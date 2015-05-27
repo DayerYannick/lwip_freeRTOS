@@ -4,11 +4,11 @@
  *
  * trcConfig.h
  *
- * Configuration parameters for the trace recorder library. Before using the 
- * trace recorder library, please check that the default settings are 
- * appropriate for your system, and if necessary adjust these. Most likely, you 
- * will need to adjust the NTask, NISR, NQueue, NMutex and NSemaphore values to 
- * reflect the number of such objects in your system. These may be 
+ * Configuration parameters for the trace recorder library. Before using the
+ * trace recorder library, please check that the default settings are
+ * appropriate for your system, and if necessary adjust these. Most likely, you
+ * will need to adjust the NTask, NISR, NQueue, NMutex and NSemaphore values to
+ * reflect the number of such objects in your system. These may be
  * over-approximated, although larger values values implies more RAM usage.
  *
  * Terms of Use
@@ -16,24 +16,24 @@
  * use together with Percepio products. You may distribute the recorder library
  * in its original form, including modifications in trcHardwarePort.c/.h
  * given that these modification are clearly marked as your own modifications
- * and documented in the initial comment section of these source files. 
- * This software is the intellectual property of Percepio AB and may not be 
- * sold or in other ways commercially redistributed without explicit written 
+ * and documented in the initial comment section of these source files.
+ * This software is the intellectual property of Percepio AB and may not be
+ * sold or in other ways commercially redistributed without explicit written
  * permission by Percepio AB.
  *
- * Disclaimer 
- * The trace tool and recorder library is being delivered to you AS IS and 
- * Percepio AB makes no warranty as to its use or performance. Percepio AB does 
- * not and cannot warrant the performance or results you may obtain by using the 
- * software or documentation. Percepio AB make no warranties, express or 
- * implied, as to noninfringement of third party rights, merchantability, or 
- * fitness for any particular purpose. In no event will Percepio AB, its 
- * technology partners, or distributors be liable to you for any consequential, 
- * incidental or special damages, including any lost profits or lost savings, 
- * even if a representative of Percepio AB has been advised of the possibility 
- * of such damages, or for any claim by any third party. Some jurisdictions do 
- * not allow the exclusion or limitation of incidental, consequential or special 
- * damages, or the exclusion of implied warranties or limitations on how long an 
+ * Disclaimer
+ * The trace tool and recorder library is being delivered to you AS IS and
+ * Percepio AB makes no warranty as to its use or performance. Percepio AB does
+ * not and cannot warrant the performance or results you may obtain by using the
+ * software or documentation. Percepio AB make no warranties, express or
+ * implied, as to noninfringement of third party rights, merchantability, or
+ * fitness for any particular purpose. In no event will Percepio AB, its
+ * technology partners, or distributors be liable to you for any consequential,
+ * incidental or special damages, including any lost profits or lost savings,
+ * even if a representative of Percepio AB has been advised of the possibility
+ * of such damages, or for any claim by any third party. Some jurisdictions do
+ * not allow the exclusion or limitation of incidental, consequential or special
+ * damages, or the exclusion of implied warranties or limitations on how long an
  * implied warranty may last, so the above limitations may not apply to you.
  *
  * Copyright Percepio AB, 2013.
@@ -44,7 +44,7 @@
 #define TRCCONFIG_H
 
 /*******************************************************************************
- * CONFIGURATION RELATED TO CAPACITY AND ALLOCATION 
+ * CONFIGURATION RELATED TO CAPACITY AND ALLOCATION
  ******************************************************************************/
 
 /*******************************************************************************
@@ -66,16 +66,16 @@
  * Macro which should be defined as an integer value, default is 0.
  *
  * If this is 1, the header file "recorderdata_linker_pragma.h" is included just
- * before the declaration of RecorderData (in trcBase.c), i.e., the trace data 
- * structure. This allows the user to specify a pragma with linker options. 
+ * before the declaration of RecorderData (in trcBase.c), i.e., the trace data
+ * structure. This allows the user to specify a pragma with linker options.
  *
  * Example (for IAR Embedded Workbench and NXP LPC17xx):
  * #pragma location="AHB_RAM_MEMORY"
- * 
- * This example instructs the IAR linker to place RecorderData in another RAM 
+ *
+ * This example instructs the IAR linker to place RecorderData in another RAM
  * bank, the AHB RAM. This can also be used for other compilers with a similar
  * pragmas for linker options.
- * 
+ *
  * Note that this only applies if using static allocation, see below.
  ******************************************************************************/
 
@@ -87,15 +87,15 @@
  *
  * Macro which should be defined as an integer value.
  *
- * This defines the capacity of the symbol table, in bytes. This symbol table 
+ * This defines the capacity of the symbol table, in bytes. This symbol table
  * stores User Events labels and names of deleted tasks, queues, or other kernel
- * objects. Note that the names of active objects not stored here but in the 
- * Object Table. Thus, if you don't use User Events or delete any kernel 
+ * objects. Note that the names of active objects not stored here but in the
+ * Object Table. Thus, if you don't use User Events or delete any kernel
  * objects you set this to a very low value, e.g. 4, but not zero (0) since
  * this causes a declaration of a zero-sized array, for which the C compiler
  * behavior is not standardized and may cause misaligned data.
  ******************************************************************************/
-#define SYMBOL_TABLE_SIZE 1000	// 100
+#define SYMBOL_TABLE_SIZE 500	// 100
 
 #if (SYMBOL_TABLE_SIZE == 0)
 #error "SYMBOL_TABLE_SIZE may not be zero!"
@@ -110,7 +110,7 @@
  * This enables and disables the use of the separate user event buffer.
  *
  * Note: When using the separate user event buffer, you may get an artificial
- * task instance named "Unknown actor". This is added as a placeholder when the 
+ * task instance named "Unknown actor". This is added as a placeholder when the
  * user event history is longer than the task scheduling history.
  ******************************************************************************/
 #define USE_SEPARATE_USER_EVENT_BUFFER 0
@@ -141,32 +141,32 @@
 /*******************************************************************************
  * NTask, NISR, NQueue, NSemaphore, NMutex
  *
- * A group of Macros which should be defined as an integer value of zero (0) 
+ * A group of Macros which should be defined as an integer value of zero (0)
  * or larger.
  *
  * This defines the capacity of the Object Property Table - the maximum number
  * of objects active at any given point within each object class.
- * 
+ *
  * NOTE: In case objects are deleted and created during runtime, this setting
  * does not limit the total amount of objects, only the number of concurrently
- * active objects. 
+ * active objects.
  *
  * Using too small values will give an error message through the vTraceError
  * routine, which makes the error message appear when opening the trace data
  * in Tracealyzer. If you are using the recorder status monitor task,
  * any error messages are displayed in console prints, assuming that the
- * print macro has been defined properly (vConsolePrintMessage). 
+ * print macro has been defined properly (vConsolePrintMessage).
  *
- * It can be wise to start with very large values for these constants, 
+ * It can be wise to start with very large values for these constants,
  * unless you are very confident on these numbers. Then do a recording and
  * check the actual usage in Tracealyzer. This is shown by selecting
  * View -> Trace Details -> Resource Usage -> Object Table
- * 
- * NOTE 2: Remember to account for all tasks and other objects created by 
- * the kernel, such as the IDLE task, any timer tasks, and any tasks created 
+ *
+ * NOTE 2: Remember to account for all tasks and other objects created by
+ * the kernel, such as the IDLE task, any timer tasks, and any tasks created
  * by other 3rd party software components, such as communication stacks.
- * Moreover, one task slot is used to indicate "(startup)", i.e., a fictive 
- * task that represent the time before the scheduler starts. 
+ * Moreover, one task slot is used to indicate "(startup)", i.e., a fictive
+ * task that represent the time before the scheduler starts.
  * NTask should thus be at least 2-3 slots larger than your application task count.
  *
  ******************************************************************************/
@@ -203,9 +203,9 @@
  * TRACE_DESCRIPTION_MAX_LENGTH
  *
  * The maximum length (including zero termination) for the TRACE_DESCRIPTION
- * string. Since this string also is used for internal error messages from the 
+ * string. Since this string also is used for internal error messages from the
  * recorder do not make it too short, as this may truncate the error messages.
- * Default is 80. 
+ * Default is 80.
  * Maximum allowed length is 256 - the trace will fail to load if longer.
  *****************************************************************************/
 #define TRACE_DESCRIPTION_MAX_LENGTH 100
@@ -214,15 +214,15 @@
 /******************************************************************************
  * TRACE_DATA_ALLOCATION
  *
- * This defines how to allocate the recorder data structure, i.e., using a 
+ * This defines how to allocate the recorder data structure, i.e., using a
  * static declaration or using a dynamic allocation in runtime (malloc).
  *
  * Should be one of these two options:
  * - TRACE_DATA_ALLOCATION_STATIC (default)
  * - TRACE_DATA_ALLOCATION_DYNAMIC
  *
- * Using static allocation has the benefits of compile-time errors if the buffer 
- * is too large (too large constants in trcConfig.h) and no need to call the 
+ * Using static allocation has the benefits of compile-time errors if the buffer
+ * is too large (too large constants in trcConfig.h) and no need to call the
  * initialization routine (xTraceInitTraceData).
  *
  * Using dynamic allocation may give more flexibility in some cases.
@@ -238,10 +238,10 @@
 /******************************************************************************
  * USE_TRACE_ASSERT
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 0.
  *
- * If this is one (1), the TRACE_ASSERT macro will verify that a condition is 
+ * If this is one (1), the TRACE_ASSERT macro will verify that a condition is
  * true. If the condition is false, vTraceError() will be called.
  *****************************************************************************/
 #define USE_TRACE_ASSERT 1
@@ -249,13 +249,13 @@
 /******************************************************************************
  * INCLUDE_FLOAT_SUPPORT
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 1.
  *
  * If this is zero (0), all references to floating point values are removed,
  * in case floating point values are not supported by the platform used.
- * Floating point values are only used in vTracePrintF and its subroutines, to 
- * store float (%f) or double (%lf) argments. 
+ * Floating point values are only used in vTracePrintF and its subroutines, to
+ * store float (%f) or double (%lf) argments.
  *
  * Note: vTracePrintF can still be used with integer and string arguments in
  * either case.
@@ -265,15 +265,15 @@
 /******************************************************************************
  * INCLUDE_USER_EVENTS
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 1.
  *
  * If this is zero (0) the code for creating User Events is excluded to
- * reduce code size. User Events are application-generated events, like 
- * "printf" but for the trace log instead of console output. User Events are 
+ * reduce code size. User Events are application-generated events, like
+ * "printf" but for the trace log instead of console output. User Events are
  * much faster than a printf and can therefore be used in timing critical code.
  * See vTraceUserEvent() and vTracePrintF() in trcUser.h
- * 
+ *
  * Note that User Events are not displayed in FreeRTOS+Trace Free Edition.
  *****************************************************************************/
 #define INCLUDE_USER_EVENTS 1
@@ -281,10 +281,10 @@
 /*****************************************************************************
  * INCLUDE_READY_EVENTS
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 1.
  *
- * If this is zero (0), the code for recording Ready events is 
+ * If this is zero (0), the code for recording Ready events is
  * excluded. Note, this will make it impossible to calculate the correct
  * response times.
  *****************************************************************************/
@@ -293,7 +293,7 @@
 /*****************************************************************************
  * INCLUDE_NEW_TIME_EVENTS
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 0.
  *
  * If this is zero (1), events will be generated whenever the os clock is
@@ -304,26 +304,26 @@
 /*****************************************************************************
  * INCLUDE_ISR_TRACING
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 1.
  *
- * If this is zero (0), the code for recording Interrupt Service Routines is 
+ * If this is zero (0), the code for recording Interrupt Service Routines is
  * excluded to reduce code size.
- * 
- * Note, if the kernel has no central interrupt dispatcher, recording ISRs 
- * require that you insert calls to vTraceStoreISRBegin and vTraceStoreISREnd 
+ *
+ * Note, if the kernel has no central interrupt dispatcher, recording ISRs
+ * require that you insert calls to vTraceStoreISRBegin and vTraceStoreISREnd
  * in your interrupt handlers.
  *****************************************************************************/
 #define INCLUDE_ISR_TRACING 1
 
 /******************************************************************************
  * INCLUDE_OBJECT_DELETE
- * 
- * Macro which should be defined as either zero (0) or one (1). 
+ *
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 1.
  *
- * This must be enabled (1) if tasks, queues or other 
- * traced kernel objects are deleted at runtime. If no deletes are made, this 
+ * This must be enabled (1) if tasks, queues or other
+ * traced kernel objects are deleted at runtime. If no deletes are made, this
  * can be set to 0 in order to exclude the delete-handling code.
  *****************************************************************************/
 #define INCLUDE_OBJECT_DELETE 1
@@ -351,9 +351,9 @@
  * - TRACE_STORE_MODE_STOP_WHEN_FULL
  * Default is TRACE_STORE_MODE_RING_BUFFER.
  *
- * With TRACE_RECORDER_STORE_MODE set to TRACE_STORE_MODE_RING_BUFFER, the events are 
- * stored in a ring buffer, i.e., where the oldest events are overwritten when 
- * the buffer becomes full. This allows you to get the last events leading up 
+ * With TRACE_RECORDER_STORE_MODE set to TRACE_STORE_MODE_RING_BUFFER, the events are
+ * stored in a ring buffer, i.e., where the oldest events are overwritten when
+ * the buffer becomes full. This allows you to get the last events leading up
  * to an interesting state, e.g., an error, without having a large trace buffer
  * for string the whole run since startup. In this mode, the recorder can run
  * "forever" as the buffer never gets full, i.e., in the sense that it always
@@ -365,8 +365,8 @@
  * task that you need to provide yourself. The trace data is found in the struct
  * RecorderData, initialized in trcBase.c.
  *
- * Note that, if you upload the trace using a RAM dump, i.e., when the system is 
- * halted on a breakpoint or by a debugger command, there is no need to stop the 
+ * Note that, if you upload the trace using a RAM dump, i.e., when the system is
+ * halted on a breakpoint or by a debugger command, there is no need to stop the
  * recorder first.
  *
  * When TRACE_RECORDER_STORE_MODE is TRACE_STORE_MODE_STOP_WHEN_FULL, the recording is
@@ -398,7 +398,7 @@
 /******************************************************************************
  * USE_IMPLICIT_IFE_RULES
  *
- * Macro which should be defined as either zero (0) or one (1). 
+ * Macro which should be defined as either zero (0) or one (1).
  * Default is 1.
  *
  * ### Instance Finish Events (IFE) ###
@@ -418,7 +418,7 @@
  * service reads a message without blocking, it does not create a new
  * instance since no blocking occurred.
  *
- * Moreover, the actual IFE might sometimes be another blocking call. We 
+ * Moreover, the actual IFE might sometimes be another blocking call. We
  * therefore allow for user-defined Explicit IFEs by calling
  *
  *     vTraceTaskInstanceIsFinished()
@@ -427,19 +427,19 @@
  * additional event but instead stores the service code and object handle
  * of the IFE call as properties of the task.
  *
- * If using Explicit IFEs and the task also calls an Implicit IFE, this may 
+ * If using Explicit IFEs and the task also calls an Implicit IFE, this may
  * result in additional incorrect task instances.
  * This is solved by disabling the Implicit IFEs for the task, by adding
  * a call to
- * 
+ *
  *     vTraceTaskSkipDefaultInstanceFinishedEvents()
- * 
+ *
  * in the very beginning of that task. This allows you to combine Explicit IFEs
  * for some tasks with Implicit IFEs for the rest of the tasks, if
  * USE_IMPLICIT_IFE_RULES is 1.
  *
  * By setting USE_IMPLICIT_IFE_RULES to zero (0), the implicit IFEs are disabled
- * for all tasks. Tasks will then be considered to have a single instance only, 
+ * for all tasks. Tasks will then be considered to have a single instance only,
  * covering all execution fragments, unless you define an explicit IFE in each
  * task by calling vTraceTaskInstanceIsFinished before the blocking call.
  *****************************************************************************/
