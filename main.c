@@ -124,8 +124,6 @@ int main(int argc, char** argv) {
  	AUDIO_msgQueue = xQueueCreateNamed(1, sizeof(queueAUDIOMsg_t), "AUDIO_msg queue");
 #endif
 
-	// DO NOT CALL ANY LWIP FUNCTIONS HERE
-
 
  	printf("MD5('%s') = ", hello);
 
@@ -172,7 +170,9 @@ void main_task(void* param) {
 	char data[MSG_LEN_MAX];
 #endif
 
+#if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("main"), "Init start");
+#endif
 
 	//-- INIT --//
 #if MY_IP_BY_DHCP
@@ -185,14 +185,20 @@ void main_task(void* param) {
 	lwip_init_static(MY_IP, MY_MASK, MY_GW);
 #endif
 
+
+#if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("main"), "Init end");
+#endif
+
 
 #if CLIENT_TEST
 	xTaskCreate(clientToIP_task, "client task", configMINIMAL_STACK_SIZE*16, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 #if SECURE_CLIENT_TEST
-	xTaskCreate(clientToIPSecured_task, "SecuClient task", configMINIMAL_STACK_SIZE*34, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
+	xTaskCreate(clientToIPSecured_task, "SecuClient task", configMINIMAL_STACK_SIZE*6, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
+	vTaskDelay(200);
+	xTaskCreate(clientToIPSecured_task, "SecuClient2 task", configMINIMAL_STACK_SIZE*6, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 
@@ -210,7 +216,10 @@ void main_task(void* param) {
 		printf("ERROR in Listen\n");
 
 	printf("accepting...\n");
+
+#if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("main"), "Accepting");
+#endif
 
 	for(i=0;i<ClNbMax;++i) {
 		s[i] = -1;
@@ -365,7 +374,10 @@ void clientHandle_task(void* param) {
 #endif
 
 	printf("New client: %d\n", i);
+
+#if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("client"), "connect");
+#endif
 	msg[MSG_LEN_MAX-1] = '\0';
 
 	while(1) {
@@ -423,7 +435,10 @@ void clientHandle_task(void* param) {
 			//vPortFree(msgBack);
 		}
 	}
+
+#if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("client"), "disconnect");
+#endif
 	printf("Connection %d closed.\n", i);
 
 	simpleClose(s[i]);
@@ -488,19 +503,26 @@ void clientToIPSecured_task(void* param) {
 	int count=0;
 	int ret;
 	char data[9];
+	char RData[200];
 
 	vTaskDelay(1000);
 
 	while(1) {
 
 		printf("creating socket.\n");
+
+#if configUSE_TRACE_FACILITY
 		vTracePrintF(xTraceOpenLabel("SecuClient"), "Create socket");
+#endif
 		socket = securedSocket();
 		if(socket < 0)
 			printf("Error on socket creation.\n");
 		else {
 			printf("Trying connection to IP with socket %d.\n", socket);
+
+#if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("SecuClient"), "Connect socket %d", socket);
+#endif
 			ret = securedConnect(socket, PC_IP, TCP_PORT);
 			if(ret < 0) {
 				printf("Error on connect.\n");
@@ -508,21 +530,42 @@ void clientToIPSecured_task(void* param) {
 			else {
 				sprintf(data, "msg %3d\n", count);
 				printf("Client sending to IP: %s\n", data);
+
+#if configUSE_TRACE_FACILITY
 				vTracePrintF(xTraceOpenLabel("SecuClient"), "send");
+#endif
 				ret = securedSendStr(socket, (unsigned char*)data);
 				if(ret < 0) {
 					printf("Error on send.\n");
 				}
+				else {
+					ret = securedRecv(socket, (unsigned char*)RData, 200);
+					if(ret < 0) {
+						printf("Error on recv.\n");
+					}
+					else if(ret == 0) {
+						printf("End connection received.\n");
+					}
+					else {
+						printf("received %d char: %.*s\n", ret, ret, RData);
+					}
+				}
 			}
 
+#if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("SecuClient"), "Close socket");
+#endif
 			securedClose(socket);
+			printf("Socket closed.\n");
 		}
+
+		//breakpoint();
 
 		if(++count >= 1000)
 			count = 0;
+
 		vTaskDelay(1000);
-		breakpoint();
+
 	}	// While(1)
 }
 
@@ -688,7 +731,10 @@ void lcd_task(void* param) {
 	while(1) {
 #if DISPLAY_MSG_ON_LCD
 		xQueueReceive(LCD_msgQueue, &received, portMAX_DELAY);
+
+#if configUSE_TRACE_FACILITY
 		vTracePrintF(xTraceOpenLabel("LCD"), "message received");
+#endif
 		gwinSetText(ghLastMessage, received.ptr, 0);
 		sprintf(msg, "%d.%03d:",  (int)(received.tick/1000), (int)(received.tick%1000));
 		gwinSetText(ghLastMessageTime, msg, 0);

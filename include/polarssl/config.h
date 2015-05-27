@@ -672,7 +672,7 @@
  *
  * Enable functions that use the filesystem.
  */
-//#define POLARSSL_FS_IO	// Removed by Dayer
+//#define POLARSSL_FS_IO	// Removed by Dayer // We don't use a file system.
 
 /**
  * \def POLARSSL_NO_DEFAULT_ENTROPY_SOURCES
@@ -1055,7 +1055,7 @@
  *
  * Uncomment this to allow your own alternate threading implementation.
  */
-//#define POLARSSL_THREADING_ALT	// Uncommented by Dayer. TODO give our implementation
+//#define POLARSSL_THREADING_ALT	// Uncommented by Dayer. TODO give our implementation (and uncomment)
 
 /**
  * \def POLARSSL_THREADING_PTHREAD
@@ -1450,7 +1450,7 @@
  *
  * This module provides the CTR_DRBG AES-256 random number generator.
  */
-//#define POLARSSL_CTR_DRBG_C	// Removed by Dayer
+//#define POLARSSL_CTR_DRBG_C	// Removed by Dayer. The stm32F417 has a Hardware random number generator. (using thermal noise)
 
 /**
  * \def POLARSSL_DEBUG_C
@@ -1623,7 +1623,7 @@
  *
  * Requires: POLARSSL_MD_C
  *
- * Uncomment to enable the HMAC_DRBG random number geerator.
+ * Uncomment to enable the HMAC_DRBG random number generator.
  */
 #define POLARSSL_HMAC_DRBG_C
 
@@ -1710,7 +1710,7 @@
  *
  * This module provides TCP/IP networking routines.
  */
-//#define POLARSSL_NET_C	// Removed by Dayer. already implemented
+//#define POLARSSL_NET_C	// Removed by Dayer. already implemented with lwip (simpleSocket)
 
 /**
  * \def POLARSSL_OID_C
@@ -2053,7 +2053,7 @@
  *
  * Enable this layer to allow use of mutexes within mbed TLS
  */
-//#define POLARSSL_THREADING_C	// Uncommented by Dayer.
+//#define POLARSSL_THREADING_C	// Uncommented by Dayer. // TODO uncomment when threading works
 
 /**
  * \def POLARSSL_TIMING_C
@@ -2246,7 +2246,7 @@
 //#define SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
-#define SSL_MAX_CONTENT_LEN             3000/*default: 16384*/ /**< Size of the input / output buffer */
+#define SSL_MAX_CONTENT_LEN             4096/*default: 16384*/ /**< Size of the input / output buffer */
 //#define SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define POLARSSL_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 
