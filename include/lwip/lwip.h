@@ -142,7 +142,7 @@ int lwip_wait_events(const int event, int timeout);
  *
  *	@return -1 if error
  */
-	int simpleSend(int socket, void* data, int length);
+	int simpleSend(int socket, const unsigned char* data, size_t length);
 
 /**
  *	@brief send a string of char
@@ -152,7 +152,7 @@ int lwip_wait_events(const int event, int timeout);
  *
  *	@return -1 if error
  */
-	int simpleSendStr(int socket, char* data);
+	int simpleSendStr(int socket, const unsigned char* data);
 
 /**
  *	@brief returns when some data were received
@@ -163,7 +163,7 @@ int lwip_wait_events(const int event, int timeout);
  *
  *	@return the length of data
  */
-	int simpleRecv(int socket, void* data, int maxLength);
+	int simpleRecv(int socket, unsigned char* data, size_t maxLength);
 
 /**
  *	@brief end the connectoin and destroy the socket
@@ -174,6 +174,7 @@ int lwip_wait_events(const int event, int timeout);
  */
 	int simpleClose(int socket);
 
+#endif	// USE_SIMPLE_SOCKET && USE_FREERTOS
 
 /**
  *	@brief return when the event given in parameter happen
@@ -185,9 +186,36 @@ int lwip_wait_events(const int event, int timeout);
  *	@return the value of the EventGroup
  */
 	int socket_wait_events(int socket, const int events, int timeout);
-#endif
 
 char* getMyIP(void);
+
+
+
+#if USE_MBEDTLS && USE_FREERTOS
+
+	int securedSocket();
+
+	int securedBind(int socket, char* localIP, int port);
+
+	int securedListen(int socket);
+
+	int securedAccept(int socket);
+
+	int securedConnect(int socket, char* distantIP, int port);
+
+	int securedConnectDNS(int socket, char* name, int port);
+
+	int securedSend(int socket, const unsigned char* data, size_t length);
+
+	int securedSendStr(int socket, const unsigned char* data);
+
+	int securedRecv(int socket, unsigned char* data, size_t maxLength);
+
+	int securedClose(int socket);
+
+#endif	// USE_MBEDTLS && USE_FREERTOS
+
+
 
 #endif	/* USE_LWIP */
 
