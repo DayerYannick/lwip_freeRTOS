@@ -119,7 +119,7 @@ socket_t Sock[MAX_SOCKET_NB];
 #ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
 
 #include "polarssl/memory_buffer_alloc.h"
-	unsigned char polarsslBuffer[100000] __attribute__ ((section (".ext_ram.bss")));
+	unsigned char polarsslBuffer[200000] __attribute__ ((section (".ext_ram.bss")));
 
 #endif
 #endif
@@ -286,7 +286,7 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 
 #if USE_MBEDTLS
-	debug_set_threshold(0);	// 0: nothing, 4: everything
+	debug_set_threshold(2);	// 0: nothing, 4: everything
 	//platform_set_malloc_free(pvPortMalloc, vPortFree);
 	random_init();
 	//entropy_init(&entropy);	// TODO : see if removable
@@ -613,7 +613,7 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 	if(length <= 0)
 		return -1;
 
-	ret = lwip_send(socket, data, length, 0);	// FIXME Check if wrong: put Sock[id].socket instead of socket
+	ret = lwip_send(socket, data, length, 0);
 
 	return ret;
 }
@@ -733,8 +733,6 @@ int securedSocket() {
 	if(socket < 0)
 		return socket;
 
-	Sock[socket].ssl = pvPortMalloc(sizeof(ssl_context));
-	memset(Sock[socket].ssl, 0, sizeof(ssl_context));
 
 	//x509_crt_init(&(Sock[id].cacert));
 
@@ -749,15 +747,59 @@ int securedSocket() {
 }
 
 int securedBind(int socket, char* localIP, int port) {
-	return -1;
+	int ret;
+
+	ret = simpleBind(socket, localIP, port);
+
+	return ret;
 }
 
 int securedListen(int socket) {
-	return -1;
+	int ret;
+
+	ret = simpleListen(socket);
+
+	return ret;
 }
 
 int securedAccept(int socket) {
-	return -1;
+	int ret, clientSocket;
+
+	clientSocket = simpleAccept(socket);
+
+	if(clientSocket < 0)
+		return clientSocket;
+
+	Sock[clientSocket].ssl = pvPortMalloc(sizeof(ssl_context));
+	memset(Sock[clientSocket].ssl, 0, sizeof(ssl_context));
+
+	if( (ret = ssl_init(Sock[clientSocket].ssl)) != 0) {
+		printf("Error in ssl_init.\n");
+		securedClose(clientSocket);
+		return ret;
+	}
+
+	ssl_set_endpoint(Sock[clientSocket].ssl, SSL_IS_SERVER);
+	ssl_set_authmode(Sock[clientSocket].ssl, SSL_VERIFY_NONE);
+
+	//ssl_set_rng(Sock[id].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
+	ssl_set_rng(Sock[clientSocket].ssl, randomHelper, 0);
+	ssl_set_dbg(Sock[clientSocket].ssl, sslDebugHelper, NULL);
+	ssl_set_bio(Sock[clientSocket].ssl, recvHelper, (void*)clientSocket, sendHelper, (void*)clientSocket);
+
+	ssl_set_ciphersuites(Sock[clientSocket].ssl, ssl_list_ciphersuites());
+
+	ssl_set_min_version(Sock[clientSocket].ssl, 3, 1);
+	while((ret=ssl_handshake(Sock[clientSocket].ssl)) != 0) {
+		if(ret != POLARSSL_ERR_NET_WANT_READ && ret != POLARSSL_ERR_NET_WANT_WRITE) {
+			printf("Error: SSL_handshake: -0x%x.\n", -ret);
+			securedClose(clientSocket);
+			return ret;
+		}
+
+	}
+
+	return clientSocket;
 }
 
 int securedConnect(int socket, char* distantIP, int port) {
@@ -766,12 +808,14 @@ int securedConnect(int socket, char* distantIP, int port) {
 	if( (ret = simpleConnect(socket, distantIP, port)) != 0)
 		return ret;
 
+	Sock[socket].ssl = pvPortMalloc(sizeof(ssl_context));
+	memset(Sock[socket].ssl, 0, sizeof(ssl_context));
+
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl init");
 #endif
 	if( (ret = ssl_init(Sock[socket].ssl)) != 0) {
 		printf("Error in ssl_init.\n");
-		securedClose(socket);
 		return ret;
 	}
 
@@ -798,7 +842,7 @@ int securedConnect(int socket, char* distantIP, int port) {
 	while((ret=ssl_handshake(Sock[socket].ssl)) != 0) {
 		if(ret != POLARSSL_ERR_NET_WANT_READ && ret != POLARSSL_ERR_NET_WANT_WRITE) {
 			printf("Error: SSL_handshake: -0x%x.\n", -ret);
-			return -1;
+			return ret;
 		}
 
 	}

@@ -1056,7 +1056,7 @@
  *
  * Uncomment this to allow your own alternate threading implementation.
  */
-//#define POLARSSL_THREADING_ALT	// Uncommented by Dayer. TODO give our implementation (and uncomment)
+//#define POLARSSL_THREADING_ALT	/* Uncommented by Dayer. TODO give our implementation (and uncomment) */
 
 /**
  * \def POLARSSL_THREADING_PTHREAD
@@ -1700,7 +1700,7 @@
  *
  * Enable this module to enable the buffer memory allocator.
  */
-#define POLARSSL_MEMORY_BUFFER_ALLOC_C	// TODO look if it can be used
+#define POLARSSL_MEMORY_BUFFER_ALLOC_C	/* uncommented by Dayer. Uses external RAM */
 
 /**
  * \def POLARSSL_NET_C
@@ -2054,7 +2054,7 @@
  *
  * Enable this layer to allow use of mutexes within mbed TLS
  */
-//#define POLARSSL_THREADING_C	// Uncommented by Dayer. // TODO uncomment when threading works
+//#define POLARSSL_THREADING_C	/* Uncommented by Dayer. // TODO uncomment when threading works */
 
 /**
  * \def POLARSSL_TIMING_C
@@ -2247,7 +2247,7 @@
 //#define SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
-#define SSL_MAX_CONTENT_LEN             16384/* XXX default: 16384*/ /**< Size of the input / output buffer */
+//#define SSL_MAX_CONTENT_LEN             16384 /**< Size of the input / output buffer */
 //#define SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define POLARSSL_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 

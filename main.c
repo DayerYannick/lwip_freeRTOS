@@ -42,15 +42,16 @@
 
 #define SERVER_TEST 0	/* Accept incoming connections */
 #define CLIENT_TEST 0	/* Connect to PC_IP and send messages */
-#define HTTP_TEST 1		/* Send a request to http://www.hevs.ch */
+#define HTTP_TEST 0		/* Send a request to http://www.hevs.ch */
 #define HTTP_SERVER_TEST 0	/* A (very) simple HTTP server... */
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
 #define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
+#define SECURE_SERVER_TEST 1
 #define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 
-#define USE_DISPLAY 1
+#define USE_DISPLAY 1	/* Set to 1 to display info about the system on the LCD screen */
 #if USE_DISPLAY
 #include "ugfx/gfx.h"
 #endif
@@ -59,13 +60,13 @@
 #define DISPLAY_MSG_ON_LCD 1	/* 1: Displays the last received message on LCD screen (slow!) */
 #endif
 
-#define USE_AUDIO 0
+#define USE_AUDIO 1	/* Set to 1 to be notified with a sound when an event occurs */
 #if USE_AUDIO
 #include "heivs/audio.h"
 #endif
 
 
-#define MSG_LEN_MAX 1000	/* The maximum length (in bytes) of a message received via TCP */
+#define MSG_LEN_MAX 200	/* The maximum length (in bytes) of a message received via TCP */
 
 
 void main_task(void* param);
@@ -77,7 +78,7 @@ void lcd_task(void* param);
 void audio_task(void* param);
 #endif
 
-#if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST
+#if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST || SECURE_SERVER_TEST
 void clientHandle_task(void* param);
 #endif
 
@@ -89,6 +90,7 @@ void clientToIP_task(void* param);
 void clientToIPSecured_task(void* param);
 #endif
 
+
 #if HTTP_TEST
 void clientTohttp_task(void* param);
 #endif
@@ -98,9 +100,11 @@ void clientTohttps_task(void* param);
 #endif
 
 
-#define ClNbMax 10
 
+#if SERVER_TEST || LED_COMMAND_TEST || HTTP_SERVER_TEST || SECURE_SERVER_TEST
+#define ClNbMax 9
 volatile int s[ClNbMax];
+#endif
 
 
 #if DISPLAY_MSG_ON_LCD
@@ -164,16 +168,13 @@ int main(int argc, char** argv) {
  */
 void main_task(void* param) {
 
+	#if SERVER_TEST || LED_COMMAND_TEST || HTTP_SERVER_TEST || SECURE_SERVER_TEST
+	int socket;
+	int i;
+#endif
+
 	printf("Starting main task.\n");
 
-#if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST
-	int socket;
-#endif
-
-#if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST
-	int i;
-
-#endif
 
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("main"), "Init start");
@@ -202,8 +203,11 @@ void main_task(void* param) {
 
 #if SECURE_CLIENT_TEST
 	xTaskCreate(clientToIPSecured_task, "SecuClient task", configMINIMAL_STACK_SIZE*6, NULL, uxTaskPriorityGet(NULL), NULL);
-	//vTaskDelay(200);
-	//xTaskCreate(clientToIPSecured_task, "SecuClient2 task", configMINIMAL_STACK_SIZE*6, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
+#endif
+
+
+#if HTTP_TEST
+	xTaskCreate(clientTohttp_task, "http client task", configMINIMAL_STACK_SIZE * 8, NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 #if HTTPS_TEST
@@ -211,9 +215,9 @@ void main_task(void* param) {
 #endif
 
 
-#if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST
+#if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST || SECURE_SERVER_TEST
 
-	int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+2) * configMINIMAL_STACK_SIZE;
+	int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+4) * configMINIMAL_STACK_SIZE;
 	socket = simpleSocket();
 	if(socket == -1)
 		printf("ERROR while creating socket\n");
@@ -234,9 +238,13 @@ void main_task(void* param) {
 		s[i] = -1;
 	}
 	while(1) {
+#if SECURE_SERVER_TEST
+		int tempS = securedAccept(socket);
+#else
 		int tempS = simpleAccept(socket);
+#endif
 
-		if(tempS == -1)
+		if(tempS < 0)
 			printf("ERROR in Accept.\n");
 		else {
 			for(i=0;i<ClNbMax;++i)
@@ -245,7 +253,7 @@ void main_task(void* param) {
 
 			if(i==ClNbMax) {
 				printf("ERROR: Cannot create socket: too many clients.");
-				simpleClose(tempS);
+				securedClose(tempS);
 			}
 			else {
 				s[i] = tempS;
@@ -254,11 +262,6 @@ void main_task(void* param) {
 		}
 	}
 
-#endif
-
-
-#if HTTP_TEST
-	xTaskCreate(clientTohttp_task, "http client task", configMINIMAL_STACK_SIZE * 8, NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 
@@ -487,6 +490,88 @@ void clientToIPSecured_task(void* param) {
 #endif
 
 
+#if SECURE_SERVER_TEST
+void clientHandle_task(void* param) {
+	char msg[MSG_LEN_MAX];
+	int i = (int)param;
+	int ret;
+
+
+	//char* msgBack;
+#if DISPLAY_MSG_ON_LCD
+	queueLCDMsg_t toSendLCD;
+#endif
+
+
+#if USE_AUDIO
+	queueAUDIOMsg_t toSendAudio;
+
+	toSendAudio.pitch = 2000;
+	toSendAudio.duration = 100;
+	xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
+#endif
+
+	printf("New client: %d\n", i);
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("client"), "connect");
+#endif
+	msg[MSG_LEN_MAX-1] = '\0';
+
+	while(1) {
+		ret = securedRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
+
+		if(ret == -1) {
+			printf("error with client %d\n", i);
+			break;
+		}
+		else if(ret == 0)
+			break;
+		else {
+			printf("Message received on server: %.*s", ret, msg);
+
+			//printf("send Ok\n");
+
+			//lwip_send(s[i], "<echo>\n", 8, 0);
+			//sprintf(msgBack, "%s", msg);
+			//securedSendStr(msgBack);
+#if DISPLAY_MSG_ON_LCD
+			toSendLCD.tick = xTaskGetTickCount();
+			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
+				toSendLCD.ptr = pvPortMalloc(ret+1);
+				memcpy(toSendLCD.ptr, msg, ret);
+				toSendLCD.ptr[ret] = '\0';
+				if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
+					vPortFree(toSendLCD.ptr);
+			}
+#endif
+
+#if USE_AUDIO
+			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
+#endif
+
+		}
+	}
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("client"), "disconnect");
+#endif
+	printf("Connection %d closed.\n", i);
+
+	securedClose(s[i]);
+
+
+#if USE_AUDIO
+	toSendAudio.pitch = 500;
+	toSendAudio.duration = 500;
+	xQueueSend(AUDIO_msgQueue, &toSendAudio, portMAX_DELAY);
+#endif
+	s[i] = -1;
+
+	vTaskDelete(NULL);
+}
+#endif
+
 #if HTTP_TEST
 void clientTohttp_task(void* param) {
 	int ret;
@@ -696,7 +781,11 @@ void lcd_task(void* param) {
 #elif LED_COMMAND_TEST
 		wi.text = "TCP/IP STACK: LED command test";
 #elif SECURE_CLIENT_TEST
-		wi.text = "TCP/IP STACK: SSL connnection test";
+		wi.text = "TCP/IP STACK: SSL client test";
+#elif SECURE_SERVER_TEST
+		wi.text = "TCP/IP STACK: SSL server test";
+#else
+		wi.text = "-- no title --";
 #endif
 
 		wi.g.y = 10;

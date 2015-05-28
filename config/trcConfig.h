@@ -48,7 +48,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * EVENT_BUFFER_SIZE
+ * EVENT_BUFFER_SIZE"TCP/IP STACK: SSL connnection test";
  *
  * Macro which should be defined as an integer value.
  *
@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 1500 /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 1000 /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************
