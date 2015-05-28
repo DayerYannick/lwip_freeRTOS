@@ -203,6 +203,7 @@
  * Uncomment a macro to enable alternate implementation for core algorithm
  * functions
  */
+// TODO use hardware CRYPT
 //#define POLARSSL_AES_ALT
 //#define POLARSSL_ARC4_ALT
 //#define POLARSSL_BLOWFISH_ALT
@@ -672,7 +673,7 @@
  *
  * Enable functions that use the filesystem.
  */
-//#define POLARSSL_FS_IO	// Removed by Dayer // We don't use a file system.
+//#define POLARSSL_FS_IO	// Removed by Dayer. (We don't use a file system)
 
 /**
  * \def POLARSSL_NO_DEFAULT_ENTROPY_SOURCES
@@ -1699,7 +1700,7 @@
  *
  * Enable this module to enable the buffer memory allocator.
  */
-//#define POLARSSL_MEMORY_BUFFER_ALLOC_C
+#define POLARSSL_MEMORY_BUFFER_ALLOC_C	// TODO look if it can be used
 
 /**
  * \def POLARSSL_NET_C
@@ -2246,7 +2247,7 @@
 //#define SSL_CACHE_DEFAULT_MAX_ENTRIES      50 /**< Maximum entries in cache */
 
 /* SSL options */
-#define SSL_MAX_CONTENT_LEN             4096/*default: 16384*/ /**< Size of the input / output buffer */
+#define SSL_MAX_CONTENT_LEN             16384/* XXX default: 16384*/ /**< Size of the input / output buffer */
 //#define SSL_DEFAULT_TICKET_LIFETIME     86400 /**< Lifetime of session tickets (if enabled) */
 //#define POLARSSL_PSK_MAX_LEN               32 /**< Max size of TLS pre-shared keys, in bytes (default 256 bits) */
 

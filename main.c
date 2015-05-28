@@ -33,7 +33,7 @@
 #define MY_GW "192.168.1.1"
 #define PC_IP "192.168.1.2"
 #else
-#define PC_IP "153.109.5.181"
+#define PC_IP "153.109.5.100"
 #endif
 
 #define TCP_PORT 4433
@@ -42,14 +42,15 @@
 
 #define SERVER_TEST 0	/* Accept incoming connections */
 #define CLIENT_TEST 0	/* Connect to PC_IP and send messages */
-#define HTTP_TEST 0		/* Send a request to http://www.hevs.ch */
+#define HTTP_TEST 1		/* Send a request to http://www.hevs.ch */
 #define HTTP_SERVER_TEST 0	/* A (very) simple HTTP server... */
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
-#define SECURE_CLIENT_TEST 1	/* Connection to a secured server via TLS */
+#define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
+#define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 
-#define USE_DISPLAY 0
+#define USE_DISPLAY 1
 #if USE_DISPLAY
 #include "ugfx/gfx.h"
 #endif
@@ -86,6 +87,14 @@ void clientToIP_task(void* param);
 
 #if SECURE_CLIENT_TEST
 void clientToIPSecured_task(void* param);
+#endif
+
+#if HTTP_TEST
+void clientTohttp_task(void* param);
+#endif
+
+#if HTTPS_TEST
+void clientTohttps_task(void* param);
 #endif
 
 
@@ -137,7 +146,7 @@ int main(int argc, char** argv) {
 
 
 	//xTaskCreate(led_task, "Led Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);	// Indicates that the system is running
-	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*8, NULL, 3, NULL);	// Runs the tests
+	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*4, NULL, 3, NULL);	// Runs the tests
 #if USE_DISPLAY
 	xTaskCreate(lcd_task, "LCD Task", configMINIMAL_STACK_SIZE, NULL, 3, NULL);	// Displays informations on the screen
 #endif
@@ -157,17 +166,13 @@ void main_task(void* param) {
 
 	printf("Starting main task.\n");
 
-#if HTTP_TEST || SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST
+#if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST
 	int socket;
 #endif
+
 #if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST
 	int i;
 
-#endif
-
-#if HTTP_TEST
-	int ret;
-	char data[MSG_LEN_MAX];
 #endif
 
 #if configUSE_TRACE_FACILITY
@@ -192,13 +197,17 @@ void main_task(void* param) {
 
 
 #if CLIENT_TEST
-	xTaskCreate(clientToIP_task, "client task", configMINIMAL_STACK_SIZE*16, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
+	xTaskCreate(clientToIP_task, "client task", configMINIMAL_STACK_SIZE*16, NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 #if SECURE_CLIENT_TEST
-	xTaskCreate(clientToIPSecured_task, "SecuClient task", configMINIMAL_STACK_SIZE*6, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
-	vTaskDelay(200);
-	xTaskCreate(clientToIPSecured_task, "SecuClient2 task", configMINIMAL_STACK_SIZE*6, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
+	xTaskCreate(clientToIPSecured_task, "SecuClient task", configMINIMAL_STACK_SIZE*6, NULL, uxTaskPriorityGet(NULL), NULL);
+	//vTaskDelay(200);
+	//xTaskCreate(clientToIPSecured_task, "SecuClient2 task", configMINIMAL_STACK_SIZE*6, (void*)NULL, uxTaskPriorityGet(NULL), NULL);
+#endif
+
+#if HTTPS_TEST
+	xTaskCreate(clientTohttps_task, "https client task", configMINIMAL_STACK_SIZE*8, NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 
@@ -248,61 +257,8 @@ void main_task(void* param) {
 #endif
 
 
-
 #if HTTP_TEST
-
-	while(1) {
-		printf("--Socket creation.\n");
-		socket = simpleSocket();
-
-		vTaskDelay(1000);
-
-		printf("--Connection.\n");
-		if(socket != -1) {
-			if(simpleConnectDNS(socket, "www.hevs.ch", 80) == 0) {
-				printf("--Connected.\n");
-
-				vTaskDelay(1000);
-
-				printf("--Send.\n");
-				if(simpleSendStr(socket, "POST /img/logo-hes-so-valais.png HTTP/1.1\r\n"
-						"Host: www.hevs.ch\r\n"
-						"Accept: */*\r\n"
-						"Content-Type: text/html\r\n"
-						"Content-Length: 0\r\n\r\n") != -1) {
-					printf("--Message sent.\n");
-
-					vTaskDelay(2000);
-
-					do {
-						ret = simpleRecv(socket, data, MSG_LEN_MAX);
-						if(ret != -1 && ret != 0)
-							printf("Received %d char: %.*s\n", ret, ret, data);
-						else if(ret == 0)
-							printf("--End of connection requested.\n");
-						else
-							printf("ERROR while receiving.\n");
-					} while(ret != 0 && ret != -1);
-
-				}
-				else
-					printf("ERROR while sending.\n");
-			}
-			else
-				printf("ERROR while connecting.\n");
-
-			printf("--Close.\n");
-			simpleClose(socket);
-
-			printf("\n\n");
-		}
-		else
-			printf("ERROR while creating socket: %s.\n", strerror(errno));
-
-		// Wait 2s and restart
-		vTaskDelay(2000);
-	}
-
+	xTaskCreate(clientTohttp_task, "http client task", configMINIMAL_STACK_SIZE * 8, NULL, uxTaskPriorityGet(NULL), NULL);
 #endif
 
 
@@ -310,47 +266,6 @@ void main_task(void* param) {
 
 }
 
-#if HTTP_TEST
-#define msgLength 200
-void clientHandle_task(void* param) {
-	char msg[msgLength];
-	int i = (int)param;
-	int ret;
-	//char* msgBack;
-	printf("New client: %d\n", i);
-
-	while(1) {
-		ret = simpleRecv(s[i], msg, msgLength);
-		//printf("msg received... ret=%d\n", ret);
-
-		if(ret == -1) {
-			printf("error with client %d\n", i);
-			break;
-		}
-		else if(ret == 0)
-			break;
-		else {
-			//printf("%.*s", ret, msg);
-
-			//printf("send Ok\n");
-
-			//lwip_send(s[i], "<echo>\n", 8, 0);
-			//msgBack = pvPortMalloc(ret);
-			//sprintf(msgBack, "%s", msg);
-			printf("Message received on server: %s", msg);
-			//lwip_send(s[i], msgBack, ret, 0);
-			//lwip_send(s[i], "</echo>\n", 9, 0);
-			//vPortFree(msg);
-			//vPortFree(msgBack);
-		}
-	}
-	printf("Connection %d closed.\n", i);
-	simpleClose(s[i]);
-	s[i] = -1;
-
-	vTaskDelete(NULL);
-}
-#endif
 
 #if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST
 void clientHandle_task(void* param) {
@@ -569,6 +484,140 @@ void clientToIPSecured_task(void* param) {
 	}	// While(1)
 }
 
+#endif
+
+
+#if HTTP_TEST
+void clientTohttp_task(void* param) {
+	int ret;
+	char data[MSG_LEN_MAX];
+	int socket;
+
+	while(1) {
+		printf("--Socket creation.\n");
+		socket = simpleSocket();
+
+		vTaskDelay(1000);
+
+		printf("--Connection.\n");
+		if(socket != -1) {
+			if(simpleConnectDNS(socket, "www.hevs.ch", 80) == 0) {
+				printf("--Connected.\n");
+
+				vTaskDelay(1000);
+
+				printf("--Send.\n");
+				if(simpleSendStr(socket, (unsigned char*)"POST /img/logo-hes-so-valais.png HTTP/1.1\r\n"
+						"Host: www.hevs.ch\r\n"
+						"Accept: */*\r\n"
+						"Content-Type: text/html\r\n"
+						"Content-Length: 0\r\n\r\n") != -1) {
+					printf("--Message sent.\n");
+
+					vTaskDelay(2000);
+
+					do {
+						ret = simpleRecv(socket, (unsigned char*)data, MSG_LEN_MAX);
+						if(ret != -1 && ret != 0)
+							printf("Received %d char: %.*s\n", ret, ret, data);
+						else if(ret == 0)
+							printf("--End of connection requested.\n");
+						else
+							printf("ERROR while receiving.\n");
+					} while(ret != 0 && ret != -1);
+
+				}
+				else
+					printf("ERROR while sending.\n");
+			}
+			else
+				printf("ERROR while connecting.\n");
+
+			printf("--Close.\n");
+			simpleClose(socket);
+
+			printf("\n\n");
+		}
+		else
+			printf("ERROR while creating socket: %s.\n", strerror(errno));
+
+		// Wait 2s and restart
+		vTaskDelay(2000);
+	}
+}
+#endif
+
+
+#if HTTPS_TEST
+void clientTohttps_task(void* param) {
+	int socket;
+	int ret;
+	char data[MSG_LEN_MAX];
+
+	vTaskDelay(1000);
+
+	while(1) {
+
+		printf("creating socket.\n");
+
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("SecuClient"), "Create socket");
+#endif
+		socket = securedSocket();
+		if(socket < 0)
+			printf("Error on socket creation.\n");
+		else {
+			printf("Trying connection to address with socket %d.\n", socket);
+
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("SecuClient"), "Connect socket %d", socket);
+#endif
+			ret = securedConnectDNS(socket, "www.google.ch", 443);
+			if(ret < 0) {
+				printf("Error on connect.\n");
+			}
+			else {
+
+#if configUSE_TRACE_FACILITY
+				vTracePrintF(xTraceOpenLabel("SecuClient"), "send");
+#endif
+				ret = securedSendStr(socket, (unsigned char*)"POST /images/srpr/logo11w.png HTTP/1.1\r\n"
+						"Host: www.google.ch\r\n"
+						"Accept: */*\r\n"
+						"Content-Type: text/html\r\n"
+						"Content-Length: 0\r\n\r\n");
+				if(ret < 0) {
+					printf("Error on send.\n");
+				}
+				else {
+					do {
+						ret = securedRecv(socket, (unsigned char*)data, MSG_LEN_MAX);
+						if(ret < 0) {
+							printf("\nError on recv.\n");
+						}
+						else if(ret == 0) {
+							printf("\nEnd connection received.\n");
+						}
+						else {
+							printf("%.*s", ret, data);
+						}
+					} while(ret > 0);
+				}
+			}
+
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("SecuClient"), "Close socket");
+#endif
+			securedClose(socket);
+			printf("Socket closed.\n");
+		}
+
+		breakpoint();
+
+		vTaskDelay(2000);
+
+	}	// While(1)
+}
 #endif
 
 void led_task(void* param) {

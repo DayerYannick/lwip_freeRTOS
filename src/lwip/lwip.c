@@ -115,6 +115,15 @@ socket_t Sock[MAX_SOCKET_NB];
 //entropy_context entropy;
 
 
+#if USE_MBEDTLS
+#ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
+
+#include "polarssl/memory_buffer_alloc.h"
+	unsigned char polarsslBuffer[100000] __attribute__ ((section (".ext_ram.bss")));
+
+#endif
+#endif
+
 
 //-- Functions implementation --//
 
@@ -277,10 +286,13 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 
 #if USE_MBEDTLS
-	debug_set_threshold(2);	// 0: nothing, 4: everything
-	platform_set_malloc_free(pvPortMalloc, vPortFree);
+	debug_set_threshold(0);	// 0: nothing, 4: everything
+	//platform_set_malloc_free(pvPortMalloc, vPortFree);
 	random_init();
 	//entropy_init(&entropy);	// TODO : see if removable
+#ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
+	memory_buffer_alloc_init(polarsslBuffer, sizeof(polarsslBuffer));
+#endif
 #endif
 
 	return 0;
@@ -806,10 +818,10 @@ int securedConnectDNS(int socket, char* name, int port) {
 	if(ent != 0) {
 		sprintf(ip, "%d.%d.%d.%d", ent->h_addr_list[0][0]&0xFF, ent->h_addr_list[0][1]&0xFF, ent->h_addr_list[0][2]&0xFF, ent->h_addr_list[0][3]&0xFF);
 		ret = securedConnect(socket, ip, port);
-		//printf("dns of %s => %s\n", name, ip);
+		printf("dns of %s => %s\n", name, ip);
 	}
 	else {
-		//printf("Error while resolving DNS name.\n");
+		printf("Error while resolving DNS name.\n");
 		return -1;
 	}
 
@@ -834,13 +846,13 @@ int securedSendStr(int socket, const unsigned char* data) {
 	for(length = 0; data[length] != '\0'; ++length);
 	++length;
 
-	return securedSend(socket, (void*)data, length);
+	return securedSend(socket, data, length);
 }
 
 int securedRecv(int socket, unsigned char* data, size_t maxLength) {
 	int ret = 0;
 
-	ret = ssl_write(Sock[socket].ssl, data, maxLength);
+	ret = ssl_read(Sock[socket].ssl, data, maxLength);
 
 	return ret;
 }
