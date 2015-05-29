@@ -150,7 +150,7 @@ int main(int argc, char** argv) {
 
 
 	//xTaskCreate(led_task, "Led Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);	// Indicates that the system is running
-	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*4, NULL, 3, NULL);	// Runs the tests
+	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*6, NULL, 3, NULL);	// Runs the tests
 #if USE_DISPLAY
 	xTaskCreate(lcd_task, "LCD Task", configMINIMAL_STACK_SIZE, NULL, 3, NULL);	// Displays informations on the screen
 #endif
