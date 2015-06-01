@@ -140,7 +140,7 @@ int lwip_wait_events(const int event, int timeout) {
 #endif	/* USE_FREERTOS */
 
 
-/* temporary probably */
+/* temporary (probably) */
 int randomHelper2(void *data, unsigned char *output, size_t len, size_t *olen) {
 	int i, j, ret;
 	uint32_t tmp;
@@ -313,7 +313,7 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 #if USE_MBEDTLS
 	debug_set_threshold(3);	// 0: nothing, 4: everything
-	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl pool implementation instead
+	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation instead
 	random_init();
 	entropy_init(&entropy);	// TODO : see if removable
 	ctr_drbg_init(&ctr_drbg, entropy_func, &entropy, (unsigned char*)"Random string", 13);
@@ -755,7 +755,7 @@ void sslDebugHelper(void* fd, int level, const char* data) {
 	printf("lvl%d: %s", level, data);
 }
 
-int securedSocket() {
+int secureSocket() {
 	int socket;
 
 	socket = simpleSocket();
@@ -766,7 +766,7 @@ int securedSocket() {
 	return socket;
 }
 
-int securedBind(int socket, char* localIP, int port) {
+int secureBind(int socket, char* localIP, int port) {
 	int ret;
 
 	ret = simpleBind(socket, localIP, port);
@@ -774,7 +774,7 @@ int securedBind(int socket, char* localIP, int port) {
 	return ret;
 }
 
-int securedListen(int socket) {
+int secureListen(int socket) {
 	int ret;
 
 	ret = simpleListen(socket);
@@ -782,10 +782,12 @@ int securedListen(int socket) {
 	return ret;
 }
 
-int securedAccept(int socket) {	// FIXME
+int secureAccept(int socket) {	// FIXME
 	int ret, clientSocket;
 
 	clientSocket = simpleAccept(socket);
+
+	printf("new socket: %d", clientSocket);
 
 	if(clientSocket < 0)
 		return clientSocket;
@@ -795,7 +797,7 @@ int securedAccept(int socket) {	// FIXME
 
 	if( (ret = ssl_init(Sock[clientSocket].ssl)) != 0) {
 		printf("Error in ssl_init.\n");
-		securedClose(clientSocket);
+		secureClose(clientSocket);
 		return ret;
 	}
 
@@ -803,7 +805,7 @@ int securedAccept(int socket) {	// FIXME
 	ssl_set_authmode(Sock[clientSocket].ssl, SSL_VERIFY_NONE);
 
 	ssl_set_rng(Sock[clientSocket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
-	//ssl_set_rng(Sock[clientSocket].ssl, randomHelper, 0);
+	//ssl_set_rng(Sock[clientSocket].ssl, randomHelper, 0);				// Using only the hardware RNG
 	ssl_set_dbg(Sock[clientSocket].ssl, sslDebugHelper, NULL);
 	ssl_set_bio(Sock[clientSocket].ssl, recvHelper, (void*)clientSocket, sendHelper, (void*)clientSocket);
 
@@ -814,18 +816,22 @@ int securedAccept(int socket) {	// FIXME
 
 	pk_init(&(Sock[clientSocket].pkey));
 
-	pk_parse_key(&(Sock[clientSocket].pkey), (const unsigned char*)test_srv_key, sizeof(test_srv_key), NULL, 0);
+	if( (ret=pk_parse_key(&(Sock[clientSocket].pkey), (const unsigned char*)test_srv_key, sizeof(test_srv_key), NULL, 0) ) != 0)
+		printf("pk_parse_key returned %d\n", ret);
 
 	x509_crt_init(&(Sock[clientSocket].cacert));
-	x509_crt_parse(&(Sock[clientSocket].cacert), (const unsigned char*) test_ca_crt, strlen(test_ca_crt));
+
+	if( (ret=x509_crt_parse(&(Sock[clientSocket].cacert), (const unsigned char*) test_srv_crt_rsa, strlen(test_srv_crt_rsa)) ) != 0)
+		printf("x509_crt_parse returned %d\n", ret);
 
 
-	ssl_set_own_cert(Sock[clientSocket].ssl, &(Sock[clientSocket].cacert), &(Sock[clientSocket].pkey));
+	if( (ssl_set_own_cert(Sock[clientSocket].ssl, &(Sock[clientSocket].cacert), &(Sock[clientSocket].pkey)) ) != 0)
+		printf("ssl_set_own_cert returned %d\n", ret);
 
 	while((ret=ssl_handshake(Sock[clientSocket].ssl)) != 0) {
 		if(ret != POLARSSL_ERR_NET_WANT_READ && ret != POLARSSL_ERR_NET_WANT_WRITE) {
 			printf("Error: SSL_handshake: -0x%x.\n", -ret);
-			securedClose(clientSocket);
+			secureClose(clientSocket);
 			return ret;
 		}
 
@@ -834,7 +840,7 @@ int securedAccept(int socket) {	// FIXME
 	return clientSocket;
 }
 
-int securedConnect(int socket, char* distantIP, int port) {
+int secureConnect(int socket, char* distantIP, int port) {
 	int ret;
 
 	if( (ret = simpleConnect(socket, distantIP, port)) != 0)
@@ -883,7 +889,7 @@ int securedConnect(int socket, char* distantIP, int port) {
 	return 0;
 }
 
-int securedConnectDNS(int socket, char* name, int port) {
+int secureConnectDNS(int socket, char* name, int port) {
 	int ret = 0;
 	char ip[16];
 	struct hostent* ent;
@@ -893,7 +899,7 @@ int securedConnectDNS(int socket, char* name, int port) {
 
 	if(ent != 0) {
 		sprintf(ip, "%d.%d.%d.%d", ent->h_addr_list[0][0]&0xFF, ent->h_addr_list[0][1]&0xFF, ent->h_addr_list[0][2]&0xFF, ent->h_addr_list[0][3]&0xFF);
-		ret = securedConnect(socket, ip, port);
+		ret = secureConnect(socket, ip, port);
 		printf("dns of %s => %s\n", name, ip);
 	}
 	else {
@@ -904,7 +910,7 @@ int securedConnectDNS(int socket, char* name, int port) {
 	return ret;
 }
 
-int securedSend(int socket, const unsigned char* data, size_t length) {
+int secureSend(int socket, const unsigned char* data, size_t length) {
 	int ret;
 
 	if(length <= 0)
@@ -916,16 +922,16 @@ int securedSend(int socket, const unsigned char* data, size_t length) {
 	return ret;
 }
 
-int securedSendStr(int socket, const unsigned char* data) {
+int secureSendStr(int socket, const unsigned char* data) {
 	int length;
 
 	for(length = 0; data[length] != '\0'; ++length);
 	++length;
 
-	return securedSend(socket, data, length);
+	return secureSend(socket, data, length);
 }
 
-int securedRecv(int socket, unsigned char* data, size_t maxLength) {
+int secureRecv(int socket, unsigned char* data, size_t maxLength) {
 	int ret = 0;
 
 	ret = ssl_read(Sock[socket].ssl, data, maxLength);
@@ -933,7 +939,7 @@ int securedRecv(int socket, unsigned char* data, size_t maxLength) {
 	return ret;
 }
 
-int securedClose(int socket) {
+int secureClose(int socket) {
 
 
 	if(socket >= 0) {

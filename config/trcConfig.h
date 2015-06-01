@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 1000 /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 200 /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************
@@ -125,7 +125,7 @@
  *
  * Only in use if USE_SEPARATE_USER_EVENT_BUFFER is set to 1.
  ******************************************************************************/
-#define USER_EVENT_BUFFER_SIZE 500
+#define USER_EVENT_BUFFER_SIZE 200
 
 /*******************************************************************************
  * USER_EVENT_CHANNELS
@@ -171,7 +171,7 @@
  *
  ******************************************************************************/
 #define NTask             16
-#define NISR              80
+#define NISR              8
 #define NQueue            16
 #define NSemaphore        15
 #define NMutex            15
@@ -208,7 +208,7 @@
  * Default is 80.
  * Maximum allowed length is 256 - the trace will fail to load if longer.
  *****************************************************************************/
-#define TRACE_DESCRIPTION_MAX_LENGTH 100
+#define TRACE_DESCRIPTION_MAX_LENGTH 80
 
 
 /******************************************************************************
@@ -524,7 +524,7 @@
 * below 16 MB (2^24 byte), and you can live with addresses truncated to the
 * lower 24 bit. Otherwise set it to 0 to get the full 32-bit addresses.
 ******************************************************************************/
-#define HEAP_SIZE_BELOW_16M 0
+#define HEAP_SIZE_BELOW_16M 1
 
 #endif
 

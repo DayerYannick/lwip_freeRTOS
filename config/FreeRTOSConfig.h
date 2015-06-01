@@ -17,7 +17,7 @@
 #define FREERTOS_CONFIG_H
 
 // Tracing
-#define configUSE_TRACE_FACILITY				0
+#define configUSE_TRACE_FACILITY				1
 
 // Scheduler options
 #define configUSE_PREEMPTION					1

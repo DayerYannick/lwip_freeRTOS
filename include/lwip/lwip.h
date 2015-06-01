@@ -193,25 +193,25 @@ char* getMyIP(void);
 
 #if USE_MBEDTLS && USE_FREERTOS
 
-	int securedSocket();
+	int secureSocket();
 
-	int securedBind(int socket, char* localIP, int port);
+	int secureBind(int socket, char* localIP, int port);
 
-	int securedListen(int socket);
+	int secureListen(int socket);
 
-	int securedAccept(int socket);
+	int secureAccept(int socket);
 
-	int securedConnect(int socket, char* distantIP, int port);
+	int secureConnect(int socket, char* distantIP, int port);
 
-	int securedConnectDNS(int socket, char* name, int port);
+	int secureConnectDNS(int socket, char* name, int port);
 
-	int securedSend(int socket, const unsigned char* data, size_t length);
+	int secureSend(int socket, const unsigned char* data, size_t length);
 
-	int securedSendStr(int socket, const unsigned char* data);
+	int secureSendStr(int socket, const unsigned char* data);
 
-	int securedRecv(int socket, unsigned char* data, size_t maxLength);
+	int secureRecv(int socket, unsigned char* data, size_t maxLength);
 
-	int securedClose(int socket);
+	int secureClose(int socket);
 
 #endif	// USE_MBEDTLS && USE_FREERTOS
 

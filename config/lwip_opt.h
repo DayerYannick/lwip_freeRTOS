@@ -38,7 +38,7 @@
 #ifndef __LWIP_OPT_H__
 #define __LWIP_OPT_H__
 
-#define LWIP_DEBUG 1
+#define LWIP_DEBUG 0
 
 /*
  * Use simplified method for creating and using sockets.ti
@@ -52,10 +52,10 @@
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */
 	#define KEEPALIVE_INTVL	1	/* Seconds */
-	#define KEEPALIVE_COUNT	10;
+	#define KEEPALIVE_COUNT	10
+	#define USE_MBEDTLS 1
 #endif
 
-#define USE_MBEDTLS 1
 
 
 /*
@@ -1534,7 +1534,7 @@
  * LWIP_STATS==1: Enable statistics collection in lwip_stats.
  */
 #ifndef LWIP_STATS
-#define LWIP_STATS                      1
+#define LWIP_STATS                      0
 #endif
 
 #if LWIP_STATS
