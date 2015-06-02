@@ -25,7 +25,7 @@
  *  http://groups.google.com/group/sci.crypt/msg/10a300c9d21afca0
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

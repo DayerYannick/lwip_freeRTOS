@@ -26,7 +26,7 @@
  *  ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1-1.asn
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

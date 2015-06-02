@@ -30,7 +30,7 @@
  *  http://www.itu.int/ITU-T/studygroups/com17/languages/X.690-0207.pdf
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

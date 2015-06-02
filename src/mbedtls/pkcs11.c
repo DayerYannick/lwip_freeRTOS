@@ -24,7 +24,7 @@
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #include "mbedtls/pkcs11.h"

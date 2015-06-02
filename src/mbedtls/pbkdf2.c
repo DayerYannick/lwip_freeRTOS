@@ -31,7 +31,7 @@
  * http://tools.ietf.org/html/rfc6070 (Test vectors)
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

@@ -28,7 +28,7 @@
  *  http://www.ietf.org/rfc/rfc4346.txt
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

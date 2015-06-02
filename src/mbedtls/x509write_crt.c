@@ -26,7 +26,7 @@
  * - attributes: PKCS#9 v2.0 aka RFC 2985
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

@@ -25,7 +25,7 @@
  *  http://www.cacr.math.uwaterloo.ca/hac/ (chapter 12)
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

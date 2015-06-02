@@ -29,7 +29,7 @@
  * RFC 5116 "An Interface and Algorithms for Authenticated Encryption"
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

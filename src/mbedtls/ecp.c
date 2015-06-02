@@ -41,7 +41,7 @@
  *     <http://eprint.iacr.org/2004/342.pdf>
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

@@ -53,7 +53,6 @@
 	#define KEEPALIVE_IDLE	5	/* Seconds */
 	#define KEEPALIVE_INTVL	1	/* Seconds */
 	#define KEEPALIVE_COUNT	10
-	#define USE_MBEDTLS 1	/* Use encrypted communication */
 #endif
 
 
@@ -129,6 +128,8 @@
 #ifndef MEM_LIBC_MALLOC
 #define MEM_LIBC_MALLOC                 1	/* set to 1 by Dayer (was 0) */
 #endif
+
+#include "freeRTOS/FreeRTOS.h"	/* Remove warnings in lwip implementation. FIXME: is this correct here?*/
 
 #define mem_free vPortFree			/* Tells lwip to use vPortFree instead of free or the lwip internal functions */
 #define mem_malloc pvPortMalloc		/* Same thing for malloc */

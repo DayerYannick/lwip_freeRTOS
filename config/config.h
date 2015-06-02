@@ -74,6 +74,20 @@
 #define USE_LWIP 1
 /****************************************************************************/
 
+/****************************************************************************/
+/**
+ * \brief Use mbedTLS (SSL/TLS encryption). (new name of polarSSL)
+ *
+ * Possible values :
+ *  0 : don't use mbedTLS
+ *  1 : use mbedTLS
+ *
+ * \see lwip_freeRTOS_dayer TODO: give the right example
+ */
+#define USE_MBEDTLS 1	/* Use encrypted communication */
+/****************************************************************************/
+
+
 /****************************************************************************
   _   _ ____  ____                     __ _
  | | | / ___|| __ )    ___ ___  _ __  / _(_) __ _

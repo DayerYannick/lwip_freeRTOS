@@ -26,7 +26,7 @@
  * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

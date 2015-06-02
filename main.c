@@ -19,7 +19,7 @@
 
 
 
-#include "polarssl/md5.h"
+#include "mbedtls/md5.h"
 
 
 //-- Defines --//
@@ -58,7 +58,7 @@
 #include "ugfx/gfx.h"
 #endif
 
-#if SERVER_TEST && USE_DISPLAY
+#if (SERVER_TEST || SECURE_SERVER_TEST) && USE_DISPLAY
 #define DISPLAY_MSG_ON_LCD 1	/* 1: Displays the last received message on LCD screen */
 #endif
 
@@ -313,9 +313,7 @@ void clientHandle_task(void* param) {
 		else {
 			//printf("Message received on server: %.*s", ret, msg);
 
-			//printf("send Ok\n");
 
-			//lwip_send(s[i], "<echo>\n", 8, 0);
 			//sprintf(msgBack, "%s", msg);
 			//simpleSendStr(msgBack);
 #if DISPLAY_MSG_ON_LCD
@@ -535,13 +533,6 @@ void clientHandle_task(void* param) {
 		else if(ret == 0)
 			break;
 		else {
-			printf("Message received on server: %.*s", ret, msg);
-
-			//printf("send Ok\n");
-
-			//lwip_send(s[i], "<echo>\n", 8, 0);
-			//sprintf(msgBack, "%s", msg);
-			//secureSendStr(msgBack);
 #if DISPLAY_MSG_ON_LCD
 			toSendLCD.tick = xTaskGetTickCount();
 			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
@@ -551,7 +542,10 @@ void clientHandle_task(void* param) {
 				if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
 					vPortFree(toSendLCD.ptr);
 			}
+#else
+			printf("Message received on server: %.*s", ret, msg);
 #endif
+
 
 #if USE_AUDIO
 			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);

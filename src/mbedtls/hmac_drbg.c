@@ -26,7 +26,7 @@
  *  References below are based on rev. 1 (January 2012).
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

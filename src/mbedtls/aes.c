@@ -26,7 +26,7 @@
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

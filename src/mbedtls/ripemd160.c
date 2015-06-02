@@ -26,7 +26,7 @@
  *  http://ehash.iaik.tugraz.at/wiki/RIPEMD-160
  */
  
-#include "heivs/config"
+#include "heivs/config.h"
 #if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)

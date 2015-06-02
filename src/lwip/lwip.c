@@ -34,12 +34,12 @@
 
 
 //-- mbedTLS includes --//
-#include "polarssl/ssl.h"
-#include "polarssl/entropy.h"
-#include "polarssl/platform.h"
-#include "polarssl/debug.h"
-#include "polarssl/certs.h"
-#include "polarssl/ctr_drbg.h"
+#include "mbedtls/ssl.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/platform.h"
+#include "mbedtls/debug.h"
+#include "mbedtls/certs.h"
+#include "mbedtls/ctr_drbg.h"
 
 
 
@@ -121,7 +121,7 @@ ctr_drbg_context ctr_drbg;
 #if USE_MBEDTLS
 #ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
 
-#include "polarssl/memory_buffer_alloc.h"
+#include "mbedtls/memory_buffer_alloc.h"
 	unsigned char polarsslBuffer[200000] __attribute__ ((section (".ext_ram.bss")));
 
 #endif
@@ -312,7 +312,7 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 
 #if USE_MBEDTLS
-	debug_set_threshold(3);	// 0: nothing, 4: everything
+	debug_set_threshold(0);	// 0: nothing, 4: everything
 	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation instead
 	random_init();
 	entropy_init(&entropy);	// TODO : see if removable
@@ -787,7 +787,7 @@ int secureAccept(int socket) {	// FIXME
 
 	clientSocket = simpleAccept(socket);
 
-	printf("new socket: %d", clientSocket);
+	printf("new socket: %d\n", clientSocket);
 
 	if(clientSocket < 0)
 		return clientSocket;
