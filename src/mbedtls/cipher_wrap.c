@@ -23,47 +23,50 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_CIPHER_C)
 
-#include "polarssl/cipher_wrap.h"
+#include "mbedtls/cipher_wrap.h"
 
 #if defined(POLARSSL_AES_C)
-#include "polarssl/aes.h"
+#include "mbedtls/aes.h"
 #endif
 
 #if defined(POLARSSL_ARC4_C)
-#include "polarssl/arc4.h"
+#include "mbedtls/arc4.h"
 #endif
 
 #if defined(POLARSSL_CAMELLIA_C)
-#include "polarssl/camellia.h"
+#include "mbedtls/camellia.h"
 #endif
 
 #if defined(POLARSSL_DES_C)
-#include "polarssl/des.h"
+#include "mbedtls/des.h"
 #endif
 
 #if defined(POLARSSL_BLOWFISH_C)
-#include "polarssl/blowfish.h"
+#include "mbedtls/blowfish.h"
 #endif
 
 #if defined(POLARSSL_GCM_C)
-#include "polarssl/gcm.h"
+#include "mbedtls/gcm.h"
 #endif
 
 #if defined(POLARSSL_CCM_C)
-#include "polarssl/ccm.h"
+#include "mbedtls/ccm.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -1446,3 +1449,5 @@ const cipher_definition_t cipher_definitions[] =
 int supported_ciphers[NUM_CIPHERS];
 
 #endif /* POLARSSL_CIPHER_C */
+
+#endif /* USE_MBEDTLS */

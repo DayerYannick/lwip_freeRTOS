@@ -19,18 +19,21 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_X509_CREATE_C)
 
-#include "polarssl/x509.h"
-#include "polarssl/asn1write.h"
-#include "polarssl/oid.h"
+#include "mbedtls/x509.h"
+#include "mbedtls/asn1write.h"
+#include "mbedtls/oid.h"
 
 #if defined(_MSC_VER) && !defined strncasecmp && !defined(EFIX64) && \
     !defined(EFI32)
@@ -339,3 +342,5 @@ int x509_write_extensions( unsigned char **p, unsigned char *start,
 }
 
 #endif /* POLARSSL_X509_CREATE_C */
+
+#endif /* USE_MBEDTLS */

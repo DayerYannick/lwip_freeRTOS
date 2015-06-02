@@ -21,20 +21,23 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_OID_C)
 
-#include "polarssl/oid.h"
-#include "polarssl/rsa.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/rsa.h"
 
 #if defined(POLARSSL_X509_USE_C) || defined(POLARSSL_X509_CREATE_C)
-#include "polarssl/x509.h"
+#include "mbedtls/x509.h"
 #endif
 
 #include <stdio.h>
@@ -679,3 +682,5 @@ int oid_get_numeric_string( char *buf, size_t size,
 }
 
 #endif /* POLARSSL_OID_C */
+
+#endif /* USE_MBEDTLS */

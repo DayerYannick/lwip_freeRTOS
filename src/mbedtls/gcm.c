@@ -29,23 +29,26 @@
  * We use the algorithm described as Shoup's method with 4-bit tables in
  * [MGV] 4.1, pp. 12-13, to enhance speed without using too much memory.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_GCM_C)
 
-#include "polarssl/gcm.h"
+#include "mbedtls/gcm.h"
 
 #if defined(POLARSSL_AESNI_C)
-#include "polarssl/aesni.h"
+#include "mbedtls/aesni.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -942,3 +945,5 @@ int gcm_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST && POLARSSL_AES_C */
 
 #endif /* POLARSSL_GCM_C */
+
+#endif /* USE_MBEDTLS */

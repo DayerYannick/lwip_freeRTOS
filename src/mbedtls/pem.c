@@ -19,23 +19,26 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PEM_PARSE_C) || defined(POLARSSL_PEM_WRITE_C)
-#include "polarssl/pem.h"
-#include "polarssl/base64.h"
-#include "polarssl/des.h"
-#include "polarssl/aes.h"
-#include "polarssl/md5.h"
-#include "polarssl/cipher.h"
+#include "mbedtls/pem.h"
+#include "mbedtls/base64.h"
+#include "mbedtls/des.h"
+#include "mbedtls/aes.h"
+#include "mbedtls/md5.h"
+#include "mbedtls/cipher.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -440,3 +443,5 @@ int pem_write_buffer( const char *header, const char *footer,
 }
 #endif /* POLARSSL_PEM_WRITE_C */
 #endif /* POLARSSL_PEM_PARSE_C || POLARSSL_PEM_WRITE_C */
+
+#endif /* USE_MBEDTLS */

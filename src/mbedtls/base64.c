@@ -19,16 +19,19 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_BASE64_C)
 
-#include "polarssl/base64.h"
+#include "mbedtls/base64.h"
 
 #if defined(_MSC_VER) && !defined(EFIX64) && !defined(EFI32)
 #include <basetsd.h>
@@ -38,7 +41,7 @@ typedef UINT32 uint32_t;
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -288,3 +291,5 @@ int base64_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_BASE64_C */
+
+#endif /* USE_MBEDTLS */

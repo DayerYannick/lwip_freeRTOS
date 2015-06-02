@@ -26,20 +26,23 @@
  *  http://www.stillhq.com/extracted/gnupg-api/mpi/
  *  http://math.libtomcrypt.com/files/tommath.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_BIGNUM_C)
 
-#include "polarssl/bignum.h"
-#include "polarssl/bn_mul.h"
+#include "mbedtls/bignum.h"
+#include "mbedtls/bn_mul.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf     printf
 #define polarssl_malloc     malloc
@@ -2343,3 +2346,5 @@ cleanup:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_BIGNUM_C */
+
+#endif /* USE_MBEDTLS */

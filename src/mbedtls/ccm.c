@@ -28,16 +28,19 @@
  * Related:
  * RFC 5116 "An Interface and Algorithms for Authenticated Encryption"
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_CCM_C)
 
-#include "polarssl/ccm.h"
+#include "mbedtls/ccm.h"
 
 /* Implementation that should never be optimized out by the compiler */
 static void polarssl_zeroize( void *v, size_t n ) {
@@ -335,7 +338,7 @@ int ccm_auth_decrypt( ccm_context *ctx, size_t length,
 #if defined(POLARSSL_SELF_TEST) && defined(POLARSSL_AES_C)
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define polarssl_printf printf
@@ -451,3 +454,5 @@ int ccm_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST && POLARSSL_AES_C */
 
 #endif /* POLARSSL_CCM_C */
+
+#endif /* USE_MBEDTLS */

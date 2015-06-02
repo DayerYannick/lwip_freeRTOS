@@ -23,19 +23,22 @@
  * These session callbacks use a simple chained list
  * to store and retrieve the session information.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_SSL_CACHE_C)
 
-#include "polarssl/ssl_cache.h"
+#include "mbedtls/ssl_cache.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -327,3 +330,5 @@ void ssl_cache_free( ssl_cache_context *cache )
 }
 
 #endif /* POLARSSL_SSL_CACHE_C */
+
+#endif /* USE_MBEDTLS */

@@ -30,17 +30,20 @@
  * http://tools.ietf.org/html/rfc2898 (Specification)
  * http://tools.ietf.org/html/rfc6070 (Test vectors)
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PBKDF2_C)
 
-#include "polarssl/pbkdf2.h"
-#include "polarssl/pkcs5.h"
+#include "mbedtls/pbkdf2.h"
+#include "mbedtls/pkcs5.h"
 
 int pbkdf2_hmac( md_context_t *ctx, const unsigned char *password, size_t plen,
                  const unsigned char *salt, size_t slen,
@@ -59,3 +62,5 @@ int pbkdf2_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_PBKDF2_C */
+
+#endif /* USE_MBEDTLS */

@@ -25,19 +25,22 @@
  *
  *  http://info.isl.ntt.co.jp/crypt/eng/camellia/dl/01espec.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_CAMELLIA_C)
 
-#include "polarssl/camellia.h"
+#include "mbedtls/camellia.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -1068,3 +1071,5 @@ int camellia_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_CAMELLIA_C */
+
+#endif /* USE_MBEDTLS */

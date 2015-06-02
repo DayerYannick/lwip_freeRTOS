@@ -21,17 +21,20 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_SSL_TLS_C)
 
-#include "polarssl/ssl_ciphersuites.h"
-#include "polarssl/ssl.h"
+#include "mbedtls/ssl_ciphersuites.h"
+#include "mbedtls/ssl.h"
 
 #include <stdlib.h>
 
@@ -1838,3 +1841,5 @@ int ssl_ciphersuite_uses_psk( const ssl_ciphersuite_t *info )
 #endif /* POLARSSL_KEY_EXCHANGE__SOME__PSK_ENABLED */
 
 #endif /* POLARSSL_SSL_TLS_C */
+
+#endif /* USE_MBEDTLS */

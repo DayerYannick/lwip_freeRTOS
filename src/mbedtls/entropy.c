@@ -19,24 +19,27 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ENTROPY_C)
 
-#include "polarssl/entropy.h"
-#include "polarssl/entropy_poll.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/entropy_poll.h"
 
 #if defined(POLARSSL_FS_IO)
 #include <stdio.h>
 #endif
 
 #if defined(POLARSSL_HAVEGE_C)
-#include "polarssl/havege.h"
+#include "mbedtls/havege.h"
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
@@ -380,7 +383,7 @@ int entropy_update_seed_file( entropy_context *ctx, const char *path )
 #if defined(POLARSSL_SELF_TEST)
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define polarssl_printf     printf
@@ -472,3 +475,5 @@ cleanup:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_ENTROPY_C */
+
+#endif /* USE_MBEDTLS */

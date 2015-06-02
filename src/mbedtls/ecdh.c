@@ -26,16 +26,19 @@
  * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
  * RFC 4492
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ECDH_C)
 
-#include "polarssl/ecdh.h"
+#include "mbedtls/ecdh.h"
 
 /*
  * Generate public key: simple wrapper around ecp_gen_keypair
@@ -275,3 +278,5 @@ int ecdh_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_ECDH_C */
+
+#endif /* USE_MBEDTLS */

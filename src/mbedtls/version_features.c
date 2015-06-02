@@ -19,16 +19,19 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_VERSION_C)
 
-#include "polarssl/version.h"
+#include "mbedtls/version.h"
 
 #include <string.h>
 
@@ -573,3 +576,5 @@ int version_check_feature( const char *feature )
 }
 
 #endif /* POLARSSL_VERSION_C */
+
+#endif /* USE_MBEDTLS */

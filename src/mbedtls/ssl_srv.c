@@ -19,23 +19,26 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_SSL_SRV_C)
 
-#include "polarssl/debug.h"
-#include "polarssl/ssl.h"
+#include "mbedtls/debug.h"
+#include "mbedtls/ssl.h"
 #if defined(POLARSSL_ECP_C)
-#include "polarssl/ecp.h"
+#include "mbedtls/ecp.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -3625,3 +3628,5 @@ int ssl_handshake_server_step( ssl_context *ssl )
     return( ret );
 }
 #endif /* POLARSSL_SSL_SRV_C */
+
+#endif /* USE_MBEDTLS */

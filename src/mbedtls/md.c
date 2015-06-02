@@ -23,17 +23,20 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_MD_C)
 
-#include "polarssl/md.h"
-#include "polarssl/md_wrap.h"
+#include "mbedtls/md.h"
+#include "mbedtls/md_wrap.h"
 
 #include <stdlib.h>
 
@@ -336,3 +339,5 @@ int md_process( md_context_t *ctx, const unsigned char *data )
 }
 
 #endif /* POLARSSL_MD_C */
+
+#endif /* USE_MBEDTLS */

@@ -53,7 +53,7 @@
 	#define KEEPALIVE_IDLE	5	/* Seconds */
 	#define KEEPALIVE_INTVL	1	/* Seconds */
 	#define KEEPALIVE_COUNT	10
-	#define USE_MBEDTLS 1
+	#define USE_MBEDTLS 1	/* Use encrypted communication */
 #endif
 
 

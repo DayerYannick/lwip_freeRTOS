@@ -19,16 +19,19 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ECP_C)
 
-#include "polarssl/ecp.h"
+#include "mbedtls/ecp.h"
 
 #if defined(_MSC_VER) && !defined(inline)
 #define inline _inline
@@ -1375,3 +1378,5 @@ static int ecp_mod_p256k1( mpi *N )
 #endif /* POLARSSL_ECP_DP_SECP256K1_ENABLED */
 
 #endif /* POLARSSL_ECP_C */
+
+#endif /* USE_MBEDTLS */

@@ -24,23 +24,26 @@
  *
  *  http://csrc.nist.gov/publications/fips/fips180-2/fips180-2.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_SHA512_C)
 
-#include "polarssl/sha512.h"
+#include "mbedtls/sha512.h"
 
 #if defined(POLARSSL_FS_IO) || defined(POLARSSL_SELF_TEST)
 #include <stdio.h>
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -791,3 +794,5 @@ exit:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_SHA512_C */
+
+#endif /* USE_MBEDTLS */

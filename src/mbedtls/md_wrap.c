@@ -23,47 +23,50 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_MD_C)
 
-#include "polarssl/md_wrap.h"
+#include "mbedtls/md_wrap.h"
 
 #if defined(POLARSSL_MD2_C)
-#include "polarssl/md2.h"
+#include "mbedtls/md2.h"
 #endif
 
 #if defined(POLARSSL_MD4_C)
-#include "polarssl/md4.h"
+#include "mbedtls/md4.h"
 #endif
 
 #if defined(POLARSSL_MD5_C)
-#include "polarssl/md5.h"
+#include "mbedtls/md5.h"
 #endif
 
 #if defined(POLARSSL_RIPEMD160_C)
-#include "polarssl/ripemd160.h"
+#include "mbedtls/ripemd160.h"
 #endif
 
 #if defined(POLARSSL_SHA1_C)
-#include "polarssl/sha1.h"
+#include "mbedtls/sha1.h"
 #endif
 
 #if defined(POLARSSL_SHA256_C)
-#include "polarssl/sha256.h"
+#include "mbedtls/sha256.h"
 #endif
 
 #if defined(POLARSSL_SHA512_C)
-#include "polarssl/sha512.h"
+#include "mbedtls/sha512.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -950,3 +953,5 @@ const md_info_t sha512_info = {
 #endif /* POLARSSL_SHA512_C */
 
 #endif /* POLARSSL_MD_C */
+
+#endif /* USE_MBEDTLS */

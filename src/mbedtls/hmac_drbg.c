@@ -25,23 +25,26 @@
  *  http://csrc.nist.gov/publications/nistpubs/800-90A/SP800-90A.pdf
  *  References below are based on rev. 1 (January 2012).
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_HMAC_DRBG_C)
 
-#include "polarssl/hmac_drbg.h"
+#include "mbedtls/hmac_drbg.h"
 
 #if defined(POLARSSL_FS_IO)
 #include <stdio.h>
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -497,3 +500,5 @@ int hmac_drbg_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_HMAC_DRBG_C */
+
+#endif /* USE_MBEDTLS */

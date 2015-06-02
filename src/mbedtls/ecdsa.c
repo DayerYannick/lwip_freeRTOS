@@ -25,20 +25,23 @@
  *
  * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ECDSA_C)
 
-#include "polarssl/ecdsa.h"
-#include "polarssl/asn1write.h"
+#include "mbedtls/ecdsa.h"
+#include "mbedtls/asn1write.h"
 
 #if defined(POLARSSL_ECDSA_DETERMINISTIC)
-#include "polarssl/hmac_drbg.h"
+#include "mbedtls/hmac_drbg.h"
 #endif
 
 #if defined(POLARSSL_ECDSA_DETERMINISTIC)
@@ -498,3 +501,5 @@ int ecdsa_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_ECDSA_C */
+
+#endif /* USE_MBEDTLS */

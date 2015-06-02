@@ -19,23 +19,26 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ASN1_PARSE_C)
 
-#include "polarssl/asn1.h"
+#include "mbedtls/asn1.h"
 
 #if defined(POLARSSL_BIGNUM_C)
-#include "polarssl/bignum.h"
+#include "mbedtls/bignum.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -393,3 +396,5 @@ asn1_named_data *asn1_find_named_data( asn1_named_data *list,
 }
 
 #endif /* POLARSSL_ASN1_PARSE_C */
+
+#endif /* USE_MBEDTLS */

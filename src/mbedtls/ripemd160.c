@@ -25,16 +25,19 @@
  *  http://homes.esat.kuleuven.be/~bosselae/ripemd160.html
  *  http://ehash.iaik.tugraz.at/wiki/RIPEMD-160
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_RIPEMD160_C)
 
-#include "polarssl/ripemd160.h"
+#include "mbedtls/ripemd160.h"
 
 #if defined(POLARSSL_FS_IO) || defined(POLARSSL_SELF_TEST)
 #include <stdio.h>
@@ -45,7 +48,7 @@
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -648,3 +651,5 @@ int ripemd160_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_RIPEMD160_C */
+
+#endif /* USE_MBEDTLS */

@@ -24,16 +24,19 @@
  * [AES-WP] http://software.intel.com/en-us/articles/intel-advanced-encryption-standard-aes-instructions-set
  * [CLMUL-WP] http://software.intel.com/en-us/articles/intel-carry-less-multiplication-instruction-and-its-usage-for-computing-the-gcm-mode/
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_AESNI_C)
 
-#include "polarssl/aesni.h"
+#include "mbedtls/aesni.h"
 #include <stdio.h>
 
 #if defined(POLARSSL_HAVE_X86_64)
@@ -458,3 +461,5 @@ int aesni_setkey_enc( unsigned char *rk,
 #endif /* POLARSSL_HAVE_X86_64 */
 
 #endif /* POLARSSL_AESNI_C */
+
+#endif /* USE_MBEDTLS */

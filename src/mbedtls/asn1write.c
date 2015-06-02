@@ -19,19 +19,22 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ASN1_WRITE_C)
 
-#include "polarssl/asn1write.h"
+#include "mbedtls/asn1write.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
 #define polarssl_malloc     malloc
@@ -361,3 +364,5 @@ asn1_named_data *asn1_store_named_data( asn1_named_data **head,
     return( cur );
 }
 #endif /* POLARSSL_ASN1_WRITE_C */
+
+#endif /* USE_MBEDTLS */

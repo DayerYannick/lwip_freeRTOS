@@ -25,27 +25,30 @@
  *  http://theory.lcs.mit.edu/~rivest/rsapaper.pdf
  *  http://www.cacr.math.uwaterloo.ca/hac/about/chap8.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_RSA_C)
 
-#include "polarssl/rsa.h"
-#include "polarssl/oid.h"
+#include "mbedtls/rsa.h"
+#include "mbedtls/oid.h"
 
 #if defined(POLARSSL_PKCS1_V21)
-#include "polarssl/md.h"
+#include "mbedtls/md.h"
 #endif
 
 #include <stdlib.h>
 #include <stdio.h>
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -1467,7 +1470,7 @@ void rsa_free( rsa_context *ctx )
 
 #if defined(POLARSSL_SELF_TEST)
 
-#include "polarssl/sha1.h"
+#include "mbedtls/sha1.h"
 
 /*
  * Example RSA-1024 keypair, for test purposes
@@ -1662,3 +1665,5 @@ cleanup:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_RSA_C */
+
+#endif /* USE_MBEDTLS */

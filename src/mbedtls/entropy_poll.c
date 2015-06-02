@@ -19,23 +19,26 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ENTROPY_C)
 
-#include "polarssl/entropy.h"
-#include "polarssl/entropy_poll.h"
+#include "mbedtls/entropy.h"
+#include "mbedtls/entropy_poll.h"
 
 #if defined(POLARSSL_TIMING_C)
-#include "polarssl/timing.h"
+#include "mbedtls/timing.h"
 #endif
 #if defined(POLARSSL_HAVEGE_C)
-#include "polarssl/havege.h"
+#include "mbedtls/havege.h"
 #endif
 
 #if !defined(POLARSSL_NO_PLATFORM_ENTROPY)
@@ -173,3 +176,5 @@ int havege_poll( void *data,
 #endif /* POLARSSL_HAVEGE_C */
 
 #endif /* POLARSSL_ENTROPY_C */
+
+#endif /* USE_MBEDTLS */

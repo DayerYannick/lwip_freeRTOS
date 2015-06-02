@@ -25,25 +25,28 @@
  *  http://csrc.nist.gov/encryption/aes/rijndael/Rijndael.pdf
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_AES_C)
 
-#include "polarssl/aes.h"
+#include "mbedtls/aes.h"
 #if defined(POLARSSL_PADLOCK_C)
-#include "polarssl/padlock.h"
+#include "mbedtls/padlock.h"
 #endif
 #if defined(POLARSSL_AESNI_C)
-#include "polarssl/aesni.h"
+#include "mbedtls/aesni.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -1449,3 +1452,5 @@ exit:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_AES_C */
+
+#endif /* USE_MBEDTLS */

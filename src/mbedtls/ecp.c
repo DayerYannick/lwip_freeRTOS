@@ -40,19 +40,22 @@
  *     ePrint Archive, 2004, vol. 2004, p. 342.
  *     <http://eprint.iacr.org/2004/342.pdf>
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_ECP_C)
 
-#include "polarssl/ecp.h"
+#include "mbedtls/ecp.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf     printf
 #define polarssl_malloc     malloc
@@ -2068,3 +2071,5 @@ cleanup:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_ECP_C */
+
+#endif /* USE_MBEDTLS */

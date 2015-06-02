@@ -19,16 +19,19 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
 
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 
 #if defined(POLARSSL_PLATFORM_MEMORY)
 #if !defined(POLARSSL_PLATFORM_STD_MALLOC)
@@ -111,3 +114,5 @@ int platform_set_fprintf( int (*fprintf_func)( FILE *, const char *, ... ) )
 #endif /* POLARSSL_PLATFORM_FPRINTF_ALT */
 
 #endif /* POLARSSL_PLATFORM_C */
+
+#endif /* USE_MBEDTLS */

@@ -25,16 +25,19 @@
  *  http://en.wikipedia.org/wiki/Blowfish_%28cipher%29
  *
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_BLOWFISH_C)
 
-#include "polarssl/blowfish.h"
+#include "mbedtls/blowfish.h"
 
 #if !defined(POLARSSL_BLOWFISH_ALT)
 
@@ -653,3 +656,5 @@ static const uint32_t S[4][256] = {
 
 #endif /* !POLARSSL_BLOWFISH_ALT */
 #endif /* POLARSSL_BLOWFISH_C */
+
+#endif /* USE_MBEDTLS */

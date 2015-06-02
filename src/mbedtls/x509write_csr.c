@@ -24,21 +24,24 @@
  * - CSRs: PKCS#10 v1.7 aka RFC 2986
  * - attributes: PKCS#9 v2.0 aka RFC 2985
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_X509_CSR_WRITE_C)
 
-#include "polarssl/x509_csr.h"
-#include "polarssl/oid.h"
-#include "polarssl/asn1write.h"
+#include "mbedtls/x509_csr.h"
+#include "mbedtls/oid.h"
+#include "mbedtls/asn1write.h"
 
 #if defined(POLARSSL_PEM_WRITE_C)
-#include "polarssl/pem.h"
+#include "mbedtls/pem.h"
 #endif
 
 #include <string.h>
@@ -255,3 +258,5 @@ int x509write_csr_pem( x509write_csr *ctx, unsigned char *buf, size_t size,
 #endif /* POLARSSL_PEM_WRITE_C */
 
 #endif /* POLARSSL_X509_CSR_WRITE_C */
+
+#endif /* USE_MBEDTLS */

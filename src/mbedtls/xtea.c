@@ -19,19 +19,22 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_XTEA_C)
 
-#include "polarssl/xtea.h"
+#include "mbedtls/xtea.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -278,3 +281,5 @@ exit:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_XTEA_C */
+
+#endif /* USE_MBEDTLS */

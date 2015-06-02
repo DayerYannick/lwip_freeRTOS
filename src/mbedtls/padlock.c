@@ -25,16 +25,19 @@
  *  http://www.via.com.tw/en/downloads/whitepapers/initiatives/padlock/
  *  programming_guide.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PADLOCK_C)
 
-#include "polarssl/padlock.h"
+#include "mbedtls/padlock.h"
 
 #if defined(POLARSSL_HAVE_X86)
 
@@ -163,3 +166,5 @@ int padlock_xcryptcbc( aes_context *ctx,
 #endif /* POLARSSL_HAVE_X86 */
 
 #endif /* POLARSSL_PADLOCK_C */
+
+#endif /* USE_MBEDTLS */

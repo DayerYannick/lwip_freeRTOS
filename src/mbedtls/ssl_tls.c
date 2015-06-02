@@ -27,25 +27,28 @@
  *  http://www.ietf.org/rfc/rfc2246.txt
  *  http://www.ietf.org/rfc/rfc4346.txt
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_SSL_TLS_C)
 
-#include "polarssl/debug.h"
-#include "polarssl/ssl.h"
+#include "mbedtls/debug.h"
+#include "mbedtls/ssl.h"
 
 #if defined(POLARSSL_X509_CRT_PARSE_C) && \
     defined(POLARSSL_X509_CHECK_EXTENDED_KEY_USAGE)
-#include "polarssl/oid.h"
+#include "mbedtls/oid.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_malloc     malloc
 #define polarssl_free       free
@@ -5269,3 +5272,5 @@ int ssl_check_cert_usage( const x509_crt *cert,
 #endif /* POLARSSL_X509_CRT_PARSE_C */
 
 #endif /* POLARSSL_SSL_TLS_C */
+
+#endif /* USE_MBEDTLS */

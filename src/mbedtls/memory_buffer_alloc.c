@@ -19,16 +19,19 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_MEMORY_BUFFER_ALLOC_C)
 
-#include "polarssl/memory_buffer_alloc.h"
+#include "mbedtls/memory_buffer_alloc.h"
 
 #include <string.h>
 
@@ -40,11 +43,11 @@
 #endif
 
 #if defined(POLARSSL_THREADING_C)
-#include "polarssl/threading.h"
+#include "mbedtls/threading.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_fprintf fprintf
 #endif
@@ -718,3 +721,5 @@ cleanup:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_MEMORY_BUFFER_ALLOC_C */
+
+#endif /* USE_MBEDTLS */

@@ -19,15 +19,18 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_SELF_TEST) && defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #include <stdio.h>
 #define polarssl_printf     printf
@@ -35,7 +38,7 @@
 
 #if defined(POLARSSL_TIMING_C) && !defined(POLARSSL_TIMING_ALT)
 
-#include "polarssl/timing.h"
+#include "mbedtls/timing.h"
 
 #if defined(_WIN32) && !defined(EFIX64) && !defined(EFI32)
 
@@ -331,7 +334,7 @@ void m_sleep( int milliseconds )
 
 /* To test net_usleep against our functions */
 #if defined(POLARSSL_NET_C) && defined(POLARSSL_HAVE_TIME)
-#include "polarssl/net.h"
+#include "mbedtls/net.h"
 #endif
 
 /*
@@ -496,3 +499,5 @@ hard_test:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_TIMING_C && !POLARSSL_TIMING_ALT */
+
+#endif /* USE_MBEDTLS */

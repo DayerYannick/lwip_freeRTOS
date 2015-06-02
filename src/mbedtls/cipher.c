@@ -23,24 +23,27 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_CIPHER_C)
 
-#include "polarssl/cipher.h"
-#include "polarssl/cipher_wrap.h"
+#include "mbedtls/cipher.h"
+#include "mbedtls/cipher_wrap.h"
 
 #if defined(POLARSSL_GCM_C)
-#include "polarssl/gcm.h"
+#include "mbedtls/gcm.h"
 #endif
 
 #if defined(POLARSSL_CCM_C)
-#include "polarssl/ccm.h"
+#include "mbedtls/ccm.h"
 #endif
 
 #include <stdlib.h>
@@ -912,3 +915,5 @@ int cipher_self_test( int verbose )
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_CIPHER_C */
+
+#endif /* USE_MBEDTLS */

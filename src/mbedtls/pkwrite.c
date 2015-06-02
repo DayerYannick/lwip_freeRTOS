@@ -19,34 +19,37 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PK_WRITE_C)
 
-#include "polarssl/pk.h"
-#include "polarssl/asn1write.h"
-#include "polarssl/oid.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/asn1write.h"
+#include "mbedtls/oid.h"
 
 #if defined(POLARSSL_RSA_C)
-#include "polarssl/rsa.h"
+#include "mbedtls/rsa.h"
 #endif
 #if defined(POLARSSL_ECP_C)
-#include "polarssl/ecp.h"
+#include "mbedtls/ecp.h"
 #endif
 #if defined(POLARSSL_ECDSA_C)
-#include "polarssl/ecdsa.h"
+#include "mbedtls/ecdsa.h"
 #endif
 #if defined(POLARSSL_PEM_WRITE_C)
-#include "polarssl/pem.h"
+#include "mbedtls/pem.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
 #define polarssl_malloc     malloc
@@ -436,3 +439,5 @@ int pk_write_key_pem( pk_context *key, unsigned char *buf, size_t size )
 #endif /* POLARSSL_PEM_WRITE_C */
 
 #endif /* POLARSSL_PK_WRITE_C */
+
+#endif /* USE_MBEDTLS */

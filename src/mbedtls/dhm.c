@@ -24,27 +24,30 @@
  *
  *  http://www.cacr.math.uwaterloo.ca/hac/ (chapter 12)
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_DHM_C)
 
-#include "polarssl/dhm.h"
+#include "mbedtls/dhm.h"
 
 #if defined(POLARSSL_PEM_PARSE_C)
-#include "polarssl/pem.h"
+#include "mbedtls/pem.h"
 #endif
 
 #if defined(POLARSSL_ASN1_PARSE_C)
-#include "polarssl/asn1.h"
+#include "mbedtls/asn1.h"
 #endif
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #include <stdlib.h>
 #define polarssl_printf     printf
@@ -549,7 +552,7 @@ int dhm_parse_dhmfile( dhm_context *dhm, const char *path )
 
 #if defined(POLARSSL_SELF_TEST)
 
-#include "polarssl/certs.h"
+#include "mbedtls/certs.h"
 
 /*
  * Checkup routine
@@ -593,3 +596,5 @@ exit:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_DHM_C */
+
+#endif /* USE_MBEDTLS */

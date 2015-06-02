@@ -26,17 +26,20 @@
  *
  *  Contact: seznec(at)irisa_dot_fr - orocheco(at)irisa_dot_fr
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_HAVEGE_C)
 
-#include "polarssl/havege.h"
-#include "polarssl/timing.h"
+#include "mbedtls/havege.h"
+#include "mbedtls/timing.h"
 
 #include <string.h>
 
@@ -242,3 +245,5 @@ int havege_random( void *p_rng, unsigned char *buf, size_t len )
 }
 
 #endif /* POLARSSL_HAVEGE_C */
+
+#endif /* USE_MBEDTLS */

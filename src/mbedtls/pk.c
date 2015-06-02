@@ -19,26 +19,29 @@
  *  with this program; if not, write to the Free Software Foundation, Inc.,
  *  51 Franklin Street, Fifth Floor, Boston, MA 02110-1301 USA.
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PK_C)
 
-#include "polarssl/pk.h"
-#include "polarssl/pk_wrap.h"
+#include "mbedtls/pk.h"
+#include "mbedtls/pk_wrap.h"
 
 #if defined(POLARSSL_RSA_C)
-#include "polarssl/rsa.h"
+#include "mbedtls/rsa.h"
 #endif
 #if defined(POLARSSL_ECP_C)
-#include "polarssl/ecp.h"
+#include "mbedtls/ecp.h"
 #endif
 #if defined(POLARSSL_ECDSA_C)
-#include "polarssl/ecdsa.h"
+#include "mbedtls/ecdsa.h"
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
@@ -372,3 +375,5 @@ pk_type_t pk_get_type( const pk_context *ctx )
 }
 
 #endif /* POLARSSL_PK_C */
+
+#endif /* USE_MBEDTLS */

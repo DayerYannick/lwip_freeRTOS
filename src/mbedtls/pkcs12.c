@@ -25,25 +25,28 @@
  *  http://www.rsa.com/rsalabs/pkcs/files/h11301-wp-pkcs-12v1-1-personal-information-exchange-syntax.pdf
  *  ftp://ftp.rsasecurity.com/pub/pkcs/pkcs-12/pkcs-12v1-1.asn
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_PKCS12_C)
 
-#include "polarssl/pkcs12.h"
-#include "polarssl/asn1.h"
-#include "polarssl/cipher.h"
+#include "mbedtls/pkcs12.h"
+#include "mbedtls/asn1.h"
+#include "mbedtls/cipher.h"
 
 #if defined(POLARSSL_ARC4_C)
-#include "polarssl/arc4.h"
+#include "mbedtls/arc4.h"
 #endif
 
 #if defined(POLARSSL_DES_C)
-#include "polarssl/des.h"
+#include "mbedtls/des.h"
 #endif
 
 /* Implementation that should never be optimized out by the compiler */
@@ -355,3 +358,5 @@ exit:
 }
 
 #endif /* POLARSSL_PKCS12_C */
+
+#endif /* USE_MBEDTLS */

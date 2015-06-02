@@ -25,19 +25,22 @@
  *
  *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
+ 
+#include "heivs/config"
+#if USE_MBEDTLS
 
 #if !defined(POLARSSL_CONFIG_FILE)
-#include "polarssl/config.h"
+#include "mbedtls/config.h"
 #else
 #include POLARSSL_CONFIG_FILE
 #endif
 
 #if defined(POLARSSL_DES_C)
 
-#include "polarssl/des.h"
+#include "mbedtls/des.h"
 
 #if defined(POLARSSL_PLATFORM_C)
-#include "polarssl/platform.h"
+#include "mbedtls/platform.h"
 #else
 #define polarssl_printf printf
 #endif
@@ -1052,3 +1055,5 @@ exit:
 #endif /* POLARSSL_SELF_TEST */
 
 #endif /* POLARSSL_DES_C */
+
+#endif /* USE_MBEDTLS */
