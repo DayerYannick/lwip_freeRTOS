@@ -95,7 +95,7 @@
  * this causes a declaration of a zero-sized array, for which the C compiler
  * behavior is not standardized and may cause misaligned data.
  ******************************************************************************/
-#define SYMBOL_TABLE_SIZE 200	/* 100 */
+#define SYMBOL_TABLE_SIZE 400	/* 100 */
 
 #if (SYMBOL_TABLE_SIZE == 0)
 #error "SYMBOL_TABLE_SIZE may not be zero!"

@@ -104,7 +104,7 @@ void clientTohttps_task(void* param);
 
 
 #if SERVER_TEST || LED_COMMAND_TEST || HTTP_SERVER_TEST || SECURE_SERVER_TEST
-#define ClNbMax 9
+#define ClNbMax 3
 volatile int s[ClNbMax];
 #endif
 
@@ -795,7 +795,7 @@ void lcd_task(void* param) {
 
 		wi.g.y = 10;
 		wi.g.x = 50;
-		wi.g.width = 150;
+		wi.g.width = 200;
 		wi.g.height = 20;
 
 		gwinLabelCreate(NULL, &wi);

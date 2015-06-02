@@ -114,8 +114,8 @@ typedef struct {
 } socket_t;
 socket_t Sock[MAX_SOCKET_NB];
 
-entropy_context entropy;
-ctr_drbg_context ctr_drbg;
+//entropy_context entropy;
+//ctr_drbg_context ctr_drbg;
 
 
 #if USE_MBEDTLS
@@ -139,29 +139,6 @@ int lwip_wait_events(const int event, int timeout) {
 
 #endif	/* USE_FREERTOS */
 
-
-/* temporary (probably) */
-int randomHelper2(void *data, unsigned char *output, size_t len, size_t *olen) {
-	int i, j, ret;
-	uint32_t tmp;
-
-	for(i=0; i<(len/4)-1; ++i) {
-		if((ret=random_get(((uint32_t*)output+i), 50)) != NO_ERROR)
-			return POLARSSL_ERR_ENTROPY_SOURCE_FAILED;
-	}
-
-	// fill the last bytes (if not multiple of 4)
-	if(random_get(&tmp, 50) != NO_ERROR)
-		return POLARSSL_ERR_ENTROPY_SOURCE_FAILED;
-	for(j=0; j<len%4; ++j)
-		output[(i*4)+j] = tmp & (0xFF<<(j*4)) >> (j*4);
-
-	printf("**Random.\n");
-
-	*olen = len;
-
-	return 0;
-}
 
 
 #if LWIP_DHCP
@@ -312,12 +289,25 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 
 #if USE_MBEDTLS
-	debug_set_threshold(0);	// 0: nothing, 4: everything
+	debug_set_threshold(4);	// 0: nothing, 4: everything	// XXX here...
 	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation instead
 	random_init();
-	entropy_init(&entropy);	// TODO : see if removable
+/*	entropy_init(&entropy);
 	ctr_drbg_init(&ctr_drbg, entropy_func, &entropy, (unsigned char*)"Random string", 13);
-	entropy_add_source(&entropy, randomHelper2, NULL, 10);
+	entropy_add_source(&entropy, randomHelper2, NULL, 0);
+	{
+#define lenTmp 50
+		unsigned char rand[lenTmp];
+		int i;
+		entropy_update_manual(&entropy, rand, lenTmp);
+		entropy_func(0, rand, lenTmp);
+		printf("rand: ");
+		for(i=0; i<lenTmp; ++i)
+			printf("%d, ", rand[i]);
+
+		printf("\n");
+	}
+*/
 #ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
 	memory_buffer_alloc_init(polarsslBuffer, sizeof(polarsslBuffer));
 #endif
@@ -723,14 +713,18 @@ int recvHelper(void* fd, unsigned char* buf, size_t len) {
 }
 
 int randomHelper(void* fd, unsigned char* buf, size_t len) {
+	const int timeout = 10;
 	int ret;
 	int i, j;
 	uint32_t tmp;
 
-	for(i=0; i<(len/4)-1; ++i) {
-		if((ret=random_get(((uint32_t*)buf+i), 50)) == NO_ERROR) {
+	printf("**Rand%d. t=%d\n", (int)len, (int)xTaskGetTickCount());
+
+	j = (len%4==0)?len/4:len/4-1;
+
+	for(i=0; i<j; ++i) {
+		if((ret=random_get(((uint32_t*)buf+i), timeout)) == NO_ERROR) {
 			ret = 0;
-			//printf("rn%d: %d\n", i, (int)((uint32_t*)buf)[i]);
 		}
 		else {
 			printf("Error in random_get: %d", ret);
@@ -739,14 +733,16 @@ int randomHelper(void* fd, unsigned char* buf, size_t len) {
 	}
 
 	// fill the last bytes (if not multiple of 4)
-	if((ret=random_get(&tmp, 50)) != NO_ERROR) {
-		printf("Error in random_get");
-		return -1;
+	if(len%4 != 0) {
+		if((ret=random_get(&tmp, timeout)) != NO_ERROR) {
+			printf("Error in random_get");
+			return -1;
+		}
+		for(j=0; j<len%4; ++j)
+			buf[(i*4)+j] = tmp & (0xFF<<(j*4)) >> (j*4);
 	}
-	for(j=0; j<len%4; ++j)
-		buf[(i*4)+j] = tmp & (0xFF<<(j*4)) >> (j*4);
 
-	printf("**Random.\n");
+	printf("**Rand end. t=%d\n", (int)xTaskGetTickCount());
 
 	return ret;
 }
@@ -804,8 +800,8 @@ int secureAccept(int socket) {	// FIXME
 	ssl_set_endpoint(Sock[clientSocket].ssl, SSL_IS_SERVER);
 	ssl_set_authmode(Sock[clientSocket].ssl, SSL_VERIFY_NONE);
 
-	ssl_set_rng(Sock[clientSocket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
-	//ssl_set_rng(Sock[clientSocket].ssl, randomHelper, 0);				// Using only the hardware RNG
+	//ssl_set_rng(Sock[clientSocket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
+	ssl_set_rng(Sock[clientSocket].ssl, randomHelper, 0);				// Using only the hardware RNG
 	ssl_set_dbg(Sock[clientSocket].ssl, sslDebugHelper, NULL);
 	ssl_set_bio(Sock[clientSocket].ssl, recvHelper, (void*)clientSocket, sendHelper, (void*)clientSocket);
 
@@ -864,8 +860,8 @@ int secureConnect(int socket, char* distantIP, int port) {
 	ssl_set_endpoint(Sock[socket].ssl, SSL_IS_CLIENT);
 	ssl_set_authmode(Sock[socket].ssl, SSL_VERIFY_NONE);
 
-	ssl_set_rng(Sock[socket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
-	//ssl_set_rng(Sock[socket].ssl, randomHelper, 0);	// TODO reset that...
+	//ssl_set_rng(Sock[socket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
+	ssl_set_rng(Sock[socket].ssl, randomHelper, 0);	// TODO reset that...
 	ssl_set_dbg(Sock[socket].ssl, sslDebugHelper, NULL);
 	ssl_set_bio(Sock[socket].ssl, recvHelper, (void*)socket, sendHelper, (void*)socket);
 
