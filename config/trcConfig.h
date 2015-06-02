@@ -48,7 +48,7 @@
  ******************************************************************************/
 
 /*******************************************************************************
- * EVENT_BUFFER_SIZE"TCP/IP STACK: SSL connnection test";
+ * EVENT_BUFFER_SIZE
  *
  * Macro which should be defined as an integer value.
  *
@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 200 /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 200	/*500*/ /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************
@@ -95,7 +95,7 @@
  * this causes a declaration of a zero-sized array, for which the C compiler
  * behavior is not standardized and may cause misaligned data.
  ******************************************************************************/
-#define SYMBOL_TABLE_SIZE 500	// 100
+#define SYMBOL_TABLE_SIZE 200	/* 100 */
 
 #if (SYMBOL_TABLE_SIZE == 0)
 #error "SYMBOL_TABLE_SIZE may not be zero!"
@@ -171,7 +171,7 @@
  *
  ******************************************************************************/
 #define NTask             16
-#define NISR              8
+#define NISR              80
 #define NQueue            16
 #define NSemaphore        15
 #define NMutex            15
