@@ -25,10 +25,12 @@ typedef UINT32 uint32_t;
 #include <inttypes.h>
 #endif
 
+#if defined(POLARSSL_MD5_ALT)
 
 #ifdef __cplusplus
 extern "C" {
 #endif
+
 
 /**
  * \brief          MD5 context structure
@@ -85,10 +87,12 @@ void md5_finish( md5_context *ctx, unsigned char output[16] );
 /* Internal use */
 void md5_process( md5_context *ctx, const unsigned char data[64] );
 
+
 #ifdef __cplusplus
 }
 #endif
 
+#endif /* defined(POLARSSL_MD5_ALT) */
 
 
 #endif /* md5.h */

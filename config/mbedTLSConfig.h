@@ -203,8 +203,8 @@
  * Uncomment a macro to enable alternate implementation for core algorithm
  * functions
  */
-// TODO use hardware CRYPT
-//#define POLARSSL_AES_ALT
+// TODO hardware CRYP and HASH modules
+#define POLARSSL_AES_ALT
 //#define POLARSSL_ARC4_ALT
 //#define POLARSSL_BLOWFISH_ALT
 //#define POLARSSL_CAMELLIA_ALT
