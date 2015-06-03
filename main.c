@@ -20,6 +20,7 @@
 
 
 #include "mbedtls/md5.h"
+#include "heivs/hash_md5.h"
 
 
 //-- Defines --//
@@ -68,7 +69,7 @@
 #endif
 
 
-#define MSG_LEN_MAX 200	/* The maximum length (in bytes) of a message received via TCP */
+#define MSG_LEN_MAX 2000	/* The maximum length (in bytes) of a message received via TCP */
 
 
 void main_task(void* param);
@@ -131,6 +132,7 @@ int main(int argc, char** argv) {
 	char hello[] = "Hello, world!";
  	printf("\n");
 
+
 #if DISPLAY_MSG_ON_LCD
  	LCD_msgQueue = xQueueCreateNamed(1, sizeof(queueLCDMsg_t), "LCD_msg queue");
 #endif
@@ -162,7 +164,7 @@ int main(int argc, char** argv) {
 	vTaskStartScheduler();	// Start FreeRTOS scheduler
 
 	return 0;
-}
+}	/* main */
 
 
 /*
@@ -220,7 +222,7 @@ void main_task(void* param) {
 
 #if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST || SECURE_SERVER_TEST
 
-	int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+4) * configMINIMAL_STACK_SIZE;
+	const int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+4) * configMINIMAL_STACK_SIZE;
 	socket = simpleSocket();
 	if(socket == -1)
 		printf("ERROR while creating socket\n");
@@ -270,7 +272,7 @@ void main_task(void* param) {
 
 	vTaskDelete(NULL);
 
-}
+}	/* main_task */
 
 
 #if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST
@@ -371,7 +373,7 @@ void clientHandle_task(void* param) {
 	s[i] = -1;
 
 	vTaskDelete(NULL);
-}
+} /* clientHandle_task */
 #endif
 
 #if CLIENT_TEST
@@ -411,7 +413,7 @@ void clientToIP_task(void* param) {
 			count = 0;
 		vTaskDelay(200);
 	}	// While(1)
-}
+}	/* clientToIP_task */
 
 #endif
 
@@ -490,7 +492,7 @@ void clientToIPSecured_task(void* param) {
 
 
 	}	// While(1)
-}
+}	/* clientToIPSecured_task */
 
 #endif
 
@@ -570,7 +572,7 @@ void clientHandle_task(void* param) {
 	s[i] = -1;
 
 	vTaskDelete(NULL);
-}
+}	/* clientHandle_task */
 #endif
 
 #if HTTP_TEST
@@ -630,7 +632,7 @@ void clientTohttp_task(void* param) {
 		// Wait 2s and restart
 		vTaskDelay(2000);
 	}
-}
+}	/* clientTohttp_task */
 #endif
 
 
@@ -703,7 +705,7 @@ void clientTohttps_task(void* param) {
 		vTaskDelay(2000);
 
 	}	// While(1)
-}
+}	/* clientTohttps_task */
 #endif
 
 void led_task(void* param) {
@@ -726,14 +728,13 @@ void led_task(void* param) {
 		}
 		vTaskDelay((float)ratems/1000 * configTICK_RATE_HZ);
 	}
-}
+}	/* led_task */
 
 #if USE_DISPLAY
 
 void lcd_task(void* param) {
 
 	GWidgetInit wi;
-	//GHandle ghButton;
 	GHandle ghStatus;
 	GHandle ghConsole;
 #if DISPLAY_MSG_ON_LCD
@@ -763,16 +764,6 @@ void lcd_task(void* param) {
 		wi.customStyle = 0;
 		wi.g.show = TRUE;
 
-/*		// Apply the button parameters
-		wi.g.width = 100;
-		wi.g.height = 30;
-		wi.g.y = 10;
-		wi.g.x = 10;
-		wi.text = "Push Button";
-
-		// Create the actual button
-		ghButton = gwinButtonCreate(0, &wi);
-*/
 
 		//-- TITLE --//
 #if SERVER_TEST
@@ -889,7 +880,7 @@ void lcd_task(void* param) {
 
 	}
 
-}
+}	/* lcd_task */
 
 #endif
 
@@ -912,6 +903,6 @@ void audio_task(void* param) {
 		Audio_PlaySin(audioMsg.pitch, audioMsg.duration);
 		//vTaskDelay(10*configTICK_RATE_HZ);
 	}
-}
+}	/* audio_task */
 #endif
 
