@@ -48,8 +48,8 @@
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
-#define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
-#define SECURE_SERVER_TEST 1
+#define SECURE_CLIENT_TEST 1	/* Connection to a secured server via TLS */
+#define SECURE_SERVER_TEST 0	/* Allows a client to connect via TLS */
 #define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 
 
@@ -455,6 +455,7 @@ void clientToIPSecured_task(void* param) {
 					snprintf(data, 25, "msg %3d from socket %1d\n", count, socket);
 					if(++count >= 1000)
 						count = 0;
+
 					printf("Client sending to IP: %s\n", data);
 
 	#if configUSE_TRACE_FACILITY
@@ -470,11 +471,15 @@ void clientToIPSecured_task(void* param) {
 						//do {
 							ret = secureRecv(socket, (unsigned char*)RData, 200);
 							if(ret < 0) {
-								printf("Error on recv on socket %d.\n", socket);
+								printf("Error on recv on socket %d: returned -%04X.\n", socket, -ret);
 								error = 1;
 							}
 							else if(ret != 0) {
 								printf("received %d char on socket %d: %.*s\n", ret, socket, ret, RData);
+							}
+							else {
+								printf("Recv returned EOF.\n");
+								error = 1;
 							}
 						//} while(ret>0);
 					}

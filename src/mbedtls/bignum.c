@@ -26,7 +26,7 @@
  *  http://www.stillhq.com/extracted/gnupg-api/mpi/
  *  http://math.libtomcrypt.com/files/tommath.pdf
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 

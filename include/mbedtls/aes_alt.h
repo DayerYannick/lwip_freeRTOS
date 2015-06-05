@@ -1,13 +1,13 @@
 /**
- * @file aes.h
+ * @file aes_alt.h
  *
  * @brief AES block cipher using the hardware CRYP module of the stm32f4 on the ARMEBS4 board
  *
  * @author Dayer Yannick
  *
  */
-#ifndef POLARSSL_AES_H
-#define POLARSSL_AES_H
+#ifndef POLARSSL_AES_ALT_H
+#define POLARSSL_AES_ALT_H
 
 #if !defined(POLARSSL_CONFIG_FILE)
 #include "config/mbedTLSConfig.h"
@@ -24,9 +24,10 @@ typedef UINT32 uint32_t;
 #include <inttypes.h>
 #endif
 
-/* padlock.c and aesni.c rely on these values! */
+#ifndef AES_ENCRYPT
 #define AES_ENCRYPT     1
 #define AES_DECRYPT     0
+#endif
 
 #define POLARSSL_ERR_AES_INVALID_KEY_LENGTH                -0x0020  /**< Invalid key length. */
 #define POLARSSL_ERR_AES_INVALID_INPUT_LENGTH              -0x0022  /**< Invalid data input length. */
@@ -47,9 +48,9 @@ extern "C" {
  */
 typedef struct
 {
-    int nr;                     /*!<  number of rounds  */
-    uint32_t *rk;               /*!<  AES round keys    */
-    uint32_t buf[68];           /*!<  unaligned data    */
+	int dir;	// AES_ENCRYPT: Encrypt, AES_DECRYPT: Decrypt (dir set by aes_setkey functions TODO remove if unnecessary)
+	size_t keySize;
+	unsigned char key[256];
 }
 aes_context;
 
@@ -113,7 +114,7 @@ int aes_crypt_ecb( aes_context *ctx,
  *                 size (16 bytes)
  *
  * \note           Upon exit, the content of the IV is updated so that you can
- *                 call the function same function again on the following
+ *                 call the same function again on the following
  *                 block(s) of data and get the same result as if it was
  *                 encrypted in one call. This allows a "streaming" usage.
  *                 If on the other hand you need to retain the contents of the
@@ -239,23 +240,7 @@ int aes_crypt_ctr( aes_context *ctx,
 }
 #endif
 
-#else  /* POLARSSL_AES_ALT */
-#include "aes_alt.h"
 #endif /* POLARSSL_AES_ALT */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
 
-/**
- * \brief          Checkup routine
- *
- * \return         0 if successful, or 1 if the test failed
- */
-int aes_self_test( int verbose );
-
-#ifdef __cplusplus
-}
-#endif
-
-#endif /* aes.h */
+#endif /* aes_alt.h */

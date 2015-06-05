@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 200	/*500*/ /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 1000	/*500*/ /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************
@@ -95,7 +95,7 @@
  * this causes a declaration of a zero-sized array, for which the C compiler
  * behavior is not standardized and may cause misaligned data.
  ******************************************************************************/
-#define SYMBOL_TABLE_SIZE 400	/* 100 */
+#define SYMBOL_TABLE_SIZE 1000	/* 100 */
 
 #if (SYMBOL_TABLE_SIZE == 0)
 #error "SYMBOL_TABLE_SIZE may not be zero!"
@@ -113,7 +113,7 @@
  * task instance named "Unknown actor". This is added as a placeholder when the
  * user event history is longer than the task scheduling history.
  ******************************************************************************/
-#define USE_SEPARATE_USER_EVENT_BUFFER 0
+#define USE_SEPARATE_USER_EVENT_BUFFER 1
 
 /*******************************************************************************
  * USER_EVENT_BUFFER_SIZE
@@ -125,7 +125,7 @@
  *
  * Only in use if USE_SEPARATE_USER_EVENT_BUFFER is set to 1.
  ******************************************************************************/
-#define USER_EVENT_BUFFER_SIZE 200
+#define USER_EVENT_BUFFER_SIZE 500
 
 /*******************************************************************************
  * USER_EVENT_CHANNELS

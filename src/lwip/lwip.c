@@ -548,9 +548,10 @@ void connectTask(void* param) {
 
 	xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN);	// The function returned.
 
+	vTaskDelete(NULL);
 	// The task sould be deleted now.
-	while(1)
-		vTaskDelay(100);
+	//while(1)
+	//	vTaskDelay(100);
 }
 
 int simpleConnect(int socket, char* distantIP, int port) {
@@ -576,7 +577,7 @@ int simpleConnect(int socket, char* distantIP, int port) {
 	//if(socket != -1) {
 
 	xSemaphoreTake(connectSema, portMAX_DELAY);
-	xTaskCreate(connectTask, "Connect Task", configMINIMAL_STACK_SIZE, (void*)params, uxTaskPriorityGet(NULL), &connectHandle);
+	xTaskCreate(connectTask, "Connect Task", configMINIMAL_STACK_SIZE, (void*)params, uxTaskPriorityGet(NULL), NULL);
 
 		uxBits = xEventGroupWaitBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN, pdTRUE, pdFALSE, CONNECT_TIMEOUT_VAL/portTICK_PERIOD_MS);
 		xSemaphoreGive(connectSema);
@@ -592,7 +593,6 @@ int simpleConnect(int socket, char* distantIP, int port) {
 			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED);
 			ret2 = ret;
 		}
-		vTaskDelete(connectHandle);
 	//}
 	//else {
 		//printf("Error: socket not found.\n");
@@ -694,7 +694,7 @@ char* getMyIP(void) {
 int sendHelper(void* fd, const unsigned char* buf, size_t len) {
 	//printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl send");
+	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl send");
 #endif
 	return simpleSend((int)fd, buf, len);
 }
@@ -702,12 +702,12 @@ int sendHelper(void* fd, const unsigned char* buf, size_t len) {
 int recvHelper(void* fd, unsigned char* buf, size_t len) {
 	int ret;
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl wait recv");
+	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv WAIT");
 #endif
 	ret = simpleRecv((int)fd, buf, len);
 	//printf("**ssl receiving %d char: \"%s\" on socket %d.\n", ret, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl recv");
+	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv END");
 #endif
 	return ret;
 }
@@ -718,7 +718,10 @@ int randomHelper(void* fd, unsigned char* buf, size_t len) {
 	int i, j;
 	uint32_t tmp;
 
-	printf("**Rand%d. t=%d\n", (int)len, (int)xTaskGetTickCount());
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS rand"), "Start len = %d", len);
+#endif
+	//printf("**Rand%d. t=%d\n", (int)len, (int)xTaskGetTickCount());
 
 	j = (len%4==0)?len/4:len/4-1;
 
@@ -742,6 +745,9 @@ int randomHelper(void* fd, unsigned char* buf, size_t len) {
 			buf[(i*4)+j] = tmp & (0xFF<<(j*4)) >> (j*4);
 	}
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS rand"), "END");
+#endif
 	printf("**Rand end. t=%d\n", (int)xTaskGetTickCount());
 
 	return ret;
@@ -791,6 +797,9 @@ int secureAccept(int socket) {	// FIXME
 	Sock[clientSocket].ssl = pvPortMalloc(sizeof(ssl_context));
 	memset(Sock[clientSocket].ssl, 0, sizeof(ssl_context));
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl init");
+#endif
 	if( (ret = ssl_init(Sock[clientSocket].ssl)) != 0) {
 		printf("Error in ssl_init.\n");
 		secureClose(clientSocket);
@@ -824,6 +833,10 @@ int secureAccept(int socket) {	// FIXME
 	if( (ssl_set_own_cert(Sock[clientSocket].ssl, &(Sock[clientSocket].cacert), &(Sock[clientSocket].pkey)) ) != 0)
 		printf("ssl_set_own_cert returned %d\n", ret);
 
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("mbedtls"), "handshake start");
+#endif
 	while((ret=ssl_handshake(Sock[clientSocket].ssl)) != 0) {
 		if(ret != POLARSSL_ERR_NET_WANT_READ && ret != POLARSSL_ERR_NET_WANT_WRITE) {
 			printf("Error: SSL_handshake: -0x%x.\n", -ret);
@@ -832,6 +845,9 @@ int secureAccept(int socket) {	// FIXME
 		}
 
 	}
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("mbedtls"), "handshake END");
+#endif
 
 	return clientSocket;
 }
@@ -853,15 +869,11 @@ int secureConnect(int socket, char* distantIP, int port) {
 		return ret;
 	}
 
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl set");
-#endif
-
 	ssl_set_endpoint(Sock[socket].ssl, SSL_IS_CLIENT);
 	ssl_set_authmode(Sock[socket].ssl, SSL_VERIFY_NONE);
 
 	//ssl_set_rng(Sock[socket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
-	ssl_set_rng(Sock[socket].ssl, randomHelper, 0);	// TODO reset that...
+	ssl_set_rng(Sock[socket].ssl, randomHelper, 0);	// True RNG via hardware
 	ssl_set_dbg(Sock[socket].ssl, sslDebugHelper, NULL);
 	ssl_set_bio(Sock[socket].ssl, recvHelper, (void*)socket, sendHelper, (void*)socket);
 
@@ -880,6 +892,9 @@ int secureConnect(int socket, char* distantIP, int port) {
 		}
 
 	}
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl handshake END");
+#endif
 
 
 	return 0;
