@@ -1451,7 +1451,7 @@
  *
  * This module provides the CTR_DRBG AES-256 random number generator.
  */
-#define POLARSSL_CTR_DRBG_C	// Removed by Dayer. The stm32F417 has a Hardware random number generator. (using thermal noise) //readded temporarily
+//#define POLARSSL_CTR_DRBG_C	// Removed by Dayer. The stm32F417 has a Hardware random number generator. (using thermal noise) //readded temporarily
 
 /**
  * \def POLARSSL_DEBUG_C

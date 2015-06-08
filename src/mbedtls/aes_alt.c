@@ -34,6 +34,8 @@
 #include "stm32/stm32f4xx_rcc.h"
 #include "stm32/stm32f4xx_cryp.h"
 
+#include "freertos/FreeRTOS.h"
+
 /* Implementation that should never be optimized out by the compiler */
 static void polarssl_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
@@ -103,7 +105,7 @@ int aes_crypt_ecb( aes_context *ctx,
                     const unsigned char input[16],
                     unsigned char output[16] )
 {
-
+/* DEBUG */
 	if(mode == AES_ENCRYPT) {
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("TLS AES"), "Encrypt ECB");
@@ -116,6 +118,7 @@ int aes_crypt_ecb( aes_context *ctx,
 #endif
 		//printf("AES ecb: decrypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
 	}
+/* END DEBUG */
 
 	if(ctx->dir != mode)
 		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");

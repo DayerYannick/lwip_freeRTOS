@@ -25,7 +25,7 @@
  *  http://csrc.nist.gov/encryption/aes/rijndael/Rijndael.pdf
  *  http://csrc.nist.gov/publications/fips/fips197/fips-197.pdf
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 

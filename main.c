@@ -34,7 +34,7 @@
 #define MY_GW "192.168.1.1"
 #define PC_IP "192.168.1.2"
 #else
-#define PC_IP "153.109.5.159"
+#define PC_IP "153.109.5.178"
 #endif
 
 #define TCP_PORT 4433
@@ -423,7 +423,7 @@ void clientToIPSecured_task(void* param) {
 	int socket;
 	int count=0;
 	int ret;
-	char data[25];
+	char data[30];
 	char RData[200];
 	int error = 0;
 
@@ -452,7 +452,8 @@ void clientToIPSecured_task(void* param) {
 			}
 			else {
 				while(error == 0) {
-					snprintf(data, 25, "msg %3d from socket %1d\n", count, socket);
+					snprintf(data, 30, "GET localhost http/1.0 \n\r\n\r");
+					//snprintf(data, 27, "msg %3d from socket %1d \n\r\n\r", count, socket);
 					if(++count >= 1000)
 						count = 0;
 
@@ -471,14 +472,20 @@ void clientToIPSecured_task(void* param) {
 						//do {
 							ret = secureRecv(socket, (unsigned char*)RData, 200);
 							if(ret < 0) {
-								printf("Error on recv on socket %d: returned -%04X.\n", socket, -ret);
+								switch(-ret) {
+								case 0x7880:
+									printf("Server notified that the connection is going to be closed.\n");
+									break;
+								default:
+									printf("Error on recv on socket %d: returned -%04X.\n", socket, -ret);
+								}
 								error = 1;
 							}
 							else if(ret != 0) {
 								printf("received %d char on socket %d: %.*s\n", ret, socket, ret, RData);
 							}
 							else {
-								printf("Recv returned EOF.\n");
+								printf("Recv returned 0 char on socket %d.\n", socket);
 								error = 1;
 							}
 						//} while(ret>0);

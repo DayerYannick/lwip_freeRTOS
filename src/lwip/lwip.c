@@ -408,6 +408,10 @@ int simpleSocket() {
 
 	socket = lwip_socket(AF_INET, SOCK_STREAM, 0);	// Create the socket
 
+	if(socket > MAX_SOCKET_NB) {
+		printf("Lwip: too many sockets!\n");
+		return -1;
+	}
 
 	if(socket >= 0) {
 		Sock[socket].events = xEventGroupCreate();
@@ -765,6 +769,8 @@ int secureSocket() {
 	if(socket < 0)
 		return socket;
 
+	Sock[socket].ssl = NULL;
+
 	return socket;
 }
 
@@ -802,6 +808,8 @@ int secureAccept(int socket) {	// FIXME
 #endif
 	if( (ret = ssl_init(Sock[clientSocket].ssl)) != 0) {
 		printf("Error in ssl_init.\n");
+		vPortFree(Sock[clientSocket].ssl);	// Cancel the malloc
+		Sock[clientSocket].ssl = NULL;
 		secureClose(clientSocket);
 		return ret;
 	}
@@ -952,13 +960,21 @@ int secureRecv(int socket, unsigned char* data, size_t maxLength) {
 
 int secureClose(int socket) {
 
+	printf("SecureSocket close\n");
 
 	if(socket >= 0) {
 
-		ssl_free(Sock[socket].ssl);
-	//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));
-		vPortFree(Sock[socket].ssl);
+		if(Sock[socket].ssl != NULL) {
+			printf("ssl_free()\n");
+			ssl_free(Sock[socket].ssl);
+		//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO see if
+			printf("free(ssl_context)\n");
+			vPortFree(Sock[socket].ssl);
+			Sock[socket].ssl = NULL;
+		}
 	}
+
+	printf("SimpleClose\n");
 	return simpleClose(socket);
 }
 
