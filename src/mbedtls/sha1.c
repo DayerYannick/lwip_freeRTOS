@@ -24,7 +24,7 @@
  *
  *  http://www.itl.nist.gov/fipspubs/fip180-1.htm
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 
@@ -48,12 +48,12 @@
 #define polarssl_printf printf
 #endif
 
+#if !defined(POLARSSL_SHA1_ALT)
+
 /* Implementation that should never be optimized out by the compiler */
 static void polarssl_zeroize( void *v, size_t n ) {
     volatile unsigned char *p = v; while( n-- ) *p++ = 0;
 }
-
-#if !defined(POLARSSL_SHA1_ALT)
 
 /*
  * 32-bit integer manipulation macros (big endian)
@@ -339,55 +339,11 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] )
     PUT_UINT32_BE( ctx->state[4], output, 16 );
 }
 
-#endif /* !POLARSSL_SHA1_ALT */
+
 
 /*
- * output = SHA-1( input buffer )
+ * HMAC SHA-1
  */
-void sha1( const unsigned char *input, size_t ilen, unsigned char output[20] )
-{
-    sha1_context ctx;
-
-    sha1_init( &ctx );
-    sha1_starts( &ctx );
-    sha1_update( &ctx, input, ilen );
-    sha1_finish( &ctx, output );
-    sha1_free( &ctx );
-}
-
-#if defined(POLARSSL_FS_IO)
-/*
- * output = SHA-1( file contents )
- */
-int sha1_file( const char *path, unsigned char output[20] )
-{
-    FILE *f;
-    size_t n;
-    sha1_context ctx;
-    unsigned char buf[1024];
-
-    if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( POLARSSL_ERR_SHA1_FILE_IO_ERROR );
-
-    sha1_init( &ctx );
-    sha1_starts( &ctx );
-
-    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
-        sha1_update( &ctx, buf, n );
-
-    sha1_finish( &ctx, output );
-    sha1_free( &ctx );
-
-    if( ferror( f ) != 0 )
-    {
-        fclose( f );
-        return( POLARSSL_ERR_SHA1_FILE_IO_ERROR );
-    }
-
-    fclose( f );
-    return( 0 );
-}
-#endif /* POLARSSL_FS_IO */
 
 /*
  * SHA-1 HMAC context setup
@@ -453,6 +409,57 @@ void sha1_hmac_reset( sha1_context *ctx )
     sha1_starts( ctx );
     sha1_update( ctx, ctx->ipad, 64 );
 }
+
+#endif /* !POLARSSL_SHA1_ALT */
+
+/*
+ * output = SHA-1( input buffer )
+ */
+void sha1( const unsigned char *input, size_t ilen, unsigned char output[20] )
+{
+    sha1_context ctx;
+
+    sha1_init( &ctx );
+    sha1_starts( &ctx );
+    sha1_update( &ctx, input, ilen );
+    sha1_finish( &ctx, output );
+    sha1_free( &ctx );
+}
+
+#if defined(POLARSSL_FS_IO)
+/*
+ * output = SHA-1( file contents )
+ */
+int sha1_file( const char *path, unsigned char output[20] )
+{
+    FILE *f;
+    size_t n;
+    sha1_context ctx;
+    unsigned char buf[1024];
+
+    if( ( f = fopen( path, "rb" ) ) == NULL )
+        return( POLARSSL_ERR_SHA1_FILE_IO_ERROR );
+
+    sha1_init( &ctx );
+    sha1_starts( &ctx );
+
+    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
+        sha1_update( &ctx, buf, n );
+
+    sha1_finish( &ctx, output );
+    sha1_free( &ctx );
+
+    if( ferror( f ) != 0 )
+    {
+        fclose( f );
+        return( POLARSSL_ERR_SHA1_FILE_IO_ERROR );
+    }
+
+    fclose( f );
+    return( 0 );
+}
+#endif /* POLARSSL_FS_IO */
+
 
 /*
  * output = HMAC-SHA-1( hmac key, input buffer )

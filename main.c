@@ -20,7 +20,7 @@
 
 
 #include "mbedtls/md5.h"
-#include "heivs/hash_md5.h"
+#include "mbedtls/sha1.h"
 
 
 //-- Defines --//
@@ -48,8 +48,8 @@
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
-#define SECURE_CLIENT_TEST 1	/* Connection to a secured server via TLS */
-#define SECURE_SERVER_TEST 0	/* Allows a client to connect via TLS */
+#define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
+#define SECURE_SERVER_TEST 1	/* Allows a client to connect via TLS */
 #define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 
 
@@ -128,7 +128,7 @@ typedef struct {
 
 int main(int argc, char** argv) {
 	int i;
-	unsigned char digest[16];
+	unsigned char digest[20];
 	char hello[] = "Hello, world!";
  	printf("\n");
 
@@ -147,6 +147,16 @@ int main(int argc, char** argv) {
  	md5( (unsigned char*)hello, 13, digest);
 
  	for(i=0; i<16; ++i) {
+ 		printf("%02x", digest[i]);
+ 	}
+
+ 	printf("\n");
+
+ 	printf("SHA1('%s') = ", hello);
+
+ 	sha1( (unsigned char*)hello, 13, digest);
+
+ 	for(i=0; i<20; ++i) {
  		printf("%02x", digest[i]);
  	}
 
@@ -452,7 +462,7 @@ void clientToIPSecured_task(void* param) {
 			}
 			else {
 				while(error == 0) {
-					snprintf(data, 30, "GET localhost http/1.0 \n\r\n\r");
+					snprintf(data, 30, "GET localhost http/1.0 \r\n\r\n");
 					//snprintf(data, 27, "msg %3d from socket %1d \n\r\n\r", count, socket);
 					if(++count >= 1000)
 						count = 0;
@@ -462,7 +472,8 @@ void clientToIPSecured_task(void* param) {
 	#if configUSE_TRACE_FACILITY
 					vTracePrintF(xTraceOpenLabel("SecuClient"), "send");
 	#endif
-					ret = secureSendStr(socket, (unsigned char*)data);
+					//ret = secureSendStr(socket, (unsigned char*)data);
+					ret = secureSend(socket, (unsigned char*)data, 27);
 
 					if(ret < 0) {
 						printf("Error on send on socket %d.\n", socket);
@@ -540,8 +551,8 @@ void clientHandle_task(void* param) {
 	while(1) {
 		ret = secureRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
 
-		if(ret == -1) {
-			printf("error with client %d\n", i);
+		if(ret < 0) {
+			printf("error with client %d: returned -0x%X\n", i, -ret);
 			break;
 		}
 		else if(ret == 0)
@@ -564,6 +575,8 @@ void clientHandle_task(void* param) {
 #if USE_AUDIO
 			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
 #endif
+
+			secureSendStr(s[i], "OK!");
 
 		}
 	}

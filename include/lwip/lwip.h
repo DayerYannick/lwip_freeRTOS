@@ -152,7 +152,7 @@ int lwip_wait_events(const int event, int timeout);
  *
  *	@return -1 if error
  */
-	int simpleSendStr(int socket, const unsigned char* data);
+	int simpleSendStr(int socket, const char* data);
 
 /**
  *	@brief returns when some data were received
@@ -207,7 +207,7 @@ char* getMyIP(void);
 
 	int secureSend(int socket, const unsigned char* data, size_t length);
 
-	int secureSendStr(int socket, const unsigned char* data);
+	int secureSendStr(int socket, const char* data);
 
 	int secureRecv(int socket, unsigned char* data, size_t maxLength);
 

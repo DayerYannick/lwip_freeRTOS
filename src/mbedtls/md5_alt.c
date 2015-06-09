@@ -76,7 +76,7 @@ void md5_finish( md5_context *ctx, unsigned char output[16] ) {
 
 
 void md5_process( md5_context *ctx, const unsigned char data[64] ) {
-	printf("md5 process should not be called (Internal use).");
+	printf("md5_process should not be called (Internal use).");
 }
 
 #endif /* POLARSSL_MD5_ALT */

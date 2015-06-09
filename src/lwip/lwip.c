@@ -640,13 +640,13 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 	return ret;
 }
 
-int simpleSendStr(int socket, const unsigned char* data) {
+int simpleSendStr(int socket, const char* data) {
 	int length;
 
 	for(length = 0; data[length] != '\0'; ++length);
 	++length;
 
-	return simpleSend(socket, (void*)data, length);
+	return simpleSend(socket, (unsigned char*)data, length);
 }
 
 int simpleRecv(int socket, unsigned char* data, size_t maxLength) {
@@ -674,7 +674,9 @@ int simpleClose(int socket) {
 
 	vEventGroupDelete(Sock[socket].events);
 
+	printf("lwip_close\n");
 	ret = lwip_close(socket);
+	printf("lwip_close OUT\n");
 
 
 	return ret;
@@ -693,10 +695,15 @@ char* getMyIP(void) {
 }
 
 
+/*
+ * MBED TLS
+ *
+ */
+
 #if USE_MBEDTLS && USE_FREERTOS
 
 int sendHelper(void* fd, const unsigned char* buf, size_t len) {
-	//printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
+	printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl send");
 #endif
@@ -709,7 +716,7 @@ int recvHelper(void* fd, unsigned char* buf, size_t len) {
 	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv WAIT");
 #endif
 	ret = simpleRecv((int)fd, buf, len);
-	//printf("**ssl receiving %d char: \"%s\" on socket %d.\n", ret, buf, (int) fd);
+	printf("**ssl receiving %d char: \"%s\" on socket %d.\n", ret, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv END");
 #endif
@@ -941,13 +948,13 @@ int secureSend(int socket, const unsigned char* data, size_t length) {
 	return ret;
 }
 
-int secureSendStr(int socket, const unsigned char* data) {
+int secureSendStr(int socket, const char* data) {
 	int length;
 
 	for(length = 0; data[length] != '\0'; ++length);
 	++length;
 
-	return secureSend(socket, data, length);
+	return secureSend(socket, (unsigned char*)data, length);
 }
 
 int secureRecv(int socket, unsigned char* data, size_t maxLength) {
@@ -960,6 +967,7 @@ int secureRecv(int socket, unsigned char* data, size_t maxLength) {
 
 int secureClose(int socket) {
 
+	int ret;
 	printf("SecureSocket close\n");
 
 	if(socket >= 0) {
@@ -975,7 +983,9 @@ int secureClose(int socket) {
 	}
 
 	printf("SimpleClose\n");
-	return simpleClose(socket);
+	ret = simpleClose(socket);
+	printf("SimpleClose OUT\n");
+	return ret;
 }
 
 #endif	// USE_MBEDTLS && USE_FREERTOS

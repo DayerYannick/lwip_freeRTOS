@@ -1293,7 +1293,7 @@
  * sys_mbox_new() when tcpip_init is called.
  */
 #ifndef TCPIP_MBOX_SIZE
-#define TCPIP_MBOX_SIZE                 0
+#define TCPIP_MBOX_SIZE                 2
 #endif
 
 /**

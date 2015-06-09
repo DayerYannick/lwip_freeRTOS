@@ -104,36 +104,11 @@ void sha1_finish( sha1_context *ctx, unsigned char output[20] );
 /* Internal use */
 void sha1_process( sha1_context *ctx, const unsigned char data[64] );
 
-#ifdef __cplusplus
-}
-#endif
 
-#else  /* POLARSSL_SHA1_ALT */
-#include "sha1_alt.h"
-#endif /* POLARSSL_SHA1_ALT */
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * \brief          Output = SHA-1( input buffer )
- *
- * \param input    buffer holding the  data
- * \param ilen     length of the input data
- * \param output   SHA-1 checksum result
+/*
+ * HMAC SHA-1
  */
-void sha1( const unsigned char *input, size_t ilen, unsigned char output[20] );
-
-/**
- * \brief          Output = SHA-1( file contents )
- *
- * \param path     input file name
- * \param output   SHA-1 checksum result
- *
- * \return         0 if successful, or POLARSSL_ERR_SHA1_FILE_IO_ERROR
- */
-int sha1_file( const char *path, unsigned char output[20] );
 
 /**
  * \brief          SHA-1 HMAC context setup
@@ -169,6 +144,38 @@ void sha1_hmac_finish( sha1_context *ctx, unsigned char output[20] );
  * \param ctx      HMAC context to be reset
  */
 void sha1_hmac_reset( sha1_context *ctx );
+
+#ifdef __cplusplus
+}
+#endif
+
+#else  /* POLARSSL_SHA1_ALT */
+#include "sha1_alt.h"
+#endif /* POLARSSL_SHA1_ALT */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \brief          Output = SHA-1( input buffer )
+ *
+ * \param input    buffer holding the  data
+ * \param ilen     length of the input data
+ * \param output   SHA-1 checksum result
+ */
+void sha1( const unsigned char *input, size_t ilen, unsigned char output[20] );
+
+/**
+ * \brief          Output = SHA-1( file contents )
+ *
+ * \param path     input file name
+ * \param output   SHA-1 checksum result
+ *
+ * \return         0 if successful, or POLARSSL_ERR_SHA1_FILE_IO_ERROR
+ */
+int sha1_file( const char *path, unsigned char output[20] );
+
 
 /**
  * \brief          Output = HMAC-SHA-1( hmac key, input buffer )

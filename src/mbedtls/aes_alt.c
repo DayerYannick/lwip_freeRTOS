@@ -16,6 +16,7 @@
 #if defined(POLARSSL_AES_C)
 
 #include "mbedtls/aes_alt.h"
+
 #if defined(POLARSSL_PADLOCK_C)
 #include "mbedtls/padlock.h"
 #endif
@@ -155,6 +156,9 @@ int aes_crypt_cbc( aes_context *ctx,
 
 	if(ctx->dir != mode)
 		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");
+
+	if(length%16)
+		return POLARSSL_ERR_AES_INVALID_INPUT_LENGTH;
 
 	if( CRYP_AES_CBC(mode, (uint8_t*)iv, ctx->key, ctx->keySize, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_CBC.\n");
