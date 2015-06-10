@@ -24,7 +24,7 @@
  *
  *  http://www.ietf.org/rfc/rfc1321.txt
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 
@@ -306,56 +306,6 @@ void md5_finish( md5_context *ctx, unsigned char output[16] )
     PUT_UINT32_LE( ctx->state[3], output, 12 );
 }
 
-#endif /* !POLARSSL_MD5_ALT */
-
-/*
- * output = MD5( input buffer )
- */
-void md5( const unsigned char *input, size_t ilen, unsigned char output[16] )
-{
-    md5_context ctx;
-
-    md5_init( &ctx );
-    md5_starts( &ctx );
-    md5_update( &ctx, input, ilen );
-    md5_finish( &ctx, output );
-    md5_free( &ctx );
-}
-
-#if defined(POLARSSL_FS_IO)
-/*
- * output = MD5( file contents )
- */
-int md5_file( const char *path, unsigned char output[16] )
-{
-    FILE *f;
-    size_t n;
-    md5_context ctx;
-    unsigned char buf[1024];
-
-    if( ( f = fopen( path, "rb" ) ) == NULL )
-        return( POLARSSL_ERR_MD5_FILE_IO_ERROR );
-
-    md5_init( &ctx );
-    md5_starts( &ctx );
-
-    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
-        md5_update( &ctx, buf, n );
-
-    md5_finish( &ctx, output );
-    md5_free( &ctx );
-
-    if( ferror( f ) != 0 )
-    {
-        fclose( f );
-        return( POLARSSL_ERR_MD5_FILE_IO_ERROR );
-    }
-
-    fclose( f );
-    return( 0 );
-}
-#endif /* POLARSSL_FS_IO */
-
 /*
  * MD5 HMAC context setup
  */
@@ -420,6 +370,58 @@ void md5_hmac_reset( md5_context *ctx )
     md5_starts( ctx );
     md5_update( ctx, ctx->ipad, 64 );
 }
+
+
+#endif /* !POLARSSL_MD5_ALT */
+
+/*
+ * output = MD5( input buffer )
+ */
+void md5( const unsigned char *input, size_t ilen, unsigned char output[16] )
+{
+    md5_context ctx;
+
+    md5_init( &ctx );
+    md5_starts( &ctx );
+    md5_update( &ctx, input, ilen );
+    md5_finish( &ctx, output );
+    md5_free( &ctx );
+}
+
+#if defined(POLARSSL_FS_IO)
+/*
+ * output = MD5( file contents )
+ */
+int md5_file( const char *path, unsigned char output[16] )
+{
+    FILE *f;
+    size_t n;
+    md5_context ctx;
+    unsigned char buf[1024];
+
+    if( ( f = fopen( path, "rb" ) ) == NULL )
+        return( POLARSSL_ERR_MD5_FILE_IO_ERROR );
+
+    md5_init( &ctx );
+    md5_starts( &ctx );
+
+    while( ( n = fread( buf, 1, sizeof( buf ), f ) ) > 0 )
+        md5_update( &ctx, buf, n );
+
+    md5_finish( &ctx, output );
+    md5_free( &ctx );
+
+    if( ferror( f ) != 0 )
+    {
+        fclose( f );
+        return( POLARSSL_ERR_MD5_FILE_IO_ERROR );
+    }
+
+    fclose( f );
+    return( 0 );
+}
+#endif /* POLARSSL_FS_IO */
+
 
 /*
  * output = HMAC-MD5( hmac key, input buffer )

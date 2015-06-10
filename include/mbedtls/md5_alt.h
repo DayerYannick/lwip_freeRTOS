@@ -37,12 +37,9 @@ extern "C" {
  */
 typedef struct
 {
-    uint32_t total[2];          /*!< number of bytes processed  */
-    uint32_t state[4];          /*!< intermediate digest state  */
-    unsigned char buffer[64];   /*!< data block being processed */
-
-    unsigned char ipad[64];     /*!< HMAC: inner padding        */
-    unsigned char opad[64];     /*!< HMAC: outer padding        */
+    unsigned char buffer[16];	/* holds the digest until finish() is called */
+    uint8_t key[64];
+    uint8_t keyLen;
 }
 md5_context;
 
@@ -87,6 +84,48 @@ void md5_finish( md5_context *ctx, unsigned char output[16] );
 /* Internal use */
 void md5_process( md5_context *ctx, const unsigned char data[64] );
 
+
+
+/* MD5 HMAC */
+
+/* Internal use */
+void md5_process( md5_context *ctx, const unsigned char data[64] );
+
+
+/**
+ * \brief          MD5 HMAC context setup
+ *
+ * \param ctx      HMAC context to be initialized
+ * \param key      HMAC secret key
+ * \param keylen   length of the HMAC key
+ */
+void md5_hmac_starts( md5_context *ctx,
+                      const unsigned char *key, size_t keylen );
+
+/**
+ * \brief          MD5 HMAC process buffer
+ *
+ * \param ctx      HMAC context
+ * \param input    buffer holding the  data
+ * \param ilen     length of the input data
+ */
+void md5_hmac_update( md5_context *ctx,
+                      const unsigned char *input, size_t ilen );
+
+/**
+ * \brief          MD5 HMAC final digest
+ *
+ * \param ctx      HMAC context
+ * \param output   MD5 HMAC checksum result
+ */
+void md5_hmac_finish( md5_context *ctx, unsigned char output[16] );
+
+/**
+ * \brief          MD5 HMAC context reset
+ *
+ * \param ctx      HMAC context to be reset
+ */
+void md5_hmac_reset( md5_context *ctx );
 
 #ifdef __cplusplus
 }

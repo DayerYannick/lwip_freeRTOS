@@ -50,7 +50,7 @@ typedef struct
 {
 	int dir;	// AES_ENCRYPT: Encrypt, AES_DECRYPT: Decrypt (dir set by aes_setkey functions TODO remove if unnecessary)
 	size_t keySize;
-	unsigned char key[256];
+	unsigned char key[32];
 }
 aes_context;
 

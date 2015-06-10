@@ -279,7 +279,7 @@ int des3_crypt_cbc( des3_context *ctx,
                      const unsigned char *input,
                      unsigned char *output )
 {
-   uint8_t constResp;
+   uint8_t* constResp;
    constResp = pvPortMalloc(length);
 
    CRYP_TDES_CBC(mode, ctx->key, iv, constResp, length, output);

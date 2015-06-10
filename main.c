@@ -21,7 +21,8 @@
 
 #include "mbedtls/md5.h"
 #include "mbedtls/sha1.h"
-
+#include "mbedtls/des.h"
+#include "mbedtls/aes.h"
 
 //-- Defines --//
 
@@ -132,6 +133,11 @@ int main(int argc, char** argv) {
 	char hello[] = "Hello, world!";
  	printf("\n");
 
+/*
+ * TEMPORARY TESTS
+ * MD5, SHA1, DES, 3DES, AES
+ */
+
 
 #if DISPLAY_MSG_ON_LCD
  	LCD_msgQueue = xQueueCreateNamed(1, sizeof(queueLCDMsg_t), "LCD_msg queue");
@@ -173,8 +179,79 @@ int main(int argc, char** argv) {
  		printf("%02x", digest[i]);
  	}
 
- 	printf("\n\n");
+ 	printf("\n");
 
+ 	{
+ 		unsigned char output[8];
+ 		des_context ctx;
+ 		des_init(&ctx);
+#if configUSE_TRACE_FACILITY
+ 		vTracePrintF(xTraceOpenLabel("speed"), "des_ecb start");
+#endif
+		des_setkey_enc(&ctx, (unsigned char*)"15935746");
+		des_crypt_ecb(&ctx, (unsigned char*)"datatocr", output);
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("speed"), "des_ecb end");
+#endif
+
+		printf("des(\"datatocr\", \"15935746\") = ");
+
+	 	for(i=0; i<8; ++i) {
+	 		printf("%02x", output[i]);
+	 	}
+
+	 	printf("\n");
+ 	}
+
+
+ 	{
+ 		unsigned char output[8];
+ 		des3_context ctx;
+ 		des3_init(&ctx);
+#if configUSE_TRACE_FACILITY
+ 		vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb start");
+#endif
+		des3_set3key_enc(&ctx, (unsigned char*)"159357468275315978945612");
+		des3_crypt_ecb(&ctx, (unsigned char*)"datatocr", output);
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb end");
+#endif
+
+		printf("des3(\"datatocr\", \"159357468275315978945612\") = ");
+
+	 	for(i=0; i<8; ++i) {
+	 		printf("%02x", output[i]);
+	 	}
+
+	 	printf("\n");
+ 	}
+ 	{
+ 		aes_context ctx;
+ 	 	unsigned char output[16];
+
+ 	 	aes_init(&ctx);
+
+#if configUSE_TRACE_FACILITY
+ 	 	vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb start");
+#endif
+ 	 	aes_setkey_enc(&ctx, (unsigned char*)"15935746827531597894561233216549", 256);
+ 	 	aes_crypt_ecb(&ctx, AES_ENCRYPT, (unsigned char*)"datatocrypt12345", output);
+
+#if configUSE_TRACE_FACILITY
+ 		vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb end");
+#endif
+
+ 		printf("aes(\"datatocrypt12345\", \"15935746827531597894561233216549\") = ");
+
+ 		for(i=0; i<16; ++i) {
+ 			printf("%02x", output[i]);
+ 		}
+
+ 		printf("\n");
+ 	 }
+	 printf("\n");
 
 	xTaskCreate(led_task, "Led Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);	// Indicates that the system is running
 	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*6, NULL, 3, NULL);	// Runs the tests

@@ -101,39 +101,11 @@ void md5_update( md5_context *ctx, const unsigned char *input, size_t ilen );
  */
 void md5_finish( md5_context *ctx, unsigned char output[16] );
 
+/* MD5 HMAC */
+
 /* Internal use */
 void md5_process( md5_context *ctx, const unsigned char data[64] );
 
-#ifdef __cplusplus
-}
-#endif
-
-#else  /* POLARSSL_MD5_ALT */
-#include "md5_alt.h"
-#endif /* POLARSSL_MD5_ALT */
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-/**
- * \brief          Output = MD5( input buffer )
- *
- * \param input    buffer holding the  data
- * \param ilen     length of the input data
- * \param output   MD5 checksum result
- */
-void md5( const unsigned char *input, size_t ilen, unsigned char output[16] );
-
-/**
- * \brief          Output = MD5( file contents )
- *
- * \param path     input file name
- * \param output   MD5 checksum result
- *
- * \return         0 if successful, or POLARSSL_ERR_MD5_FILE_IO_ERROR
- */
-int md5_file( const char *path, unsigned char output[16] );
 
 /**
  * \brief          MD5 HMAC context setup
@@ -169,6 +141,38 @@ void md5_hmac_finish( md5_context *ctx, unsigned char output[16] );
  * \param ctx      HMAC context to be reset
  */
 void md5_hmac_reset( md5_context *ctx );
+
+#ifdef __cplusplus
+}
+#endif
+
+#else  /* POLARSSL_MD5_ALT */
+#include "md5_alt.h"
+#endif /* POLARSSL_MD5_ALT */
+
+#ifdef __cplusplus
+extern "C" {
+#endif
+
+/**
+ * \brief          Output = MD5( input buffer )
+ *
+ * \param input    buffer holding the  data
+ * \param ilen     length of the input data
+ * \param output   MD5 checksum result
+ */
+void md5( const unsigned char *input, size_t ilen, unsigned char output[16] );
+
+/**
+ * \brief          Output = MD5( file contents )
+ *
+ * \param path     input file name
+ * \param output   MD5 checksum result
+ *
+ * \return         0 if successful, or POLARSSL_ERR_MD5_FILE_IO_ERROR
+ */
+int md5_file( const char *path, unsigned char output[16] );
+
 
 /**
  * \brief          Output = HMAC-MD5( hmac key, input buffer )

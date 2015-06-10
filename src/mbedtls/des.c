@@ -25,7 +25,7 @@
  *
  *  http://csrc.nist.gov/publications/fips/fips46-3/fips46-3.pdf
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 

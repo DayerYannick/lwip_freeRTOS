@@ -78,10 +78,14 @@ int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
 {
 	printf("AES: set key enc: %x %x %x...\n", key[0], key[1], key[2]);
 	ctx->dir = AES_ENCRYPT;
-	ctx->keySize = keysize;
+	if(keysize != 128 && keysize != 192 && keysize != 256) {
+		printf("AES wrong key size: %d. Must be 128, 192 or 256.", keysize);
+		return POLARSSL_ERR_AES_INVALID_KEY_LENGTH;
+	}
+	ctx->keySize = keysize>>3;	// size in bytes
 	memcpy(ctx->key, key, keysize);
 
-    return( 0 );
+    return 0;
 }
 
 /*
@@ -92,7 +96,7 @@ int aes_setkey_dec( aes_context *ctx, const unsigned char *key,
 {
 	printf("AES: set key dec: %x %x %x...\n", key[0], key[1], key[2]);
 	ctx->dir = AES_DECRYPT;
-	ctx->keySize = keysize;
+	ctx->keySize = keysize>>3;
 	memcpy(ctx->key, key, keysize);
 
     return( 0 );
@@ -124,7 +128,7 @@ int aes_crypt_ecb( aes_context *ctx,
 	if(ctx->dir != mode)
 		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");
 
-	if( CRYP_AES_ECB(mode, ctx->key, ctx->keySize, (uint8_t*)input, 16, (uint8_t*)output) == ERROR ) {
+	if( CRYP_AES_ECB(mode, ctx->key, ctx->keySize<<3, (uint8_t*)input, 16, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_ECB.\n");
 		return -1;
 	}
@@ -160,7 +164,7 @@ int aes_crypt_cbc( aes_context *ctx,
 	if(length%16)
 		return POLARSSL_ERR_AES_INVALID_INPUT_LENGTH;
 
-	if( CRYP_AES_CBC(mode, (uint8_t*)iv, ctx->key, ctx->keySize, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
+	if( CRYP_AES_CBC(mode, (uint8_t*)iv, ctx->key, ctx->keySize<<3, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_CBC.\n");
 		return -1;
 	}
@@ -266,7 +270,7 @@ int aes_crypt_ctr( aes_context *ctx,
 {
 	printf("AES ctr: crypt/decrypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
 
-	if( CRYP_AES_CTR(ctx->dir, nonce_counter, ctx->key, ctx->keySize, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
+	if( CRYP_AES_CTR(ctx->dir, nonce_counter, ctx->key, ctx->keySize<<3, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_CTR.\n");
 		return -1;
 	}
