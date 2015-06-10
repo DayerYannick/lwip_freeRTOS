@@ -208,7 +208,7 @@
 //#define POLARSSL_ARC4_ALT
 //#define POLARSSL_BLOWFISH_ALT
 //#define POLARSSL_CAMELLIA_ALT
-//#define POLARSSL_DES_ALT	// Can be implemented in HW
+#define POLARSSL_DES_ALT
 //#define POLARSSL_XTEA_ALT
 //#define POLARSSL_MD2_ALT
 //#define POLARSSL_MD4_ALT

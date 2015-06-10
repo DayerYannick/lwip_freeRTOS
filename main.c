@@ -144,7 +144,14 @@ int main(int argc, char** argv) {
 
  	printf("MD5('%s') = ", hello);
 
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("speed"), "MD5 start");
+#endif
  	md5( (unsigned char*)hello, 13, digest);
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("speed"), "MD5 end");
+#endif
 
  	for(i=0; i<16; ++i) {
  		printf("%02x", digest[i]);
@@ -154,7 +161,13 @@ int main(int argc, char** argv) {
 
  	printf("SHA1('%s') = ", hello);
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("speed"), "SHA1 start");
+#endif
  	sha1( (unsigned char*)hello, 13, digest);
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("speed"), "SHA1 end");
+#endif
 
  	for(i=0; i<20; ++i) {
  		printf("%02x", digest[i]);
@@ -576,7 +589,7 @@ void clientHandle_task(void* param) {
 			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
 #endif
 
-			secureSendStr(s[i], "OK!");
+			secureSend(s[i], (unsigned char*)"OK!\n", 4);
 
 		}
 	}
