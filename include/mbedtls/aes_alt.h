@@ -49,7 +49,7 @@ extern "C" {
 typedef struct
 {
 	int dir;	// AES_ENCRYPT: Encrypt, AES_DECRYPT: Decrypt (dir set by aes_setkey functions TODO remove if unnecessary)
-	size_t keySize;
+	size_t keySize;	// 128, 192 or 256
 	unsigned char key[32];
 }
 aes_context;

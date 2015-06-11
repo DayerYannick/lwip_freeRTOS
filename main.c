@@ -55,7 +55,7 @@
 
 
 
-#define USE_DISPLAY 1	/* Set to 1 to display info about the system on the LCD screen */
+#define USE_DISPLAY 0	/* Set to 1 to display info about the system on the LCD screen */
 #if USE_DISPLAY
 #include "ugfx/gfx.h"
 #endif
@@ -160,7 +160,7 @@ int main(int argc, char** argv) {
 #endif
 
  	for(i=0; i<16; ++i) {
- 		printf("%02x", digest[i]);
+ 		printf("%02X", digest[i]);
  	}
 
  	printf("\n");
@@ -176,29 +176,30 @@ int main(int argc, char** argv) {
 #endif
 
  	for(i=0; i<20; ++i) {
- 		printf("%02x", digest[i]);
+ 		printf("%02X", digest[i]);
  	}
 
  	printf("\n");
 
  	{
  		unsigned char output[8];
+ 		unsigned char key[8] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x03, 0x02, 0x01};
  		des_context ctx;
  		des_init(&ctx);
 #if configUSE_TRACE_FACILITY
  		vTracePrintF(xTraceOpenLabel("speed"), "des_ecb start");
 #endif
-		des_setkey_enc(&ctx, (unsigned char*)"15935746");
+		des_setkey_enc(&ctx, key);
 		des_crypt_ecb(&ctx, (unsigned char*)"datatocr", output);
 
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("speed"), "des_ecb end");
 #endif
 
-		printf("des(\"datatocr\", \"15935746\") = ");
+		printf("des(\"datatocr\", \"0001020304030201\") = ");
 
 	 	for(i=0; i<8; ++i) {
-	 		printf("%02x", output[i]);
+	 		printf("%02X", output[i]);
 	 	}
 
 	 	printf("\n");
@@ -207,22 +208,23 @@ int main(int argc, char** argv) {
 
  	{
  		unsigned char output[8];
+ 	 	unsigned char key[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01};
  		des3_context ctx;
  		des3_init(&ctx);
 #if configUSE_TRACE_FACILITY
  		vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb start");
 #endif
-		des3_set3key_enc(&ctx, (unsigned char*)"159357468275315978945612");
+		des3_set3key_enc(&ctx, key);
 		des3_crypt_ecb(&ctx, (unsigned char*)"datatocr", output);
 
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb end");
 #endif
 
-		printf("des3(\"datatocr\", \"159357468275315978945612\") = ");
+		printf("des3(\"datatocr\", \"00010203040506070807060504030201\") = ");
 
 	 	for(i=0; i<8; ++i) {
-	 		printf("%02x", output[i]);
+	 		printf("%02X", output[i]);
 	 	}
 
 	 	printf("\n");
@@ -230,23 +232,25 @@ int main(int argc, char** argv) {
  	{
  		aes_context ctx;
  	 	unsigned char output[16];
+ 	 	unsigned char key[32] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
+ 	 							 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
 
- 	 	aes_init(&ctx);
+ 	 	//aes_init(&ctx);
 
 #if configUSE_TRACE_FACILITY
  	 	vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb start");
 #endif
- 	 	aes_setkey_enc(&ctx, (unsigned char*)"15935746827531597894561233216549", 256);
- 	 	aes_crypt_ecb(&ctx, AES_ENCRYPT, (unsigned char*)"datatocrypt12345", output);
+ 	 //	aes_setkey_enc(&ctx, key, 256);
+ 	 //	aes_crypt_ecb(&ctx, AES_ENCRYPT, (unsigned char*)"datatocrypt12345", output);
 
 #if configUSE_TRACE_FACILITY
  		vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb end");
 #endif
 
- 		printf("aes(\"datatocrypt12345\", \"15935746827531597894561233216549\") = ");
+ 		printf("aes(\"datatocrypt12345\", \"000102030405060708070605040302010908070605040302030405060708090A\") = ");
 
  		for(i=0; i<16; ++i) {
- 			printf("%02x", output[i]);
+ 			printf("%02X ", output[i]);
  		}
 
  		printf("\n");

@@ -204,11 +204,11 @@
  * functions
  */
 // TODO hardware CRYP and HASH modules
-#define POLARSSL_AES_ALT
+//#define POLARSSL_AES_ALT
 //#define POLARSSL_ARC4_ALT
 //#define POLARSSL_BLOWFISH_ALT
 //#define POLARSSL_CAMELLIA_ALT
-#define POLARSSL_DES_ALT
+//#define POLARSSL_DES_ALT	/* not working with HW!*/
 //#define POLARSSL_XTEA_ALT
 //#define POLARSSL_MD2_ALT
 //#define POLARSSL_MD4_ALT
@@ -673,7 +673,7 @@
  *
  * Enable functions that use the filesystem.
  */
-//#define POLARSSL_FS_IO	// Removed by Dayer. (We don't use a file system)
+//#define POLARSSL_FS_IO	/* Removed by Dayer. (We don't use a file system) */
 
 /**
  * \def POLARSSL_NO_DEFAULT_ENTROPY_SOURCES
@@ -726,7 +726,7 @@
  *
  * Uncomment this macro to let the buffer allocator print out error messages.
  */
-//#define POLARSSL_MEMORY_DEBUG
+#define POLARSSL_MEMORY_DEBUG	/* TODO remove back */
 
 /**
  * \def POLARSSL_MEMORY_BACKTRACE
@@ -1011,7 +1011,7 @@
  *
  * Comment this macro to disable support for SSL session tickets
  */
-#define POLARSSL_SSL_SESSION_TICKETS
+//#define POLARSSL_SSL_SESSION_TICKETS
 
 /**
  * \def POLARSSL_SSL_SERVER_NAME_INDICATION
@@ -1056,7 +1056,7 @@
  *
  * Uncomment this to allow your own alternate threading implementation.
  */
-//#define POLARSSL_THREADING_ALT	/* Uncommented by Dayer. TODO give our implementation (and uncomment) */
+#define POLARSSL_THREADING_ALT	/* Uncommented by Dayer. */
 
 /**
  * \def POLARSSL_THREADING_PTHREAD
@@ -1179,7 +1179,7 @@
  *
  * This modules adds support for the AES-NI instructions on x86-64
  */
-#define POLARSSL_AESNI_C
+//#define POLARSSL_AESNI_C	/* Removed by Dayer */
 
 /**
  * \def POLARSSL_AES_C
@@ -1411,7 +1411,7 @@
  * This module enables the AES-CCM ciphersuites, if other requisites are
  * enabled as well.
  */
-#define POLARSSL_CCM_C
+//#define POLARSSL_CCM_C
 
 /**
  * \def POLARSSL_CERTS_C
@@ -1589,7 +1589,7 @@
  * This module enables the AES-GCM and CAMELLIA-GCM ciphersuites, if other
  * requisites are enabled as well.
  */
-#define POLARSSL_GCM_C
+//#define POLARSSL_GCM_C
 
 /**
  * \def POLARSSL_HAVEGE_C
@@ -1748,7 +1748,7 @@
  *
  * This modules adds support for the VIA PadLock on x86.
  */
-#define POLARSSL_PADLOCK_C
+//#define POLARSSL_PADLOCK_C /* Removed by Dayer */
 
 /**
  * \def POLARSSL_PBKDF2_C
@@ -2054,7 +2054,7 @@
  *
  * Enable this layer to allow use of mutexes within mbed TLS
  */
-//#define POLARSSL_THREADING_C	/* Uncommented by Dayer. // TODO uncomment when threading works */
+#define POLARSSL_THREADING_C	/* Uncommented by Dayer. */
 
 /**
  * \def POLARSSL_TIMING_C
@@ -2208,7 +2208,7 @@
 
 /* MPI / BIGNUM options */
 //#define POLARSSL_MPI_WINDOW_SIZE            6 /**< Maximum windows size used. */
-//#define POLARSSL_MPI_MAX_SIZE            512/*default 1024*/ /**< Maximum number of bytes for usable MPIs. */
+//#define POLARSSL_MPI_MAX_SIZE            1024 /**< Maximum number of bytes for usable MPIs. */
 
 /* CTR_DRBG options */
 //#define CTR_DRBG_ENTROPY_LEN               48 /**< Amount of entropy used per seed by default (48 with SHA-512, 32 with SHA-256) */
@@ -2236,7 +2236,7 @@
 //#define POLARSSL_MEMORY_ALIGN_MULTIPLE      4 /**< Align on multiples of this value */
 
 /* Platform options */
-//#define POLARSSL_PLATFORM_STD_MEM_HDR "freertos/FreeRTOS.h" /* Uncommented by Dayer. was <stdlib.h>*/ /**< Header to include if POLARSSL_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
+//#define POLARSSL_PLATFORM_STD_MEM_HDR <stdlib.h> /**< Header to include if POLARSSL_PLATFORM_NO_STD_FUNCTIONS is defined. Don't define if no header is needed. */
 //#define POLARSSL_PLATFORM_STD_MALLOC   malloc /**< Default allocator to use, can be undefined */
 //#define POLARSSL_PLATFORM_STD_FREE       free /**< Default free to use, can be undefined */
 //#define POLARSSL_PLATFORM_STD_PRINTF   printf /**< Default printf to use, can be undefined */

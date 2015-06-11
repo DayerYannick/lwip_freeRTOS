@@ -290,7 +290,8 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 #if USE_MBEDTLS
 	debug_set_threshold(4);	// 0: nothing, 4: everything	// XXX here...
-	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation instead
+	threading_set_alt(polarssl_mutex_init_func, polarssl_mutex_free_func, polarssl_mutex_lock_func, polarssl_mutex_unlock_func);
+	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation with the extern memory instead
 	random_init();
 /*	entropy_init(&entropy);
 	ctr_drbg_init(&ctr_drbg, entropy_func, &entropy, (unsigned char*)"Random string", 13);

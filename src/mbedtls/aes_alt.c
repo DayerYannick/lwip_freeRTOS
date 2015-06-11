@@ -53,15 +53,12 @@ static int aes_padlock_ace = -1;
 
 void aes_init( aes_context *ctx )
 {
-	printf("AES init.\n");
 	RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_CRYP, ENABLE);
     memset( ctx, 0, sizeof( aes_context ) );
 }
 
 void aes_free( aes_context *ctx )
 {
-	printf("AES free.\n");
-
 	//RCC_AHB2PeriphClockCmd(RCC_AHB2Periph_CRYP, DISABLE); NO! if another ctx is active... at least, test that.
 
     if( ctx == NULL )
@@ -76,14 +73,13 @@ void aes_free( aes_context *ctx )
 int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
                     unsigned int keysize )
 {
-	printf("AES: set key enc: %x %x %x...\n", key[0], key[1], key[2]);
 	ctx->dir = AES_ENCRYPT;
 	if(keysize != 128 && keysize != 192 && keysize != 256) {
-		printf("AES wrong key size: %d. Must be 128, 192 or 256.", keysize);
+		printf("AES wrong key size: %d. Must be 128, 192 or 256 (bits).", keysize);
 		return POLARSSL_ERR_AES_INVALID_KEY_LENGTH;
 	}
-	ctx->keySize = keysize>>3;	// size in bytes
-	memcpy(ctx->key, key, keysize);
+	ctx->keySize = keysize;	// size in bytes
+	memcpy(ctx->key, key, ctx->keySize>>3);
 
     return 0;
 }
@@ -94,10 +90,13 @@ int aes_setkey_enc( aes_context *ctx, const unsigned char *key,
 int aes_setkey_dec( aes_context *ctx, const unsigned char *key,
                     unsigned int keysize )
 {
-	printf("AES: set key dec: %x %x %x...\n", key[0], key[1], key[2]);
 	ctx->dir = AES_DECRYPT;
-	ctx->keySize = keysize>>3;
-	memcpy(ctx->key, key, keysize);
+	if(keysize != 128 && keysize != 192 && keysize != 256) {
+		printf("AES wrong key size: %d. Must be 128, 192 or 256 (bits).", keysize);
+		return POLARSSL_ERR_AES_INVALID_KEY_LENGTH;
+	}
+	ctx->keySize = keysize;
+	memcpy(ctx->key, key, ctx->keySize>>3);
 
     return( 0 );
 }
@@ -126,9 +125,9 @@ int aes_crypt_ecb( aes_context *ctx,
 /* END DEBUG */
 
 	if(ctx->dir != mode)
-		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");
+		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");	// TODO remove
 
-	if( CRYP_AES_ECB(mode, ctx->key, ctx->keySize<<3, (uint8_t*)input, 16, (uint8_t*)output) == ERROR ) {
+	if( CRYP_AES_ECB(mode, ctx->key, ctx->keySize, (uint8_t*)input, 16, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_ECB.\n");
 		return -1;
 	}
@@ -153,23 +152,16 @@ int aes_crypt_cbc( aes_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
-	if(mode == AES_ENCRYPT)
-		printf("AES cbc: crypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
-	else
-		printf("AES cbc: decrypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
-
 	if(ctx->dir != mode)
-		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");
+		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");	// TODO remove
 
 	if(length%16)
 		return POLARSSL_ERR_AES_INVALID_INPUT_LENGTH;
 
-	if( CRYP_AES_CBC(mode, (uint8_t*)iv, ctx->key, ctx->keySize<<3, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
+	if( CRYP_AES_CBC(mode, (uint8_t*)iv, ctx->key, ctx->keySize, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_CBC.\n");
 		return -1;
 	}
-
-	printf("AES cbc: crypt/decrypt END.\n");
 
 	return 0;
 }
@@ -268,14 +260,10 @@ int aes_crypt_ctr( aes_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
-	printf("AES ctr: crypt/decrypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
-
-	if( CRYP_AES_CTR(ctx->dir, nonce_counter, ctx->key, ctx->keySize<<3, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
+	if( CRYP_AES_CTR(ctx->dir, nonce_counter, ctx->key, ctx->keySize, (uint8_t*)input, length, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_CTR.\n");
 		return -1;
 	}
-
-	printf("AES ctr: crypt/decrypt END.\n");
 
     return 0;
 }

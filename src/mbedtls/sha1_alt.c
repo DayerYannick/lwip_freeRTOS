@@ -26,7 +26,7 @@
 
 #if defined(POLARSSL_SHA1_ALT)
 
-#include "freertos/FreeRTOS.h"	// TODO remove when constRespect fix has been corrected
+#include "freertos/FreeRTOS.h"
 
 /* Implementation that should never be optimized out by the compiler */
 static void polarssl_zeroize( void *v, size_t n ) {
@@ -65,12 +65,12 @@ void sha1_update( sha1_context *ctx, const unsigned char *input, size_t ilen )
 {
 	unsigned char* constRespect;			// Used to respect the const qualifier :(
 	constRespect = pvPortMalloc(ilen);		//
-	memcpy(constRespect, input, ilen);		// Slow!
+	memcpy(constRespect, input, ilen);		//
 
 	if(HASH_SHA1(constRespect, ilen, ctx->buffer) == ERROR)	// Stores the digest in ctx.buffer
 		printf("ERROR in HASH_SHA1 function.");
 
-	vPortFree(constRespect);	// TODO remove constRespect fix
+	vPortFree(constRespect);
 }
 
 /*
@@ -123,11 +123,11 @@ void sha1_hmac_update( sha1_context *ctx, const unsigned char *input,
 {
 	unsigned char* constRespect;		// Used to respect the const qualifier :(
 	constRespect = pvPortMalloc(ilen);	//
-	memcpy(constRespect, input, ilen);	// Slow!
+	memcpy(constRespect, input, ilen);	//
 
 	HMAC_SHA1(ctx->key, ctx->keyLen, constRespect, ilen, ctx->buffer);
 
-	vPortFree(constRespect);	// TODO remove constRespect fix
+	vPortFree(constRespect);
 }
 
 /*
@@ -143,7 +143,7 @@ void sha1_hmac_finish( sha1_context *ctx, unsigned char output[20] )
  */
 void sha1_hmac_reset( sha1_context *ctx )
 {
-	return; // TODO check what to do in reset
+	return;
 }
 
 #endif /* !POLARSSL_SHA1_ALT */
