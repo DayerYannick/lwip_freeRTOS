@@ -26,7 +26,7 @@
  * SEC1 http://www.secg.org/index.php?action=secg,docs_secg
  * RFC 4492
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 

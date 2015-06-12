@@ -204,7 +204,7 @@
  * functions
  */
 // TODO hardware CRYP and HASH modules
-//#define POLARSSL_AES_ALT
+#define POLARSSL_AES_ALT
 //#define POLARSSL_ARC4_ALT
 //#define POLARSSL_BLOWFISH_ALT
 //#define POLARSSL_CAMELLIA_ALT
@@ -726,7 +726,7 @@
  *
  * Uncomment this macro to let the buffer allocator print out error messages.
  */
-#define POLARSSL_MEMORY_DEBUG	/* TODO remove back */
+//#define POLARSSL_MEMORY_DEBUG
 
 /**
  * \def POLARSSL_MEMORY_BACKTRACE
@@ -1011,7 +1011,7 @@
  *
  * Comment this macro to disable support for SSL session tickets
  */
-//#define POLARSSL_SSL_SESSION_TICKETS
+#define POLARSSL_SSL_SESSION_TICKETS
 
 /**
  * \def POLARSSL_SSL_SERVER_NAME_INDICATION
@@ -1411,7 +1411,7 @@
  * This module enables the AES-CCM ciphersuites, if other requisites are
  * enabled as well.
  */
-//#define POLARSSL_CCM_C
+#define POLARSSL_CCM_C
 
 /**
  * \def POLARSSL_CERTS_C
@@ -1589,7 +1589,7 @@
  * This module enables the AES-GCM and CAMELLIA-GCM ciphersuites, if other
  * requisites are enabled as well.
  */
-//#define POLARSSL_GCM_C
+#define POLARSSL_GCM_C
 
 /**
  * \def POLARSSL_HAVEGE_C

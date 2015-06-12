@@ -1493,7 +1493,7 @@
  * SO_RCVTIMEO processing.
  */
 #ifndef LWIP_SO_RCVTIMEO
-#define LWIP_SO_RCVTIMEO                0
+#define LWIP_SO_RCVTIMEO                1
 #endif
 
 /**

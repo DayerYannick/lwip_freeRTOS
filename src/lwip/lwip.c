@@ -289,7 +289,7 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 
 
 #if USE_MBEDTLS
-	debug_set_threshold(4);	// 0: nothing, 4: everything	// XXX here...
+	debug_set_threshold(0);	// 0: nothing, 4: everything	// XXX here...
 	threading_set_alt(polarssl_mutex_init_func, polarssl_mutex_free_func, polarssl_mutex_lock_func, polarssl_mutex_unlock_func);
 	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation with the extern memory instead
 	random_init();
@@ -675,9 +675,7 @@ int simpleClose(int socket) {
 
 	vEventGroupDelete(Sock[socket].events);
 
-	printf("lwip_close\n");
 	ret = lwip_close(socket);
-	printf("lwip_close OUT\n");
 
 
 	return ret;
@@ -704,7 +702,7 @@ char* getMyIP(void) {
 #if USE_MBEDTLS && USE_FREERTOS
 
 int sendHelper(void* fd, const unsigned char* buf, size_t len) {
-	printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
+	//printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl send");
 #endif
@@ -717,7 +715,7 @@ int recvHelper(void* fd, unsigned char* buf, size_t len) {
 	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv WAIT");
 #endif
 	ret = simpleRecv((int)fd, buf, len);
-	printf("**ssl receiving %d char: \"%s\" on socket %d.\n", ret, buf, (int) fd);
+	//printf("**ssl receiving %d char: \"%s\" on socket %d.\n", ret, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv END");
 #endif
@@ -760,7 +758,7 @@ int randomHelper(void* fd, unsigned char* buf, size_t len) {
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("TLS rand"), "END");
 #endif
-	printf("**Rand end. t=%d\n", (int)xTaskGetTickCount());
+	//printf("**Rand end. t=%d\n", (int)xTaskGetTickCount());
 
 	return ret;
 }
@@ -802,8 +800,6 @@ int secureAccept(int socket) {	// FIXME
 	int ret, clientSocket;
 
 	clientSocket = simpleAccept(socket);
-
-	printf("new socket: %d\n", clientSocket);
 
 	if(clientSocket < 0)
 		return clientSocket;
@@ -969,23 +965,18 @@ int secureRecv(int socket, unsigned char* data, size_t maxLength) {
 int secureClose(int socket) {
 
 	int ret;
-	printf("SecureSocket close\n");
 
 	if(socket >= 0) {
 
 		if(Sock[socket].ssl != NULL) {
-			printf("ssl_free()\n");
 			ssl_free(Sock[socket].ssl);
-		//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO see if
-			printf("free(ssl_context)\n");
+		//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO see if necessary
 			vPortFree(Sock[socket].ssl);
 			Sock[socket].ssl = NULL;
 		}
 	}
 
-	printf("SimpleClose\n");
 	ret = simpleClose(socket);
-	printf("SimpleClose OUT\n");
 	return ret;
 }
 
