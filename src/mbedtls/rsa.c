@@ -25,7 +25,7 @@
  *  http://theory.lcs.mit.edu/~rivest/rsapaper.pdf
  *  http://www.cacr.math.uwaterloo.ca/hac/about/chap8.pdf
  */
- 
+
 #include "heivs/config.h"
 #if USE_MBEDTLS
 
@@ -60,12 +60,18 @@ void rsa_init( rsa_context *ctx,
                int padding,
                int hash_id )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "init start");
+#endif
     memset( ctx, 0, sizeof( rsa_context ) );
 
     rsa_set_padding( ctx, padding, hash_id );
 
 #if defined(POLARSSL_THREADING_C)
     polarssl_mutex_init( &ctx->mutex );
+#endif
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "init end");
 #endif
 }
 
@@ -88,6 +94,9 @@ int rsa_gen_key( rsa_context *ctx,
                  void *p_rng,
                  unsigned int nbits, int exponent )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "gen key start");
+#endif
     int ret;
     mpi P1, Q1, H, G;
 
@@ -149,6 +158,9 @@ cleanup:
         rsa_free( ctx );
         return( POLARSSL_ERR_RSA_KEY_GEN_FAILED + ret );
     }
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "gen key end");
+#endif
 
     return( 0 );
 }
@@ -160,6 +172,9 @@ cleanup:
  */
 int rsa_check_pubkey( const rsa_context *ctx )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "check pub key start");
+#endif
     if( !ctx->N.p || !ctx->E.p )
         return( POLARSSL_ERR_RSA_KEY_CHECK_FAILED );
 
@@ -175,6 +190,9 @@ int rsa_check_pubkey( const rsa_context *ctx )
         mpi_cmp_mpi( &ctx->E, &ctx->N ) >= 0 )
         return( POLARSSL_ERR_RSA_KEY_CHECK_FAILED );
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "check pub key end");
+#endif
     return( 0 );
 }
 
@@ -183,6 +201,9 @@ int rsa_check_pubkey( const rsa_context *ctx )
  */
 int rsa_check_privkey( const rsa_context *ctx )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "check priv key start");
+#endif
     int ret;
     mpi PQ, DE, P1, Q1, H, I, G, G2, L1, L2, DP, DQ, QP;
 
@@ -237,6 +258,9 @@ cleanup:
     if( ret != 0 )
         return( POLARSSL_ERR_RSA_KEY_CHECK_FAILED + ret );
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "check priv key end");
+#endif
     return( 0 );
 }
 
@@ -245,6 +269,9 @@ cleanup:
  */
 int rsa_check_pub_priv( const rsa_context *pub, const rsa_context *prv )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "check pub priv start");
+#endif
     if( rsa_check_pubkey( pub ) != 0 ||
         rsa_check_privkey( prv ) != 0 )
     {
@@ -257,6 +284,9 @@ int rsa_check_pub_priv( const rsa_context *pub, const rsa_context *prv )
         return( POLARSSL_ERR_RSA_KEY_CHECK_FAILED );
     }
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "check pub priv end");
+#endif
     return( 0 );
 }
 
@@ -267,6 +297,9 @@ int rsa_public( rsa_context *ctx,
                 const unsigned char *input,
                 unsigned char *output )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "public start");
+#endif
     int ret;
     size_t olen;
     mpi T;
@@ -305,6 +338,9 @@ static int rsa_prepare_blinding( rsa_context *ctx, mpi *Vi, mpi *Vf,
                  int (*f_rng)(void *, unsigned char *, size_t), void *p_rng )
 {
     int ret, count = 0;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "prepare blinding start");
+#endif
 
 #if defined(POLARSSL_THREADING_C)
     polarssl_mutex_lock( &ctx->mutex );
@@ -346,6 +382,9 @@ cleanup:
     polarssl_mutex_unlock( &ctx->mutex );
 #endif
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "prepare blinding end");
+#endif
     return( ret );
 }
 
@@ -362,6 +401,9 @@ int rsa_private( rsa_context *ctx,
     size_t olen;
     mpi T, T1, T2;
     mpi *Vi, *Vf;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "private start");
+#endif
 
     /*
      * When using the Chinese Remainder Theorem, we use blinding values.
@@ -444,6 +486,9 @@ cleanup:
     mpi_free( &Vi_copy ); mpi_free( &Vf_copy );
 #endif
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "private end");
+#endif
     if( ret != 0 )
         return( POLARSSL_ERR_RSA_PRIVATE_FAILED + ret );
 
@@ -468,6 +513,10 @@ static void mgf_mask( unsigned char *dst, size_t dlen, unsigned char *src,
     unsigned char *p;
     unsigned int hlen;
     size_t i, use_len;
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "mgf mask start");
+#endif
 
     memset( mask, 0, POLARSSL_MD_MAX_SIZE );
     memset( counter, 0, 4 );
@@ -518,6 +567,10 @@ int rsa_rsaes_oaep_encrypt( rsa_context *ctx,
     unsigned int hlen;
     const md_info_t *md_info;
     md_context_t md_ctx;
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "enc rsaes oaep start");
+#endif
 
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V21 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
@@ -589,6 +642,9 @@ int rsa_rsaes_pkcs1_v15_encrypt( rsa_context *ctx,
     size_t nb_pad, olen;
     int ret;
     unsigned char *p = output;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "enc rsaes pkcs1 start");
+#endif
 
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V15 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
@@ -651,6 +707,10 @@ int rsa_pkcs1_encrypt( rsa_context *ctx,
                        const unsigned char *input,
                        unsigned char *output )
 {
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "enc pkcs1 start");
+#endif
     switch( ctx->padding )
     {
 #if defined(POLARSSL_PKCS1_V15)
@@ -693,6 +753,10 @@ int rsa_rsaes_oaep_decrypt( rsa_context *ctx,
     const md_info_t *md_info;
     md_context_t md_ctx;
 
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "dec rsaes oaep start");
+#endif
     /*
      * Parameters sanity checks
      */
@@ -802,6 +866,9 @@ int rsa_rsaes_pkcs1_v15_decrypt( rsa_context *ctx,
     unsigned char *p, bad, pad_done = 0;
     unsigned char buf[POLARSSL_MPI_MAX_SIZE];
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "dec rsaes pkcs1 start");
+#endif
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V15 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
 
@@ -881,6 +948,10 @@ int rsa_pkcs1_decrypt( rsa_context *ctx,
                        unsigned char *output,
                        size_t output_max_len)
 {
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "dec pkcs1 start");
+#endif
     switch( ctx->padding )
     {
 #if defined(POLARSSL_PKCS1_V15)
@@ -923,6 +994,9 @@ int rsa_rsassa_pss_sign( rsa_context *ctx,
     const md_info_t *md_info;
     md_context_t md_ctx;
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "sign rsassa pss start");
+#endif
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V21 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
 
@@ -1020,6 +1094,9 @@ int rsa_rsassa_pkcs1_v15_sign( rsa_context *ctx,
     size_t nb_pad, olen, oid_size = 0;
     unsigned char *p = sig;
     const char *oid = NULL;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "sign rsassa pkcs1 start");
+#endif
 
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V15 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
@@ -1081,6 +1158,9 @@ int rsa_rsassa_pkcs1_v15_sign( rsa_context *ctx,
         *p++ = hashlen;
         memcpy( p, hash, hashlen );
     }
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "sign rsassa pkcs1 end");
+#endif
 
     return( ( mode == RSA_PUBLIC )
             ? rsa_public(  ctx, sig, sig )
@@ -1144,6 +1224,10 @@ int rsa_rsassa_pss_verify_ext( rsa_context *ctx,
     size_t slen, msb;
     const md_info_t *md_info;
     md_context_t md_ctx;
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "verif rsassa pss start");
+#endif
 
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V21 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
@@ -1286,6 +1370,9 @@ int rsa_rsassa_pkcs1_v15_verify( rsa_context *ctx,
     md_type_t msg_md_alg;
     const md_info_t *md_info;
     asn1_buf oid;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "verif rsassa pkcs1 start");
+#endif
 
     if( mode == RSA_PRIVATE && ctx->padding != RSA_PKCS_V15 )
         return( POLARSSL_ERR_RSA_BAD_INPUT_DATA );
@@ -1396,6 +1483,9 @@ int rsa_pkcs1_verify( rsa_context *ctx,
                       const unsigned char *hash,
                       const unsigned char *sig )
 {
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "verif rsa pkcs1 start");
+#endif
     switch( ctx->padding )
     {
 #if defined(POLARSSL_PKCS1_V15)
@@ -1421,6 +1511,10 @@ int rsa_pkcs1_verify( rsa_context *ctx,
 int rsa_copy( rsa_context *dst, const rsa_context *src )
 {
     int ret;
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "copy start");
+#endif
 
     dst->ver = src->ver;
     dst->len = src->len;
@@ -1457,6 +1551,10 @@ cleanup:
  */
 void rsa_free( rsa_context *ctx )
 {
+
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS RSA"), "free");
+#endif
     mpi_free( &ctx->Vi ); mpi_free( &ctx->Vf );
     mpi_free( &ctx->RQ ); mpi_free( &ctx->RP ); mpi_free( &ctx->RN );
     mpi_free( &ctx->QP ); mpi_free( &ctx->DQ ); mpi_free( &ctx->DP );

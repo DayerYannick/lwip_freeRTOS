@@ -224,6 +224,7 @@ int mpi_safe_cond_assign( mpi *X, const mpi *Y, unsigned char assign )
     int ret = 0;
     size_t i;
 
+
     /* make sure assign is 0 or 1 */
     assign = ( assign != 0 );
 
@@ -341,6 +342,7 @@ cleanup:
 size_t mpi_lsb( const mpi *X )
 {
     size_t i, j, count = 0;
+
 
     for( i = 0; i < X->n; i++ )
         for( j = 0; j < biL; j++, count++ )
@@ -469,6 +471,7 @@ static int mpi_write_hlp( mpi *X, int radix, char **p )
 {
     int ret;
     t_uint r;
+
 
     if( radix < 2 || radix > 16 )
         return( POLARSSL_ERR_MPI_BAD_INPUT_DATA );
@@ -1162,7 +1165,6 @@ int mpi_mul_mpi( mpi *X, const mpi *A, const mpi *B )
     X->s = A->s * B->s;
 
 cleanup:
-
     mpi_free( &TB ); mpi_free( &TA );
 
     return( ret );
@@ -1535,6 +1537,9 @@ int mpi_exp_mod( mpi *X, const mpi *A, const mpi *E, const mpi *N, mpi *_RR )
     t_uint ei, mm, state;
     mpi RR, T, W[ 2 << POLARSSL_MPI_WINDOW_SIZE ], Apos;
     int neg;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "exp mod start");
+#endif
 
     if( mpi_cmp_int( N, 0 ) < 0 || ( N->p[0] & 1 ) == 0 )
         return( POLARSSL_ERR_MPI_BAD_INPUT_DATA );
@@ -1728,6 +1733,10 @@ cleanup:
     if( _RR == NULL || _RR->p == NULL )
         mpi_free( &RR );
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "exp mod end");
+#endif
+
     return( ret );
 }
 
@@ -1815,6 +1824,10 @@ int mpi_inv_mod( mpi *X, const mpi *A, const mpi *N )
     int ret;
     mpi G, TA, TU, U1, U2, TB, TV, V1, V2;
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "inv mod start");
+#endif
+
     if( mpi_cmp_int( N, 0 ) <= 0 )
         return( POLARSSL_ERR_MPI_BAD_INPUT_DATA );
 
@@ -1898,6 +1911,9 @@ cleanup:
     mpi_free( &TA ); mpi_free( &TU ); mpi_free( &U1 ); mpi_free( &U2 );
     mpi_free( &G ); mpi_free( &TB ); mpi_free( &TV );
     mpi_free( &V1 ); mpi_free( &V2 );
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "inv mod end");
+#endif
 
     return( ret );
 }
@@ -1943,6 +1959,9 @@ static int mpi_check_small_factors( const mpi *X )
     int ret = 0;
     size_t i;
     t_uint r;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "check small factors start");
+#endif
 
     if( ( X->p[0] & 1 ) == 0 )
         return( POLARSSL_ERR_MPI_NOT_ACCEPTABLE );
@@ -1959,6 +1978,9 @@ static int mpi_check_small_factors( const mpi *X )
     }
 
 cleanup:
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "check small factors end");
+#endif
     return( ret );
 }
 
@@ -1972,6 +1994,9 @@ static int mpi_miller_rabin( const mpi *X,
     int ret;
     size_t i, j, n, s;
     mpi W, R, T, A, RR;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "miller rabin start");
+#endif
 
     mpi_init( &W ); mpi_init( &R ); mpi_init( &T ); mpi_init( &A );
     mpi_init( &RR );
@@ -2046,6 +2071,9 @@ cleanup:
     mpi_free( &W ); mpi_free( &R ); mpi_free( &T ); mpi_free( &A );
     mpi_free( &RR );
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "miller rabin end");
+#endif
     return( ret );
 }
 
@@ -2059,6 +2087,9 @@ int mpi_is_prime( mpi *X,
     int ret;
     mpi XX;
 
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "is prime start");
+#endif
     XX.s = 1;
     XX.n = X->n;
     XX.p = X->p;
@@ -2092,6 +2123,9 @@ int mpi_gen_prime( mpi *X, size_t nbits, int dh_flag,
     size_t k, n;
     t_uint r;
     mpi Y;
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "gen prime start");
+#endif
 
     if( nbits < 3 || nbits > POLARSSL_MPI_MAX_BITS )
         return( POLARSSL_ERR_MPI_BAD_INPUT_DATA );
@@ -2165,6 +2199,9 @@ int mpi_gen_prime( mpi *X, size_t nbits, int dh_flag,
 cleanup:
 
     mpi_free( &Y );
+#if configUSE_TRACE_FACILITY
+	vTracePrintF(xTraceOpenLabel("TLS MPI"), "gen prime end");
+#endif
 
     return( ret );
 }

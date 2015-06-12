@@ -21,8 +21,6 @@ int polarssl_mutex_init_func( threading_mutex_t *mutex ) {
 	*mutex = NULL;
 	*mutex = xSemaphoreCreateMutexNamed("mbedtls mutex");
 
-	printf("SEMAPHORE created.\n");
-
 	if(*mutex == NULL)
 		return -1;
 	return 0;

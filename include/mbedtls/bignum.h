@@ -24,6 +24,8 @@
 #ifndef POLARSSL_BIGNUM_H
 #define POLARSSL_BIGNUM_H
 
+#include "freertos/FreeRTOS.h"
+
 #include <string.h>
 
 #if !defined(POLARSSL_CONFIG_FILE)

@@ -55,7 +55,7 @@
 
 
 
-#define USE_DISPLAY 0	/* Set to 1 to display info about the system on the LCD screen */
+#define USE_DISPLAY 1	/* Set to 1 to display info about the system on the LCD screen */
 #if USE_DISPLAY
 #include "ugfx/gfx.h"
 #endif
@@ -196,7 +196,7 @@ int main(int argc, char** argv) {
 	vTracePrintF(xTraceOpenLabel("speed"), "des_ecb end");
 #endif
 
-		printf("des(\"datatocr\", \"0001020304030201\") = ");
+		printf("DES(\"datatocr\", \"0001020304030201\") = ");
 
 	 	for(i=0; i<8; ++i) {
 	 		printf("%02X", output[i]);
@@ -221,7 +221,7 @@ int main(int argc, char** argv) {
 	vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb end");
 #endif
 
-		printf("des3(\"datatocr\", \"00010203040506070807060504030201\") = ");
+		printf("DES3(\"datatocr\", \"00010203040506070807060504030201\") = ");
 
 	 	for(i=0; i<8; ++i) {
 	 		printf("%02X", output[i]);
@@ -235,19 +235,19 @@ int main(int argc, char** argv) {
  	 	unsigned char key[32] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
  	 							 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
 
- 	 	//aes_init(&ctx);
+ 	 	aes_init(&ctx);
 
 #if configUSE_TRACE_FACILITY
  	 	vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb start");
 #endif
- 	 //	aes_setkey_enc(&ctx, key, 256);
- 	 //	aes_crypt_ecb(&ctx, AES_ENCRYPT, (unsigned char*)"datatocrypt12345", output);
+		aes_setkey_enc(&ctx, key, 256);
+		aes_crypt_ecb(&ctx, AES_ENCRYPT, (unsigned char*)"datatocrypt12345", output);
 
 #if configUSE_TRACE_FACILITY
  		vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb end");
 #endif
 
- 		printf("aes(\"datatocrypt12345\", \"000102030405060708070605040302010908070605040302030405060708090A\") = ");
+ 		printf("AES(\"datatocrypt12345\", \"000102030405060708070605040302010908070605040302030405060708090A\") = ");
 
  		for(i=0; i<16; ++i) {
  			printf("%02X ", output[i]);
@@ -646,7 +646,13 @@ void clientHandle_task(void* param) {
 		ret = secureRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
 
 		if(ret < 0) {
-			printf("error with client %d: returned -0x%X\n", i, -ret);
+			switch(-ret) {
+			case 0x7880:
+				printf("Client %d notified us that the connection is going to be closed.\n", i);
+				break;
+			default:
+				printf("error with client %d: returned -0x%X\n", i, -ret);
+			}
 			break;
 		}
 		else if(ret == 0)
