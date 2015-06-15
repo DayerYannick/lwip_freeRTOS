@@ -643,6 +643,7 @@ void clientHandle_task(void* param) {
 	msg[MSG_LEN_MAX-1] = '\0';
 
 	while(1) {
+		printf("mem free: %d\n", xPortGetFreeHeapSize());
 		ret = secureRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
 
 		if(ret < 0) {

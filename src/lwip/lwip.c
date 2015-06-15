@@ -99,7 +99,8 @@ const int EV_LWIP_SOCKET_DISCONNECTED=	1<<2;	// The socket is disconnected
 const int EV_LWIP_SOCKET_RECEIVED=		1<<3;	// The socket received data
 const int EV_LWIP_SOCKET_CONNECT_TIMEOUT= 1<<4;	// The socket could not connect before the timeout value
 const int EV_LWIP_SOCKET_RECV_TIMEOUT=	1<<5;	// The socket did not receive any data before the timeout value
-const int EV_LWIP_SOCKET_ACCEPT_TIMEOUT= 1<<6;	// The socket did not accept any connection before the timeout value
+const int EV_LWIP_SOCKET_SEND_TIMEOUT=	1<<6;	// The socket did not send the data before the timeout value
+const int EV_LWIP_SOCKET_ACCEPT_TIMEOUT= 1<<7;	// The socket did not accept any connection before the timeout value
 const int EV_LWIP_SOCKET_CONNECTED_INTERN= 1<<10; // Internal event indicating the end of lwip_connect
 
 // sockets variables
@@ -422,23 +423,23 @@ int simpleSocket() {
 	//-- Set parameters --//
 #if LWIP_TCP_KEEPALIVE
 		if( lwip_setsockopt(socket, IPPROTO_TCP, LWIP_TCP_KEEPALIVE, (void*)&keepAliveIdleTime, sizeof(keepAliveIdleTime)) == -1)
-			i=0;//printf("ERROR: cannot set LWIP_TCP_KEEPALIVE.\n");
+			printf("ERROR: cannot set LWIP_TCP_KEEPALIVE.\n");
 
 		if( lwip_setsockopt(socket, IPPROTO_TCP, TCP_KEEPINTVL, (void*)&interval, sizeof(interval)) == -1)
-			i=0;//printf("ERROR: cannot set TCP_KEEPINTVL.\n");
+			printf("ERROR: cannot set TCP_KEEPINTVL.\n");
 
 		if( lwip_setsockopt(socket, IPPROTO_TCP, TCP_KEEPCNT, (void*)&count, sizeof(count)) == -1)
-			i=0;//printf("ERROR: cannot set TCP_KEEPCNT.\n");
+			printf("ERROR: cannot set TCP_KEEPCNT.\n");
 #endif
 
 #if LWIP_SO_RCVTIMEO
 		if( lwip_setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (void*)&recvTimeout, sizeof(recvTimeout)) == -1)
-			i=0;//printf("ERROR: cannot set SO_RCVTIMEO.\n");
+			printf("ERROR: cannot set SO_RCVTIMEO.\n");
 #endif
 
 #if LWIP_SO_SNDTIMEO
 		if( lwip_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (void*)&sendTimeout, sizeof(sendTimeout)) == -1)
-			i=0;//printf("ERROR: cannot set SO_SNDTIMEO.\n");
+			printf("ERROR: cannot set SO_SNDTIMEO.\n");
 #endif
 
 	}
@@ -483,14 +484,16 @@ int simpleAccept(int socket) {
 	int error;
 	socklen_t optLen = sizeof(error);
 
-	while((ret = lwip_accept(socket, NULL, NULL)) == -1) {
+	while((ret = lwip_accept(socket, NULL, NULL)) < 0) {
 		lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);	// Retrieve the error
 
-		if(error!= EWOULDBLOCK)	// Error!
+		if(error!= EWOULDBLOCK) {	// Error!
+			printf("Error in lwip_accept.\n");
 			break;
+		}
 		else {	// timeout: set the event
 			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_ACCEPT_TIMEOUT);
-			break;
+			printf("lwip_accept timed out\n");
 		}
 	}
 
@@ -510,23 +513,23 @@ int simpleAccept(int socket) {
 //-- set parameters --//
 #if LWIP_TCP_KEEPALIVE
 		if( lwip_setsockopt(socket, IPPROTO_TCP, LWIP_TCP_KEEPALIVE, (void*)&keepAliveIdleTime, sizeof(keepAliveIdleTime)) == -1)
-			i=0;//printf("ERROR: cannot set LWIP_TCP_KEEPALIVE.\n");
+			printf("ERROR: cannot set LWIP_TCP_KEEPALIVE.\n");
 
 		if( lwip_setsockopt(socket, IPPROTO_TCP, TCP_KEEPINTVL, (void*)&interval, sizeof(interval)) == -1)
-			i=0;//printf("ERROR: cannot set TCP_KEEPINTVL.\n");
+			printf("ERROR: cannot set TCP_KEEPINTVL.\n");
 
 		if( lwip_setsockopt(socket, IPPROTO_TCP, TCP_KEEPCNT, (void*)&count, sizeof(count)) == -1)
-			i=0;//printf("ERROR: cannot set TCP_KEEPCNT.\n");
+			printf("ERROR: cannot set TCP_KEEPCNT.\n");
 #endif
 
 #if LWIP_SO_RCVTIMEO
 		if( lwip_setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (void*)&recvTimeout, sizeof(recvTimeout)) == -1)
-			i=0;//printf("ERROR: cannot set SO_RCVTIMEO.\n");
+			printf("ERROR: cannot set SO_RCVTIMEO.\n");
 #endif
 
 #if LWIP_SO_SNDTIMEO
 		if( lwip_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (void*)&sendTimeout, sizeof(sendTimeout)) == -1)
-			i=0;//printf("ERROR: cannot set SO_SNDTIMEO.\n");
+			printf("ERROR: cannot set SO_SNDTIMEO.\n");
 #endif
 
 	}
@@ -636,7 +639,16 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 	if(length <= 0)
 		return -1;
 
-	ret = lwip_send(socket, data, length, 0);
+	while( (ret = lwip_send(socket, data, length, 0)) < 0) {
+		if(ret != EWOULDBLOCK) { // error
+			printf("ERROR in lwip_send: %d\n", ret);
+			break;
+		}
+		else {
+			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_SEND_TIMEOUT)
+			printf("lwip_send timed out.\n");
+		}
+	}
 
 	return ret;
 }
@@ -655,7 +667,7 @@ int simpleRecv(int socket, unsigned char* data, size_t maxLength) {
 	int error;
 	socklen_t optLen = sizeof(error);
 
-	while((ret = lwip_recv(socket, data, maxLength, 0)) == -1) {
+	while((ret = lwip_recv(socket, data, maxLength, 0)) < 0) {
 		//vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv timeout");
 		lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
 		if(error!= EWOULDBLOCK) {
@@ -663,6 +675,7 @@ int simpleRecv(int socket, unsigned char* data, size_t maxLength) {
 		}
 		else {
 			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_RECV_TIMEOUT);
+			printf("lwip_recv timed out\n");
 		}
 	}
 
@@ -704,7 +717,7 @@ char* getMyIP(void) {
 int sendHelper(void* fd, const unsigned char* buf, size_t len) {
 	//printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl send");
+	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl send %d", len);
 #endif
 	return simpleSend((int)fd, buf, len);
 }
@@ -717,7 +730,7 @@ int recvHelper(void* fd, unsigned char* buf, size_t len) {
 	ret = simpleRecv((int)fd, buf, len);
 	//printf("**ssl receiving %d char: \"%s\" on socket %d.\n", ret, buf, (int) fd);
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv END");
+	vTracePrintF(xTraceOpenLabel("TLS send/recv"), "ssl recv END (%d)", ret);
 #endif
 	return ret;
 }

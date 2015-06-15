@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 500	/*500*/ /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 2000	/*500*/ /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************

@@ -58,6 +58,7 @@ extern const int EV_LWIP_SOCKET_DISCONNECTED;	/// TCP socket is disconnected
 extern const int EV_LWIP_SOCKET_RECEIVED;		/// TCP socket received data
 extern const int EV_LWIP_SOCKET_CONNECT_TIMEOUT;/// The socket could not connect before the timeout value
 extern const int EV_LWIP_SOCKET_RECV_TIMEOUT;	/// The socket did not receive any data before the timeout value
+extern const int EV_LWIP_SOCKET_SEND_TIMEOUT;	/// The socket did not send the data before the timeout value
 extern const int EV_LWIP_SOCKET_ACCEPT_TIMEOUT;	/// The socket did not accept any connection before the timeout value
 
 /**
