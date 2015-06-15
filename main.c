@@ -103,6 +103,7 @@ void clientTohttp_task(void* param);
 void clientTohttps_task(void* param);
 #endif
 
+void watcher_task(void* param);
 
 
 #if SERVER_TEST || LED_COMMAND_TEST || HTTP_SERVER_TEST || SECURE_SERVER_TEST
@@ -265,6 +266,8 @@ int main(int argc, char** argv) {
 #if USE_AUDIO
 	xTaskCreate(audio_task, "Audio Task", configMINIMAL_STACK_SIZE, NULL, 2, NULL);	// Plays sounds when something happens
 #endif
+
+
 	vTaskStartScheduler();	// Start FreeRTOS scheduler
 
 	return 0;
@@ -342,6 +345,7 @@ void main_task(void* param) {
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("main"), "Accepting");
 #endif
+	xTaskCreate(watcher_task, "event watcher task", configMINIMAL_STACK_SIZE, NULL, uxTaskPriorityGet(NULL), NULL);
 
 	for(i=0;i<ClNbMax;++i) {
 		s[i] = -1;
@@ -1031,3 +1035,22 @@ void audio_task(void* param) {
 	}
 }	/* audio_task */
 #endif
+
+
+
+void watcher_task(void* param) {
+	uint32_t bits;
+	uint8_t socket;
+	while(1) {
+		for(socket = 0; socket<getSocketNb(); ++socket)
+		if( (bits = socket_get_events(socket, EV_LWIP_SOCKET_RECV_TIMEOUT | EV_LWIP_SOCKET_SEND_TIMEOUT)) > 0) {
+			if(bits & EV_LWIP_SOCKET_RECV_TIMEOUT)
+				printf("EV_LWIP_SOCKET_RECV_TIMEOUT\n");
+			if(bits & EV_LWIP_SOCKET_SEND_TIMEOUT)
+				printf("EV_LWIP_SOCKET_SEND_TIMEOUT\n");
+			//breakpoint();
+		}
+
+		vTaskDelay(50);
+	}
+}

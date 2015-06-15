@@ -186,7 +186,11 @@ int lwip_wait_events(const int event, int timeout);
  *
  *	@return the value of the EventGroup
  */
-	int socket_wait_events(int socket, const int events, int timeout);
+	int socket_wait_events(int socket, const uint32_t events, int timeout);
+
+	int socket_get_events(int socket, uint32_t events);
+
+	int getSocketNb(void);
 
 char* getMyIP(void);
 

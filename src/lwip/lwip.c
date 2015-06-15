@@ -108,12 +108,14 @@ const int EV_LWIP_SOCKET_CONNECTED_INTERN= 1<<10; // Internal event indicating t
 typedef struct {
 	EventGroupHandle_t events;
 
+	uint8_t isSocket;
+
 	ssl_context* ssl;
 	x509_crt cacert;
 	pk_context pkey;
 
 } socket_t;
-socket_t Sock[MAX_SOCKET_NB];
+socket_t Sock[MAX_SOCKET_NB] = {{0}};
 
 //entropy_context entropy;
 //ctr_drbg_context ctr_drbg;
@@ -444,6 +446,8 @@ int simpleSocket() {
 
 	}
 
+	Sock[socket].isSocket = 1;
+
 	return socket;
 }
 
@@ -512,27 +516,28 @@ int simpleAccept(int socket) {
 
 //-- set parameters --//
 #if LWIP_TCP_KEEPALIVE
-		if( lwip_setsockopt(socket, IPPROTO_TCP, LWIP_TCP_KEEPALIVE, (void*)&keepAliveIdleTime, sizeof(keepAliveIdleTime)) == -1)
+		if( lwip_setsockopt(ret, IPPROTO_TCP, LWIP_TCP_KEEPALIVE, (void*)&keepAliveIdleTime, sizeof(keepAliveIdleTime)) == -1)
 			printf("ERROR: cannot set LWIP_TCP_KEEPALIVE.\n");
 
-		if( lwip_setsockopt(socket, IPPROTO_TCP, TCP_KEEPINTVL, (void*)&interval, sizeof(interval)) == -1)
+		if( lwip_setsockopt(ret, IPPROTO_TCP, TCP_KEEPINTVL, (void*)&interval, sizeof(interval)) == -1)
 			printf("ERROR: cannot set TCP_KEEPINTVL.\n");
 
-		if( lwip_setsockopt(socket, IPPROTO_TCP, TCP_KEEPCNT, (void*)&count, sizeof(count)) == -1)
+		if( lwip_setsockopt(ret, IPPROTO_TCP, TCP_KEEPCNT, (void*)&count, sizeof(count)) == -1)
 			printf("ERROR: cannot set TCP_KEEPCNT.\n");
 #endif
 
 #if LWIP_SO_RCVTIMEO
-		if( lwip_setsockopt(socket, SOL_SOCKET, SO_RCVTIMEO, (void*)&recvTimeout, sizeof(recvTimeout)) == -1)
+		if( lwip_setsockopt(ret, SOL_SOCKET, SO_RCVTIMEO, (void*)&recvTimeout, sizeof(recvTimeout)) == -1)
 			printf("ERROR: cannot set SO_RCVTIMEO.\n");
 #endif
 
 #if LWIP_SO_SNDTIMEO
-		if( lwip_setsockopt(socket, SOL_SOCKET, SO_SNDTIMEO, (void*)&sendTimeout, sizeof(sendTimeout)) == -1)
+		if( lwip_setsockopt(ret, SOL_SOCKET, SO_SNDTIMEO, (void*)&sendTimeout, sizeof(sendTimeout)) == -1)
 			printf("ERROR: cannot set SO_SNDTIMEO.\n");
 #endif
 
 	}
+	Sock[ret].isSocket = 1;
 
 	return ret;
 }
@@ -645,7 +650,7 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 			break;
 		}
 		else {
-			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_SEND_TIMEOUT)
+			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_SEND_TIMEOUT);
 			printf("lwip_send timed out.\n");
 		}
 	}
@@ -697,15 +702,37 @@ int simpleClose(int socket) {
 #endif	/* USE_SIMPLESOCKET && USE_FREERTOS */
 
 
-int socket_wait_events(int socket, const int events, int timeout) {
+int socket_wait_events(int socket, const uint32_t events, int timeout) {
 
-	return xEventGroupWaitBits(Sock[socket].events, events&(~EV_LWIP_SOCKET_CONNECTED_INTERN), pdFALSE, pdFALSE, timeout / portTICK_PERIOD_MS);
+	if(Sock[socket].isSocket != 0)
+		return xEventGroupWaitBits(Sock[socket].events, events&(~EV_LWIP_SOCKET_CONNECTED_INTERN), pdFALSE, pdFALSE, timeout / portTICK_PERIOD_MS);
+	else
+		return -1;
+}
+
+
+int socket_get_events(int socket, uint32_t events) {
+	//uint32_t bits;
+	if(Sock[socket].isSocket != 0) {
+		//bits = xEventGroupGetBits(Sock[socket].events);
+		return (xEventGroupGetBits(Sock[socket].events) & events);
+	}
+	else
+		return -1;
 }
 
 char* getMyIP(void) {
 	return myIP;
 }
 
+int getSocketNb(void) {
+	int sock, nb=0;
+	for(sock=0; sock<MAX_SOCKET_NB; ++sock) {
+		if(Sock[sock].isSocket)
+			++nb;
+	}
+	return nb;
+}
 
 /*
  * MBED TLS
@@ -990,6 +1017,7 @@ int secureClose(int socket) {
 	}
 
 	ret = simpleClose(socket);
+	Sock[ret].isSocket = 0;
 	return ret;
 }
 
