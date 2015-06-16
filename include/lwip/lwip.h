@@ -191,6 +191,8 @@ int lwip_wait_events(const int event, int timeout);
 	int socket_get_events(int socket, uint32_t events);
 
 	int getSocketNb(void);
+	int getSocketNbMax(void);
+	uint8_t socketValid(int socket);
 
 char* getMyIP(void);
 

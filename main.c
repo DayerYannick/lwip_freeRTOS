@@ -38,19 +38,19 @@
 #define PC_IP "153.109.5.178"
 #endif
 
-#define TCP_PORT 4433
+#define TCP_PORT 5001 /*4433*/
 
 
 
 #define CLIENT_TEST 0	/* Connect to PC_IP and send messages */
-#define SERVER_TEST 0	/* Accept incoming connections */
+#define SERVER_TEST 1	/* Accept incoming connections */
 #define HTTP_TEST 0		/* Send a request to http://www.hevs.ch */
 #define HTTP_SERVER_TEST 0	/* A (very) simple HTTP server... */
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
 #define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
-#define SECURE_SERVER_TEST 1	/* Allows a client to connect via TLS */
+#define SECURE_SERVER_TEST 0	/* Allows a client to connect via TLS */
 #define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 
 
@@ -115,6 +115,7 @@ volatile int s[ClNbMax];
 #if DISPLAY_MSG_ON_LCD
 QueueHandle_t LCD_msgQueue;
 typedef struct {
+	uint8_t type;
 	char* ptr;
 	unsigned int tick;
 } queueLCDMsg_t;
@@ -247,7 +248,6 @@ int main(int argc, char** argv) {
 #if configUSE_TRACE_FACILITY
  		vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb end");
 #endif
-
  		printf("AES(\"datatocrypt12345\", \"000102030405060708070605040302010908070605040302030405060708090A\") = ");
 
  		for(i=0; i<16; ++i) {
@@ -334,6 +334,8 @@ void main_task(void* param) {
 	if(socket == -1)
 		printf("ERROR while creating socket\n");
 
+	xTaskCreate(watcher_task, "event watcher task", configMINIMAL_STACK_SIZE*4, NULL, uxTaskPriorityGet(NULL), NULL);
+
 	//printf("socket = %d.\n", socket);
 	if(simpleBind(socket, getMyIP(), TCP_PORT) == -1)
 		printf("ERROR in Bind\n");
@@ -345,7 +347,6 @@ void main_task(void* param) {
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("main"), "Accepting");
 #endif
-	xTaskCreate(watcher_task, "event watcher task", configMINIMAL_STACK_SIZE, NULL, uxTaskPriorityGet(NULL), NULL);
 
 	for(i=0;i<ClNbMax;++i) {
 		s[i] = -1;
@@ -366,7 +367,11 @@ void main_task(void* param) {
 
 			if(i==ClNbMax) {
 				printf("ERROR: Cannot create socket: too many clients.");
+#if SECURE_SERVER_TEST
 				secureClose(tempS);
+#else
+				simpleClose(tempS);
+#endif
 			}
 			else {
 				s[i] = tempS;
@@ -384,10 +389,14 @@ void main_task(void* param) {
 
 
 #if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST
+#include <stdlib.h>
 void clientHandle_task(void* param) {
 	char msg[MSG_LEN_MAX];
+	char msgBack[MSG_LEN_MAX+4];
 	int i = (int)param;
 	int ret;
+	char traceMsg[5];
+	int traceNb;
 
 
 	//char* msgBack;
@@ -407,12 +416,15 @@ void clientHandle_task(void* param) {
 	printf("New client: %d\n", i);
 
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("client"), "connect");
+	vTracePrintF(xTraceOpenLabel("Client"), "connect");
 #endif
 	msg[MSG_LEN_MAX-1] = '\0';
 
 	while(1) {
-		ret = simpleRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("Client"), "Wainting message");
+#endif
+		ret = simpleRecv(s[i], (unsigned char*)msg, 500);//MSG_LEN_MAX-1);
 
 		if(ret == -1) {
 			printf("error with client %d\n", i);
@@ -423,10 +435,24 @@ void clientHandle_task(void* param) {
 		else {
 			//printf("Message received on server: %.*s", ret, msg);
 
+#if configUSE_TRACE_FACILITY
+		memcpy(traceMsg, msg+4, 4);
+		traceMsg[4] = '\0';
+		traceNb = atoi(traceMsg);
+		vTracePrintF(xTraceOpenLabel("Client msg"), "%d", traceNb);
+#endif
 
-			//sprintf(msgBack, "%s", msg);
-			//simpleSendStr(msgBack);
+			msgBack[0] = 'O';
+			msgBack[1] = 'K';
+			msgBack[2] = '!';
+			msgBack[3] = ' ';
+			memcpy(msgBack+4, msg, ret);
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("Client"), "Sending message");
+#endif
+			simpleSend(s[i], (unsigned char*)msgBack, ret+4);
 #if DISPLAY_MSG_ON_LCD
+			toSendLCD.type = 1;
 			toSendLCD.tick = xTaskGetTickCount();
 			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
 				toSendLCD.ptr = pvPortMalloc(ret+1);
@@ -441,7 +467,7 @@ void clientHandle_task(void* param) {
 			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
 #endif
 
-			//vTracePrintF(xTraceOpenLabel("client"), "msg rcv");
+			//vTracePrintF(xTraceOpenLabel("Client"), "msg rcv");
 #if HTTP_SERVER_TEST
 			simpleSendStr(s[i], "HTTP/1.1 200 OK \n\r"
 								"Date: Wen, 06 May 2015 10:40:00 GMT\n\r"
@@ -466,7 +492,7 @@ void clientHandle_task(void* param) {
 	}
 
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("client"), "disconnect");
+	vTracePrintF(xTraceOpenLabel("Client"), "disconnect");
 #endif
 	printf("Connection %d closed.\n", i);
 
@@ -640,14 +666,14 @@ void clientHandle_task(void* param) {
 #endif
 
 	printf("New client: %d\n", i);
+	printf("mem free: %d\n", xPortGetFreeHeapSize());
 
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("client"), "connect");
+	vTracePrintF(xTraceOpenLabel("Client"), "connect");
 #endif
 	msg[MSG_LEN_MAX-1] = '\0';
 
 	while(1) {
-		printf("mem free: %d\n", xPortGetFreeHeapSize());
 		ret = secureRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
 
 		if(ret < 0) {
@@ -664,6 +690,7 @@ void clientHandle_task(void* param) {
 			break;
 		else {
 #if DISPLAY_MSG_ON_LCD
+			toSendLCD.type = 1;
 			toSendLCD.tick = xTaskGetTickCount();
 			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
 				toSendLCD.ptr = pvPortMalloc(ret+1);
@@ -687,12 +714,13 @@ void clientHandle_task(void* param) {
 	}
 
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("client"), "disconnect");
+	vTracePrintF(xTraceOpenLabel("Client"), "disconnect");
 #endif
-	printf("Connection %d closed.\n", i);
 
+	printf("mem free: %d\n", xPortGetFreeHeapSize());
 	secureClose(s[i]);
-
+	printf("Connection with client %d closed.\n", i);
+	printf("mem free: %d\n", xPortGetFreeHeapSize());
 
 #if USE_AUDIO
 	toSendAudio.pitch = 500;
@@ -999,10 +1027,15 @@ void lcd_task(void* param) {
 #if configUSE_TRACE_FACILITY
 		vTracePrintF(xTraceOpenLabel("LCD"), "message received");
 #endif
-		gwinSetText(ghLastMessage, received.ptr, 0);
-		sprintf(msg, "%d.%03d:",  (int)(received.tick/1000), (int)(received.tick%1000));
-		gwinSetText(ghLastMessageTime, msg, 0);
-
+		switch(received.type) {
+		case 2:
+			gwinPutString(ghConsole, received.ptr);
+			break;
+		default:
+			gwinSetText(ghLastMessage, received.ptr, 0);
+			sprintf(msg, "%d.%03d:",  (int)(received.tick/1000), (int)(received.tick%1000));
+			gwinSetText(ghLastMessageTime, msg, 0);
+		}
 		vPortFree(received.ptr);
 #else
 		vTaskDelay(10*configTICK_RATE_HZ);
@@ -1039,18 +1072,55 @@ void audio_task(void* param) {
 
 
 void watcher_task(void* param) {
-	uint32_t bits;
+	uint32_t bits[10] = {0};
+	uint32_t temp;
 	uint8_t socket;
-	while(1) {
-		for(socket = 0; socket<getSocketNb(); ++socket)
-		if( (bits = socket_get_events(socket, EV_LWIP_SOCKET_RECV_TIMEOUT | EV_LWIP_SOCKET_SEND_TIMEOUT)) > 0) {
-			if(bits & EV_LWIP_SOCKET_RECV_TIMEOUT)
-				printf("EV_LWIP_SOCKET_RECV_TIMEOUT\n");
-			if(bits & EV_LWIP_SOCKET_SEND_TIMEOUT)
-				printf("EV_LWIP_SOCKET_SEND_TIMEOUT\n");
-			//breakpoint();
-		}
+	uint32_t i;
 
-		vTaskDelay(50);
+#if DISPLAY_MSG_ON_LCD
+	queueLCDMsg_t toSend;
+#endif
+
+	while(1) {
+		for(socket=0; socket<getSocketNbMax() && socket<10; ++socket) {	// process all the sockets
+			if(socketValid(socket) == 0) {
+				bits[socket] = 0;
+				continue;
+			}
+			if( (temp = socket_get_events(socket, EV_LWIP_SOCKET_RECV_TIMEOUT | EV_LWIP_SOCKET_SEND_TIMEOUT | EV_LWIP_SOCKET_ACCEPT_TIMEOUT)) > 0) {
+				if(temp != bits[socket]) {	// Changes detected
+
+					for(i=1; i<=(1<<6); i<<=1) {	// Process all bits
+						if(!(i&bits[socket]) && (i&temp)) {	// Event raised
+#if DISPLAY_MSG_ON_LCD
+							toSend.tick = xTaskGetTickCount();
+							toSend.type = 2;
+							toSend.ptr = pvPortMalloc(50);
+
+							switch(i&temp) {
+							case 1<<4:
+									sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								break;
+							case 1<<5:
+								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+								break;
+							case 1<<6:
+								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+								break;
+							default:
+								;
+							}	// switch(i&temp)
+							xQueueSend(LCD_msgQueue, &toSend, portMAX_DELAY);
+#endif
+						}	// if(!(i&bits...
+					}	// for(i=1;...
+
+					bits[socket] = temp;
+
+				}	// if(temp != bits[...
+			}	// if( (temp =...
+		}	// for(socket=0...
+
+		vTaskDelay(5);
 	}
 }

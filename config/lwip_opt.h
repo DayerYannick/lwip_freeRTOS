@@ -47,7 +47,7 @@
 #define USE_SIMPLE_SOCKET 1
 #if USE_SIMPLE_SOCKET
 	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	5000		/* Milliseconds */
+	#define RECV_TIMEOUT_VAL	50		/* Milliseconds */
 	#define SEND_TIMEOUT_VAL	5000		/* Milliseconds */
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */

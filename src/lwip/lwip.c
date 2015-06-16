@@ -84,23 +84,23 @@ void waitForLinkDown(void);
 EventGroupHandle_t evGrLwip;		// LWIP Events
 volatile int evGrLwipCreated = 0;	// Indicates that the eventGroup was created
 
-const int EV_LWIP_INITIALIZED=			1<<1;	// Lwip is initialized
-const int EV_LWIP_ETH_UP=				1<<2;	// Ethernet connection could be established
-const int EV_LWIP_ETH_DOWN=				1<<3;	// Ethernet connection was lost (cable disconnected)
-const int EV_LWIP_IP_ASSIGNED=			1<<4;	// The interface has an IP
-const int EV_LWIP_DHCP_FAILED=			1<<5;	// The DHCP tries got higher than MAX_DHCP_TRIES
+const int EV_LWIP_INITIALIZED=			1<<0;	// Lwip is initialized
+const int EV_LWIP_ETH_UP=				1<<1;	// Ethernet connection could be established
+const int EV_LWIP_ETH_DOWN=				1<<2;	// Ethernet connection was lost (cable disconnected)
+const int EV_LWIP_IP_ASSIGNED=			1<<3;	// The interface has an IP
+const int EV_LWIP_DHCP_FAILED=			1<<4;	// The DHCP tries got higher than MAX_DHCP_TRIES
 
 const int EV_LWIP_ERROR=				1<<23;	// There was an error with lwip
 
 
 
-const int EV_LWIP_SOCKET_CONNECTED=		1<<1;	// The socket is connected
-const int EV_LWIP_SOCKET_DISCONNECTED=	1<<2;	// The socket is disconnected
-const int EV_LWIP_SOCKET_RECEIVED=		1<<3;	// The socket received data
-const int EV_LWIP_SOCKET_CONNECT_TIMEOUT= 1<<4;	// The socket could not connect before the timeout value
-const int EV_LWIP_SOCKET_RECV_TIMEOUT=	1<<5;	// The socket did not receive any data before the timeout value
-const int EV_LWIP_SOCKET_SEND_TIMEOUT=	1<<6;	// The socket did not send the data before the timeout value
-const int EV_LWIP_SOCKET_ACCEPT_TIMEOUT= 1<<7;	// The socket did not accept any connection before the timeout value
+const int EV_LWIP_SOCKET_CONNECTED=		1<<0;	// The socket is connected
+const int EV_LWIP_SOCKET_DISCONNECTED=	1<<1;	// The socket is disconnected
+const int EV_LWIP_SOCKET_RECEIVED=		1<<2;	// The socket received data
+const int EV_LWIP_SOCKET_CONNECT_TIMEOUT= 1<<3;	// The socket could not connect before the timeout value
+const int EV_LWIP_SOCKET_RECV_TIMEOUT=	1<<4;	// The socket did not receive any data before the timeout value
+const int EV_LWIP_SOCKET_SEND_TIMEOUT=	1<<5;	// The socket did not send the data before the timeout value
+const int EV_LWIP_SOCKET_ACCEPT_TIMEOUT= 1<<6;	// The socket did not accept any connection before the timeout value
 const int EV_LWIP_SOCKET_CONNECTED_INTERN= 1<<10; // Internal event indicating the end of lwip_connect
 
 // sockets variables
@@ -492,12 +492,12 @@ int simpleAccept(int socket) {
 		lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);	// Retrieve the error
 
 		if(error!= EWOULDBLOCK) {	// Error!
-			printf("Error in lwip_accept.\n");
+			//printf("Error in lwip_accept.\n");
 			break;
 		}
 		else {	// timeout: set the event
 			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_ACCEPT_TIMEOUT);
-			printf("lwip_accept timed out\n");
+			//printf("lwip_accept timed out\n");
 		}
 	}
 
@@ -640,21 +640,47 @@ int simpleConnectDNS(int socket, char* name, int port) {
 
 int simpleSend(int socket, const unsigned char* data, size_t length) {
 	int ret = 0;
+	int error;
+	int count = 0;
+	socklen_t optLen = sizeof(error);
 
 	if(length <= 0)
 		return -1;
 
-	while( (ret = lwip_send(socket, data, length, 0)) < 0) {
-		if(ret != EWOULDBLOCK) { // error
-			printf("ERROR in lwip_send: %d\n", ret);
-			break;
-		}
+	do {
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send start");
+#endif
+		ret = lwip_send(socket, data, length, 0);
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("LwIP send ret"), "%d", ret);
+#endif
+		if(ret < 0) {
+			lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
+			if(error != EWOULDBLOCK) { // error
+#if configUSE_TRACE_FACILITY
+				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send error");
+#endif
+				break;
+			}
+			else {
+#if configUSE_TRACE_FACILITY
+				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send timeout");
+#endif
+				xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_SEND_TIMEOUT);
+				//printf("lwip_send timed out.\n");
+			}
+		}	// if(ret < 0)
 		else {
-			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_SEND_TIMEOUT);
-			printf("lwip_send timed out.\n");
+			count += ret;
+			if(count < length)
+				printf("message partially sent! %d / %d.\n", count, length);
 		}
-	}
+	} while(count < length);
 
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send end");
+#endif
 	return ret;
 }
 
@@ -662,29 +688,50 @@ int simpleSendStr(int socket, const char* data) {
 	int length;
 
 	for(length = 0; data[length] != '\0'; ++length);
-	++length;
+		++length;
 
 	return simpleSend(socket, (unsigned char*)data, length);
 }
+
 
 int simpleRecv(int socket, unsigned char* data, size_t maxLength) {
 	int ret = 0;
 	int error;
 	socklen_t optLen = sizeof(error);
 
-	while((ret = lwip_recv(socket, data, maxLength, 0)) < 0) {
-		//vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv timeout");
-		lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
-		if(error!= EWOULDBLOCK) {
-			break;
-		}
-		else {
-			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_RECV_TIMEOUT);
-			printf("lwip_recv timed out\n");
-		}
-	}
+	//if( lwip_recv(socket, NULL, maxLength, MSG_PEEK) );
 
-	//vTracePrintF(xTraceOpenLabel("SimpleSock"), "lwip_recv exit. ret = %d", ret);
+
+	do {
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv start");
+#endif
+		ret = lwip_recv(socket, data, maxLength, 0);
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("LwIP recv ret"), "%d", ret);
+#endif
+		if(ret < 0) {
+			lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
+			if(error!= EWOULDBLOCK) {	// error!
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv error");
+#endif
+				break;
+			}
+			else {	// Timeout.
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv timeout");
+#endif
+				xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_RECV_TIMEOUT);
+				//printf("lwip_recv timed out\n");
+			}
+		}
+	} while(ret < 0);	// while((ret = lwip_recv...
+
+#if configUSE_TRACE_FACILITY
+		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv end");
+#endif
+
 	return ret;
 }
 
@@ -694,6 +741,8 @@ int simpleClose(int socket) {
 	vEventGroupDelete(Sock[socket].events);
 
 	ret = lwip_close(socket);
+
+	Sock[socket].isSocket = 0;
 
 
 	return ret;
@@ -732,6 +781,14 @@ int getSocketNb(void) {
 			++nb;
 	}
 	return nb;
+}
+
+int getSocketNbMax(void) {
+	return MAX_SOCKET_NB;
+}
+
+uint8_t socketValid(int socket) {
+	return Sock[socket].isSocket;
 }
 
 /*
@@ -843,6 +900,8 @@ int secureAccept(int socket) {	// FIXME
 
 	if(clientSocket < 0)
 		return clientSocket;
+
+	printf("Connecting socket %d.\n", clientSocket);
 
 	Sock[clientSocket].ssl = pvPortMalloc(sizeof(ssl_context));
 	memset(Sock[clientSocket].ssl, 0, sizeof(ssl_context));
@@ -1007,17 +1066,19 @@ int secureClose(int socket) {
 	int ret;
 
 	if(socket >= 0) {
-
-		if(Sock[socket].ssl != NULL) {
-			ssl_free(Sock[socket].ssl);
-		//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO see if necessary
-			vPortFree(Sock[socket].ssl);
-			Sock[socket].ssl = NULL;
+		if(Sock[socket].isSocket != 0) {
+			if(Sock[socket].ssl != NULL) {
+				pk_free(&Sock[socket].pkey);
+				x509_crt_free(&Sock[socket].cacert);
+				ssl_free(Sock[socket].ssl);
+			//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO see if necessary
+				vPortFree(Sock[socket].ssl);
+				Sock[socket].ssl = NULL;
+			}
 		}
 	}
 
 	ret = simpleClose(socket);
-	Sock[ret].isSocket = 0;
 	return ret;
 }
 
