@@ -22,10 +22,11 @@
  *	@brief initializes lwip with DHCP address assignment.
  *
  *	@param waitAddress: 0 when the function must not block
+ *	@param hostname: the desired hostname for the board. NULL for no hostname
  *
  *	@return 0 if initialized, something else otherwise.
  */
-int lwip_init_DHCP(const int waitAddress);
+int lwip_init_DHCP(const int waitAddress, const char* hostname);
 
 #endif	/* LWIP_DHCP */
 
@@ -35,10 +36,11 @@ int lwip_init_DHCP(const int waitAddress);
  *	@param ip: Our IP address							(e.g. "192.168.1.2")
  *	@param mask: The subnet mask						(e.g. "255.255.255.0")
  *	@param gateway: The default gateway of the network	(e.g. "192.168.1.1")
+ *	@param hostname: the desired hostname for the board. NULL for no hostname
  *
  *	@return 0 if initialized, something else otherwise.
  */
-int lwip_init_static(const char* ip, const char* mask, const char* gateway);
+int lwip_init_static(const char* ip, const char* mask, const char* gateway, const char* hostname);
 
 #if USE_FREERTOS
 /*

@@ -38,7 +38,7 @@
 #ifndef __LWIP_OPT_H__
 #define __LWIP_OPT_H__
 
-#define LWIP_DEBUG 0
+#define LWIP_DEBUG 1
 
 /*
  * Use simplified method for creating and using sockets.ti
@@ -47,7 +47,7 @@
 #define USE_SIMPLE_SOCKET 1
 #if USE_SIMPLE_SOCKET
 	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	50		/* Milliseconds */
+	#define RECV_TIMEOUT_VAL	20		/* Milliseconds */
 	#define SEND_TIMEOUT_VAL	5000		/* Milliseconds */
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */
@@ -1142,7 +1142,7 @@
  * field.
  */
 #ifndef LWIP_NETIF_HOSTNAME
-#define LWIP_NETIF_HOSTNAME             0
+#define LWIP_NETIF_HOSTNAME             1
 #endif
 
 /**
@@ -1275,7 +1275,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef TCPIP_THREAD_STACKSIZE
-#define TCPIP_THREAD_STACKSIZE          configMINIMAL_STACK_SIZE
+#define TCPIP_THREAD_STACKSIZE          configMINIMAL_STACK_SIZE*4
 #endif
 
 /**
@@ -1908,7 +1908,7 @@
  * messages are written.
  */
 #ifndef LWIP_DBG_MIN_LEVEL
-#define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_ALL
+#define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_WARNING
 #endif
 
 /**
@@ -1916,7 +1916,7 @@
  * debug messages of certain types.
  */
 #ifndef LWIP_DBG_TYPES_ON
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_OFF
+#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
 #endif
 
 /**
@@ -2035,14 +2035,14 @@
  * TCP_DEBUG: Enable debugging for TCP.
  */
 #ifndef TCP_DEBUG
-#define TCP_DEBUG                       LWIP_DBG_OFF
+#define TCP_DEBUG                       LWIP_DBG_ON
 #endif
 
 /**
  * TCP_INPUT_DEBUG: Enable debugging in tcp_in.c for incoming debug.
  */
 #ifndef TCP_INPUT_DEBUG
-#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
+#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
 #endif
 
 /**
@@ -2064,21 +2064,21 @@
  * TCP_CWND_DEBUG: Enable debugging for TCP congestion window.
  */
 #ifndef TCP_CWND_DEBUG
-#define TCP_CWND_DEBUG                  LWIP_DBG_OFF
+#define TCP_CWND_DEBUG                  LWIP_DBG_ON
 #endif
 
 /**
  * TCP_WND_DEBUG: Enable debugging in tcp_in.c for window updating.
  */
 #ifndef TCP_WND_DEBUG
-#define TCP_WND_DEBUG                   LWIP_DBG_OFF
+#define TCP_WND_DEBUG                   LWIP_DBG_ON
 #endif
 
 /**
  * TCP_OUTPUT_DEBUG: Enable debugging in tcp_out.c output functions.
  */
 #ifndef TCP_OUTPUT_DEBUG
-#define TCP_OUTPUT_DEBUG                LWIP_DBG_OFF
+#define TCP_OUTPUT_DEBUG                LWIP_DBG_ON
 #endif
 
 /**
@@ -2106,7 +2106,7 @@
  * TCPIP_DEBUG: Enable debugging in tcpip.c.
  */
 #ifndef TCPIP_DEBUG
-#define TCPIP_DEBUG                     LWIP_DBG_ON
+#define TCPIP_DEBUG                     LWIP_DBG_OFF
 #endif
 
 /**

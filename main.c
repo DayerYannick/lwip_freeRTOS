@@ -38,6 +38,8 @@
 #define PC_IP "153.109.5.178"
 #endif
 
+#define MY_HOSTNAME "Dayer_ARMEBS4"
+
 #define TCP_PORT 5001 /*4433*/
 
 
@@ -258,6 +260,11 @@ int main(int argc, char** argv) {
  	 }
 	 printf("\n");
 
+
+	 /* END OF TEMPORARY TESTS */
+
+
+
 	xTaskCreate(led_task, "Led Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);	// Indicates that the system is running
 	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*6, NULL, 3, NULL);	// Runs the tests
 #if USE_DISPLAY
@@ -293,13 +300,13 @@ void main_task(void* param) {
 
 	//-- INIT --//
 #if MY_IP_BY_DHCP
-	while(lwip_init_DHCP(0) != 0);
+	while(lwip_init_DHCP(0, MY_HOSTNAME) != 0);
 	lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
 #if !USE_DISPLAY
 	printf("My ip: %s\n", getMyIP());
 #endif
 #else
-	lwip_init_static(MY_IP, MY_MASK, MY_GW);
+	lwip_init_static(MY_IP, MY_MASK, MY_GW, MY_HOSTNAME);
 #endif
 
 
@@ -329,7 +336,7 @@ void main_task(void* param) {
 
 #if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST || SECURE_SERVER_TEST
 
-	const int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+4) * configMINIMAL_STACK_SIZE;
+	const int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+2) * configMINIMAL_STACK_SIZE;
 	socket = simpleSocket();
 	if(socket == -1)
 		printf("ERROR while creating socket\n");
@@ -372,6 +379,7 @@ void main_task(void* param) {
 #else
 				simpleClose(tempS);
 #endif
+				printf("Client closed.\n");
 			}
 			else {
 				s[i] = tempS;
@@ -390,13 +398,23 @@ void main_task(void* param) {
 
 #if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST
 #include <stdlib.h>
+
+uint8_t detectEOF(char* msg, int len) {
+	if(len < 4)
+		return 1;
+
+	return msg[len-4]=='\r' && msg[len-3]=='\n' && msg[len-2]=='\r' && msg[len-1]=='\n';
+}
+
 void clientHandle_task(void* param) {
 	char msg[MSG_LEN_MAX];
 	char msgBack[MSG_LEN_MAX+4];
 	int i = (int)param;
 	int ret;
-	char traceMsg[5];
+	//char traceMsg[5];
 	int traceNb;
+	uint8_t firstSegment=1;
+	uint8_t closeCon = 0;
 
 
 	//char* msgBack;
@@ -420,75 +438,105 @@ void clientHandle_task(void* param) {
 #endif
 	msg[MSG_LEN_MAX-1] = '\0';
 
-	while(1) {
+	while(!closeCon) {
+		firstSegment = 1;
 #if configUSE_TRACE_FACILITY
 		vTracePrintF(xTraceOpenLabel("Client"), "Wainting message");
 #endif
-		ret = simpleRecv(s[i], (unsigned char*)msg, 500);//MSG_LEN_MAX-1);
+#if SERVER_TEST
+		do {
+#endif
+			ret = simpleRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX);
 
-		if(ret == -1) {
-			printf("error with client %d\n", i);
-			break;
-		}
-		else if(ret == 0)
-			break;
-		else {
-			//printf("Message received on server: %.*s", ret, msg);
+			printf("Received %d char.\n", ret);
+
+			if(ret == -1) {
+				printf("error with client %d\n", i);
+				closeCon = 1;
+				break;
+			}
+			else if(ret == 0) {
+				closeCon = 1;
+				break;
+			}
+			else {
 
 #if configUSE_TRACE_FACILITY
-		memcpy(traceMsg, msg+4, 4);
-		traceMsg[4] = '\0';
-		traceNb = atoi(traceMsg);
-		vTracePrintF(xTraceOpenLabel("Client msg"), "%d", traceNb);
-#endif
-
-			msgBack[0] = 'O';
-			msgBack[1] = 'K';
-			msgBack[2] = '!';
-			msgBack[3] = ' ';
-			memcpy(msgBack+4, msg, ret);
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("Client"), "Sending message");
-#endif
-			simpleSend(s[i], (unsigned char*)msgBack, ret+4);
-#if DISPLAY_MSG_ON_LCD
-			toSendLCD.type = 1;
-			toSendLCD.tick = xTaskGetTickCount();
-			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
-				toSendLCD.ptr = pvPortMalloc(ret+1);
-				memcpy(toSendLCD.ptr, msg, ret);
-				toSendLCD.ptr[ret] = '\0';
-				if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
-					vPortFree(toSendLCD.ptr);
+			if(firstSegment) {				// 012345678
+				//memcpy(traceMsg, msg+4, 4);	// Msg nnnn.
+				//traceMsg[4] = '\0';			// nnnn0
+				traceNb = atoi(msg+4);
+				vTracePrintF(xTraceOpenLabel("Client msg"), "%d", traceNb);
 			}
 #endif
 
+
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("Client"), "Sending message");
+#endif
+
+			if(firstSegment) {
+				int err;
+				msgBack[0] = 'O';
+				msgBack[1] = 'K';
+				msgBack[2] = '!';
+				msgBack[3] = ' ';
+				memcpy(msgBack+4, msg, ret);
+				printf("Sending %d char.\n", ret+4);
+				err = simpleSend(s[i], (unsigned char*)msgBack, ret+4);
+				printf("returned %d.\n", err);
+			}
+			else {
+				int err;
+				printf("Sending %d char.\n", ret);
+				err = simpleSend(s[i], (unsigned char*)msg, ret);
+				printf("returned %d.\n", err);
+			}
+#if DISPLAY_MSG_ON_LCD
+				if(firstSegment) {
+					toSendLCD.type = 1;
+					toSendLCD.tick = xTaskGetTickCount();
+					if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
+						toSendLCD.ptr = pvPortMalloc(ret+1);
+						memcpy(toSendLCD.ptr, msg, ret);
+						toSendLCD.ptr[ret] = '\0';
+						if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
+							vPortFree(toSendLCD.ptr);
+					}
+				}
+#endif
+
 #if USE_AUDIO
-			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
+				if(firstSegment)
+					xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
 #endif
 
 			//vTracePrintF(xTraceOpenLabel("Client"), "msg rcv");
 #if HTTP_SERVER_TEST
-			simpleSendStr(s[i], "HTTP/1.1 200 OK \n\r"
-								"Date: Wen, 06 May 2015 10:40:00 GMT\n\r"
-								"Server: Apache/0.8.4\n\r"
-								"Content-Length: 140\n\r"
-								"Content-Type: text/html\n\r"
-								"\n\r"
-								"<html><head><title>ARMEBS 4</title></head><body><h1>This is a test</h1>This page was generated on the ARMEBS4 and sent via tcp</body></html>\n\r");
+				simpleSendStr(s[i], "HTTP/1.1 200 OK \n\r"
+									"Date: Wen, 06 May 2015 10:40:00 GMT\n\r"
+									"Server: Apache/0.8.4\n\r"
+									"Content-Length: 140\n\r"
+									"Content-Type: text/html\n\r"
+									"\n\r"
+									"<html><head><title>ARMEBS 4</title></head><body><h1>This is a test</h1>This page was generated on the ARMEBS4 and sent via tcp</body></html>\n\r");
 #elif LED_COMMAND_TEST
-			if(msg[0] == '1')
-				bsp_led_toggle(1);
-			else if(msg[0] == '2')
-				bsp_led_toggle(2);
-			else if(msg[0] == '3')
-				bsp_led_toggle(3);
-			//else
-				//simpleSendStr(s[i], "not a LED.\n");
+				if(msg[0] == '1')
+					bsp_led_toggle(1);
+				else if(msg[0] == '2')
+					bsp_led_toggle(2);
+				else if(msg[0] == '3')
+					bsp_led_toggle(3);
+				//else
+					//simpleSendStr(s[i], "not a LED.\n");
 #endif
-			//vPortFree(msg);
-			//vPortFree(msgBack);
-		}
+				//vPortFree(msg);
+				//vPortFree(msgBack);
+			}
+		firstSegment = 0;
+#if SERVER_TEST
+		} while(!detectEOF(msg,ret));
+#endif
 	}
 
 #if configUSE_TRACE_FACILITY

@@ -75,7 +75,7 @@ static void dhcp_task(void* params);	// DHCP state-machine
 static void connectTask(void* param);	// A task allowing a timeout detection on lwip_connect
 #endif
 
-static int lwip_init_common(const int ip, const int mask, const int gateway);	// A private function that initializes lwip and the hardware
+static int lwip_init_common(const int ip, const int mask, const int gateway, const char* hostname);	// A private function that initializes lwip and the hardware
 void waitForLinkDown(void);
 
 //-- EVENTS --//
@@ -146,7 +146,7 @@ int lwip_wait_events(const int event, int timeout) {
 
 #if LWIP_DHCP
 
-int lwip_init_DHCP(const int waitAddress) {
+int lwip_init_DHCP(const int waitAddress, const char* hostname) {
 	int ret;
 	char ip[16];	// ip address
 	char nm[16];	// network mask
@@ -154,7 +154,7 @@ int lwip_init_DHCP(const int waitAddress) {
 	EventBits_t uxBits;	// The EventGroupWaitBits answer
 	//printf("Lwip init: DHCP\n");
 
-	if( (ret = lwip_init_common(0, 0, 0)) != 0 )	// Call the main init function with ip parameters at 0
+	if( (ret = lwip_init_common(0, 0, 0, hostname)) != 0 )	// Call the main init function with ip parameters at 0
 		return ret;
 
 	// DHCP part
@@ -184,11 +184,11 @@ int lwip_init_DHCP(const int waitAddress) {
 }
 #endif	/* LWIP_DHCP */
 
-int lwip_init_static(const char* ip, const char* mask, const char* gateway) {
+int lwip_init_static(const char* ip, const char* mask, const char* gateway, const char* hostname) {
 
 	//printf("Lwip init with static IP: %s, %s, %s\n", ip, mask, gateway);
 
-	if(lwip_init_common(inet_addr(ip), inet_addr(mask), inet_addr(gateway)) != 0)	// Initialize lwip with ip parameters
+	if(lwip_init_common(inet_addr(ip), inet_addr(mask), inet_addr(gateway), hostname) != 0)	// Initialize lwip with ip parameters
 		return -1;
 
 	memcpy(myIP, ip, 16);
@@ -210,7 +210,7 @@ int lwip_init_static(const char* ip, const char* mask, const char* gateway) {
  *
  *	@returns 0 in case of success
  */
-static int lwip_init_common(const int ip, const int mask, const int gateway) {
+static int lwip_init_common(const int ip, const int mask, const int gateway, const char* hostname) {
 	struct ip_addr myIp;
 	struct ip_addr myMask;
 	struct ip_addr myGw;
@@ -290,6 +290,10 @@ static int lwip_init_common(const int ip, const int mask, const int gateway) {
 		return -1;
 	}
 
+#if LWIP_NETIF_HOSTNAME
+	if(hostname != NULL)
+		netif_set_hostname(stmNetif, hostname);
+#endif
 
 #if USE_MBEDTLS
 	debug_set_threshold(0);	// 0: nothing, 4: everything	// XXX here...
@@ -714,7 +718,7 @@ int simpleRecv(int socket, unsigned char* data, size_t maxLength) {
 			lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
 			if(error!= EWOULDBLOCK) {	// error!
 #if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv error");
+				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv error");
 #endif
 				break;
 			}
