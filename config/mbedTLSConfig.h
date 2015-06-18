@@ -203,18 +203,17 @@
  * Uncomment a macro to enable alternate implementation for core algorithm
  * functions
  */
-// TODO hardware CRYP and HASH modules
-#define POLARSSL_AES_ALT
+#define POLARSSL_AES_ALT		/* Utilise aes_alt.h */
 //#define POLARSSL_ARC4_ALT
 //#define POLARSSL_BLOWFISH_ALT
 //#define POLARSSL_CAMELLIA_ALT
-//#define POLARSSL_DES_ALT	/* not working with HW!*/
+//#define POLARSSL_DES_ALT	/* not working with HW! TODO: correct that... */
 //#define POLARSSL_XTEA_ALT
 //#define POLARSSL_MD2_ALT
 //#define POLARSSL_MD4_ALT
-#define POLARSSL_MD5_ALT
+#define POLARSSL_MD5_ALT		/* Utilise md5_alt.h */
 //#define POLARSSL_RIPEMD160_ALT
-#define POLARSSL_SHA1_ALT
+#define POLARSSL_SHA1_ALT		/* Utilise sha1_alt.h */
 //#define POLARSSL_SHA256_ALT
 //#define POLARSSL_SHA512_ALT
 
