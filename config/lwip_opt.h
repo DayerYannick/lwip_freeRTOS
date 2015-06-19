@@ -47,7 +47,7 @@
 #define USE_SIMPLE_SOCKET 1
 #if USE_SIMPLE_SOCKET
 	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	100		/* Milliseconds */
+	#define RECV_TIMEOUT_VAL	5000		/* Milliseconds */
 	#define SEND_TIMEOUT_VAL	5000		/* Milliseconds */
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */
@@ -140,7 +140,7 @@
 * speed and usage from interrupts!
 */
 #ifndef MEMP_MEM_MALLOC
-#define MEMP_MEM_MALLOC                 0
+#define MEMP_MEM_MALLOC                 1
 #endif
 
 /**
@@ -157,7 +157,7 @@
  * a lot of data that needs to be copied, this should be set high.
  */
 #ifndef MEM_SIZE
-#define MEM_SIZE                        8192/*1600*/
+#define MEM_SIZE                        550/*8192*//*1600*/
 #endif
 
 /**

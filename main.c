@@ -26,7 +26,7 @@
 
 //-- Defines --//
 
-#define MY_IP_BY_DHCP 0	/* 0: use MY_IP / 1: use DHCP */
+#define MY_IP_BY_DHCP 1	/* 0: use MY_IP / 1: use DHCP */
 
 
 #if !MY_IP_BY_DHCP
@@ -38,26 +38,26 @@
 #define PC_IP "153.109.5.178"
 #endif
 
-#define MY_HOSTNAME "Dayer_ARMEBS4"
+#define MY_HOSTNAME "lwip_dayer"
 
-#define TCP_PORT 5001 /*4433*/
+#define TCP_PORT 4433 /*4433*/
 
 
 
 #define CLIENT_TEST 0	/* Connect to PC_IP and send messages */
-#define SERVER_TEST 1	/* Accept incoming connections */
+#define SERVER_TEST 0	/* Accept incoming connections */
 #define HTTP_TEST 0		/* Send a request to http://www.hevs.ch */
 #define HTTP_SERVER_TEST 0	/* A (very) simple HTTP server... */
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
 #define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
-#define SECURE_SERVER_TEST 0	/* Allows a client to connect via TLS */
+#define SECURE_SERVER_TEST 1	/* Allows a client to connect via TLS */
 #define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 
 
 
-#define USE_DISPLAY 1	/* Set to 1 to display info about the system on the LCD screen */
+#define USE_DISPLAY 0	/* Set to 1 to display info about the system on the LCD screen */
 #if USE_DISPLAY
 #include "ugfx/gfx.h"
 #endif
@@ -432,6 +432,7 @@ void clientHandle_task(void* param) {
 #endif
 
 	printf("New client: %d\n", i);
+	printf("Free mem: %d\n", xPortGetFreeHeapSize());
 
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("Client"), "connect");
@@ -482,9 +483,9 @@ void clientHandle_task(void* param) {
 				msgBack[2] = '!';
 				msgBack[3] = ' ';
 				memcpy(msgBack+4, msg, ret);
-				printf("Sending %d char.\n", ret+4);
+				//printf("Sending %d char.\n", ret+4);
 				err = simpleSend(s[i], (unsigned char*)msgBack, ret+4);
-				printf("returned %d.\n", err);
+				//printf("returned %d.\n", err);
 			}
 			else {
 				int err;
@@ -492,6 +493,9 @@ void clientHandle_task(void* param) {
 				err = simpleSend(s[i], (unsigned char*)msg, ret);
 				//printf("returned %d.\n", err);
 			}
+
+			//printf("Free mem: %d\n", xPortGetFreeHeapSize());
+
 #if DISPLAY_MSG_ON_LCD
 				if(firstSegment) {
 					toSendLCD.type = 1;
@@ -542,10 +546,11 @@ void clientHandle_task(void* param) {
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("Client"), "disconnect");
 #endif
-	printf("Connection %d closed.\n", i);
 
 	simpleClose(s[i]);
 
+	printf("Connection %d closed.\n", i);
+	printf("Free mem: %d\n", xPortGetFreeHeapSize());
 
 #if USE_AUDIO
 	toSendAudio.pitch = 500;
@@ -748,7 +753,7 @@ void clientHandle_task(void* param) {
 					vPortFree(toSendLCD.ptr);
 			}
 #else
-			printf("Message received on server: %.*s", ret, msg);
+			//printf("Message received on server: %.*s", ret, msg);
 #endif
 
 
@@ -1147,7 +1152,7 @@ void watcher_task(void* param) {
 
 							switch(i&temp) {
 							case 1<<4:
-									sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
 								break;
 							case 1<<5:
 								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
@@ -1159,6 +1164,20 @@ void watcher_task(void* param) {
 								;
 							}	// switch(i&temp)
 							xQueueSend(LCD_msgQueue, &toSend, portMAX_DELAY);
+#else
+							switch(i&temp) {
+							case 1<<4:
+								printf("socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								break;
+							case 1<<5:
+								printf("socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+								break;
+							case 1<<6:
+								printf("socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+								break;
+							default:
+								;
+							}	// switch(i&temp)
 #endif
 						}	// if(!(i&bits...
 					}	// for(i=1;...
@@ -1169,6 +1188,6 @@ void watcher_task(void* param) {
 			}	// if( (temp =...
 		}	// for(socket=0...
 
-		vTaskDelay(5);
+		vTaskDelay(500);
 	}
 }
