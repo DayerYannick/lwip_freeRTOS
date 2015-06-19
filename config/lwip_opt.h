@@ -47,7 +47,7 @@
 #define USE_SIMPLE_SOCKET 1
 #if USE_SIMPLE_SOCKET
 	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	20		/* Milliseconds */
+	#define RECV_TIMEOUT_VAL	100		/* Milliseconds */
 	#define SEND_TIMEOUT_VAL	5000		/* Milliseconds */
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */
@@ -149,7 +149,7 @@
  *    2 byte alignment -> #define MEM_ALIGNMENT 2
  */
 #ifndef MEM_ALIGNMENT
-#define MEM_ALIGNMENT                   1
+#define MEM_ALIGNMENT                   4
 #endif
 
 /**
@@ -157,7 +157,7 @@
  * a lot of data that needs to be copied, this should be set high.
  */
 #ifndef MEM_SIZE
-#define MEM_SIZE                        1600
+#define MEM_SIZE                        8192/*1600*/
 #endif
 
 /**
@@ -1908,7 +1908,7 @@
  * messages are written.
  */
 #ifndef LWIP_DBG_MIN_LEVEL
-#define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_WARNING
+#define LWIP_DBG_MIN_LEVEL              LWIP_DBG_LEVEL_ALL
 #endif
 
 /**
@@ -1916,7 +1916,7 @@
  * debug messages of certain types.
  */
 #ifndef LWIP_DBG_TYPES_ON
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+#define LWIP_DBG_TYPES_ON               LWIP_DBG_OFF
 #endif
 
 /**

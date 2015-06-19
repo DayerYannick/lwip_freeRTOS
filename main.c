@@ -26,7 +26,7 @@
 
 //-- Defines --//
 
-#define MY_IP_BY_DHCP 1	/* 0: use MY_IP / 1: use DHCP */
+#define MY_IP_BY_DHCP 0	/* 0: use MY_IP / 1: use DHCP */
 
 
 #if !MY_IP_BY_DHCP
@@ -448,7 +448,7 @@ void clientHandle_task(void* param) {
 #endif
 			ret = simpleRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX);
 
-			printf("Received %d char.\n", ret);
+			//printf("Received %d char.\n", ret);
 
 			if(ret == -1) {
 				printf("error with client %d\n", i);
@@ -488,9 +488,9 @@ void clientHandle_task(void* param) {
 			}
 			else {
 				int err;
-				printf("Sending %d char.\n", ret);
+				//printf("Sending %d char.\n", ret);
 				err = simpleSend(s[i], (unsigned char*)msg, ret);
-				printf("returned %d.\n", err);
+				//printf("returned %d.\n", err);
 			}
 #if DISPLAY_MSG_ON_LCD
 				if(firstSegment) {
