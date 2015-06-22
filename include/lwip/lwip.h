@@ -177,6 +177,8 @@ int lwip_wait_events(const int event, int timeout);
  */
 	int simpleClose(int socket);
 
+	int simple_shutdown(int socket, int how);
+
 #endif	// USE_SIMPLE_SOCKET && USE_FREERTOS
 
 /**

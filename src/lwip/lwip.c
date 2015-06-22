@@ -51,7 +51,7 @@ int tcpip_init_once = 0;	// Flag indicating that lwip was already initialized
 #if USE_FREERTOS
 TaskHandle_t connectHandle;	// For deleting the connect task after a return or a timeout
 SemaphoreHandle_t createSema;	// Prevents errors while creating sockets ids
-SemaphoreHandle_t connectSema;	// Ensures that the connect function is called once at a time
+//SemaphoreHandle_t connectSema;	// Ensures that the connect function is called once at a time
 int semaCreated = 0;	// Indicates that the semaphores were created.
 #endif
 
@@ -230,7 +230,7 @@ static int lwip_init_common(const int ip, const int mask, const int gateway, con
 	//-- SEMAPHORES INIT --//
 
 	if(semaCreated == 0) {	// Do not recreate the semaphores if we already did
-		connectSema = xSemaphoreCreateMutexNamed("connect sema");
+		//connectSema = xSemaphoreCreateMutexNamed("connect sema");
 		createSema = xSemaphoreCreateMutexNamed("create sema");
 		semaCreated = 1;
 	}
@@ -292,7 +292,7 @@ static int lwip_init_common(const int ip, const int mask, const int gateway, con
 
 #if LWIP_NETIF_HOSTNAME
 	if(hostname != NULL)
-		netif_set_hostname(stmNetif, hostname);
+		netif_set_hostname(stmNetif, (char*)hostname);
 #endif
 
 #if USE_MBEDTLS
@@ -448,9 +448,9 @@ int simpleSocket() {
 			printf("ERROR: cannot set SO_SNDTIMEO.\n");
 #endif
 
+		Sock[socket].isSocket = 1;
 	}
 
-	Sock[socket].isSocket = 1;
 
 	return socket;
 }
@@ -480,7 +480,9 @@ int simpleListen(int socket) {
 int simpleAccept(int socket) {
 
 #if LWIP_TCP_KEEPALIVE
-	int keepAliveIdleTime = KEEPALIVE_IDLE, interval = KEEPALIVE_INTVL, count = KEEPALIVE_COUNT;
+	int keepAliveIdleTime = KEEPALIVE_IDLE;
+	int interval = KEEPALIVE_INTVL;
+	int count = KEEPALIVE_COUNT;
 #endif
 #if LWIP_SO_RCVTIMEO
 	int recvTimeout = RECV_TIMEOUT_VAL;
@@ -493,15 +495,16 @@ int simpleAccept(int socket) {
 	socklen_t optLen = sizeof(error);
 
 	while((ret = lwip_accept(socket, NULL, NULL)) < 0) {
-		lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);	// Retrieve the error
+		// Retrieve the error
+		lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
 
 		if(error!= EWOULDBLOCK) {	// Error!
 			//printf("Error in lwip_accept.\n");
 			break;
 		}
-		else {	// timeout: set the event
-			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_ACCEPT_TIMEOUT);
+		else {	// Timeout! Set the event.
 			//printf("lwip_accept timed out\n");
+			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_ACCEPT_TIMEOUT);
 		}
 	}
 
@@ -548,7 +551,8 @@ int simpleAccept(int socket) {
 
 /**
  * connectTask
- *	A FreeRTOS task to measure the time that it takes and generate a timeout
+ *	A FreeRTOS task to measure the time that it takes for lwip_connect to return
+ *	and generate a timeout if it takes too long.
  *
  */
 void connectTask(void* param) {
@@ -556,6 +560,7 @@ void connectTask(void* param) {
 	int* ret = params[3];
 	int socket = *(params[0]);
 	struct sockaddr_in ip;
+
 	ip.sin_addr.s_addr = *(params[1]);
 	ip.sin_port = *(params[2]);
 	ip.sin_family = AF_INET;
@@ -563,62 +568,55 @@ void connectTask(void* param) {
 
 	*ret = lwip_connect(socket, (struct sockaddr*)&ip, ip.sin_len);
 
-	xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN);	// The function returned.
+	// The function returned. Notify the main task with an event.
+	xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN);
 
-	vTaskDelete(NULL);
-	// The task sould be deleted now.
-	//while(1)
-	//	vTaskDelay(100);
+	// Wait for deletion
+	while(1)
+		vTaskDelay(portMAX_DELAY);
 }
 
 int simpleConnect(int socket, char* distantIP, int port) {
-	int ret = 0, ret2 = 0;
+	volatile int ret = 0;
 	int ipParam, portParam;
-	int* params[4];
+	 volatile int* params[4];
 	EventBits_t uxBits;
+	TaskHandle_t connectTaskHandle;
 
-	ipParam = inet_addr(distantIP);	// Transform from string to int
-
-	if(ipParam == INADDR_NONE)
+	// Transform ip from string to int
+	if( (ipParam = inet_addr(distantIP)) == INADDR_NONE)
 		return -1;
 
-	portParam = htons(port);	// Transform to network format (endianness)
+	// Transform port to network format (endianness)
+	portParam = htons(port);
 
 	// Prepare parameters for the task
 	params[0] = &socket;
-	params[1] = &(ipParam);
-	params[2] = &(portParam);
+	params[1] = &ipParam;
+	params[2] = &portParam;
 	params[3] = &ret;
 
 
-	//if(socket != -1) {
+	//xSemaphoreTake(connectSema, portMAX_DELAY);
+	xTaskCreate(connectTask, "Connect Task", configMINIMAL_STACK_SIZE, (void*)params, uxTaskPriorityGet(NULL), &connectTaskHandle);
 
-	xSemaphoreTake(connectSema, portMAX_DELAY);
-	xTaskCreate(connectTask, "Connect Task", configMINIMAL_STACK_SIZE, (void*)params, uxTaskPriorityGet(NULL), NULL);
+	uxBits = xEventGroupWaitBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN, pdTRUE, pdFALSE, CONNECT_TIMEOUT_VAL/portTICK_PERIOD_MS);
+	//xSemaphoreGive(connectSema);
 
-		uxBits = xEventGroupWaitBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN, pdTRUE, pdFALSE, CONNECT_TIMEOUT_VAL/portTICK_PERIOD_MS);
-		xSemaphoreGive(connectSema);
+	if((uxBits & EV_LWIP_SOCKET_CONNECTED_INTERN) != EV_LWIP_SOCKET_CONNECTED_INTERN) {	// Timeout
+		xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECT_TIMEOUT | EV_LWIP_SOCKET_DISCONNECTED);
+		xEventGroupClearBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED);
+		ret = -1;
+		//printf("Timeout of connect.\n");
+	}
+	else {
+		xEventGroupClearBits(Sock[socket].events, EV_LWIP_SOCKET_DISCONNECTED);
+		xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED);
+	}
 
-		if((uxBits & EV_LWIP_SOCKET_CONNECTED_INTERN) != EV_LWIP_SOCKET_CONNECTED_INTERN) {	// Timeout
-			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECT_TIMEOUT | EV_LWIP_SOCKET_DISCONNECTED);
-			xEventGroupClearBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED);
-			ret2 = -1;
-			//printf("Timeout of connect.\n");
-		}
-		else {
-			xEventGroupClearBits(Sock[socket].events, EV_LWIP_SOCKET_DISCONNECTED);
-			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED);
-			ret2 = ret;
-		}
-	//}
-	//else {
-		//printf("Error: socket not found.\n");
-		//return -1;
-	//}
+	vTaskDelete(connectTaskHandle);
 
-	ret = ret2;
-
-	return ret2;
+	return ret;
 }
 
 int simpleConnectDNS(int socket, char* name, int port) {
@@ -751,6 +749,12 @@ int simpleClose(int socket) {
 
 	return ret;
 }
+
+
+int simple_shutdown(int socket, int how) {
+	return lwip_shutdown(socket, how);
+}
+
 
 #endif	/* USE_SIMPLESOCKET && USE_FREERTOS */
 

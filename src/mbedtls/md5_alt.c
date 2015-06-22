@@ -67,6 +67,7 @@ void md5_starts( md5_context *ctx ) {
  * MD5 process buffer
  */
 void md5_update( md5_context *ctx, const unsigned char *input, size_t ilen ) {
+	/*
 	uint8_t* constResp;
 	constResp = pvPortMalloc(ilen);
 	memcpy(constResp, input, ilen);
@@ -74,6 +75,8 @@ void md5_update( md5_context *ctx, const unsigned char *input, size_t ilen ) {
 	HASH_MD5(constResp, ilen, ctx->buffer);
 	//hash_run(&hash_stm32_md5, ctx->state, (void*)input, ilen);
 	vPortFree(constResp);
+	*/
+	HASH_MD5((unsigned char*) input, ilen, ctx->buffer);
 }
 
 /*
@@ -114,13 +117,16 @@ void md5_hmac_starts( md5_context *ctx, const unsigned char *key, size_t keylen 
  * MD5 HMAC process buffer
  */
 void md5_hmac_update( md5_context *ctx, const unsigned char *input, size_t ilen ) {
-	uint8_t* constResp;
+	/*uint8_t* constResp;
 	constResp = pvPortMalloc(ilen);
 	memcpy(constResp, input, ilen);
 
 	HMAC_MD5(ctx->key, ctx->keyLen, constResp, ilen, ctx->buffer);
 
 	vPortFree(constResp);
+	*/
+	HMAC_MD5(ctx->key, ctx->keyLen, (unsigned char*) input, ilen, ctx->buffer);
+
 }
 
 /*

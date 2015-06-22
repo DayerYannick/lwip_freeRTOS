@@ -38,7 +38,7 @@
 #ifndef __LWIP_OPT_H__
 #define __LWIP_OPT_H__
 
-#define LWIP_DEBUG 1
+//#define LWIP_DEBUG
 
 /*
  * Use simplified method for creating and using sockets.ti
@@ -140,7 +140,7 @@
 * speed and usage from interrupts!
 */
 #ifndef MEMP_MEM_MALLOC
-#define MEMP_MEM_MALLOC                 1
+#define MEMP_MEM_MALLOC                 0
 #endif
 
 /**

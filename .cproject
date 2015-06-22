@@ -69,7 +69,8 @@
 						</toolChain>
 					</folderInfo>
 					<sourceEntries>
-						<entry excluding="src|libheivs_stm32/src/jpeg|libheivs_stm32/src/fatfs|libheivs_stm32/src/cyassl|libheivs_stm32/src/cmsis|stm32lib/src/usb_bsp_template.c" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="demos|main.c|stm32lib/src/usb_bsp_template.c|libheivs_stm32/src/jpeg|libheivs_stm32/src/fatfs|libheivs_stm32/src/cmsis|libheivs_stm32/src/cyassl|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry flags="VALUE_WORKSPACE_PATH" kind="sourcePath" name="demos"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>
 				</configuration>

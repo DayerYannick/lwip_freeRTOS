@@ -63,6 +63,7 @@ void sha1_starts( sha1_context *ctx )
  */
 void sha1_update( sha1_context *ctx, const unsigned char *input, size_t ilen )
 {
+	/*
 	unsigned char* constRespect;			// Used to respect the const qualifier :(
 	constRespect = pvPortMalloc(ilen);		//
 	memcpy(constRespect, input, ilen);		//
@@ -71,6 +72,9 @@ void sha1_update( sha1_context *ctx, const unsigned char *input, size_t ilen )
 		printf("ERROR in HASH_SHA1 function.");
 
 	vPortFree(constRespect);
+	*/
+	if( HASH_SHA1( (unsigned char*) input, ilen, ctx->buffer) == ERROR)	// Stores the digest in ctx.buffer
+		printf("ERROR in HASH_SHA1 function.");
 }
 
 /*
@@ -121,6 +125,7 @@ void sha1_hmac_starts( sha1_context *ctx, const unsigned char *key,
 void sha1_hmac_update( sha1_context *ctx, const unsigned char *input,
                        size_t ilen )
 {
+	/*
 	unsigned char* constRespect;		// Used to respect the const qualifier :(
 	constRespect = pvPortMalloc(ilen);	//
 	memcpy(constRespect, input, ilen);	//
@@ -128,6 +133,8 @@ void sha1_hmac_update( sha1_context *ctx, const unsigned char *input,
 	HMAC_SHA1(ctx->key, ctx->keyLen, constRespect, ilen, ctx->buffer);
 
 	vPortFree(constRespect);
+	*/
+	HMAC_SHA1(ctx->key, ctx->keyLen, (unsigned char*) input, ilen, ctx->buffer);
 }
 
 /*
