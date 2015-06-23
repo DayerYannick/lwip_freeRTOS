@@ -47,7 +47,7 @@
 #define USE_SIMPLE_SOCKET 1
 #if USE_SIMPLE_SOCKET
 	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	5000		/* Milliseconds */
+	#define RECV_TIMEOUT_VAL	5		/* Milliseconds */
 	#define SEND_TIMEOUT_VAL	5000		/* Milliseconds */
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */
@@ -1275,7 +1275,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef TCPIP_THREAD_STACKSIZE
-#define TCPIP_THREAD_STACKSIZE          configMINIMAL_STACK_SIZE*4
+#define TCPIP_THREAD_STACKSIZE          configMINIMAL_STACK_SIZE*8	/* changed by Dayer (*4) */
 #endif
 
 /**
@@ -1284,7 +1284,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef TCPIP_THREAD_PRIO
-#define TCPIP_THREAD_PRIO               1
+#define TCPIP_THREAD_PRIO               2
 #endif
 
 /**
@@ -1293,7 +1293,7 @@
  * sys_mbox_new() when tcpip_init is called.
  */
 #ifndef TCPIP_MBOX_SIZE
-#define TCPIP_MBOX_SIZE                 2
+#define TCPIP_MBOX_SIZE                 4
 #endif
 
 /**
@@ -1318,7 +1318,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef SLIPIF_THREAD_PRIO
-#define SLIPIF_THREAD_PRIO              1
+#define SLIPIF_THREAD_PRIO              2
 #endif
 
 /**
@@ -1343,7 +1343,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef PPP_THREAD_PRIO
-#define PPP_THREAD_PRIO                 1
+#define PPP_THREAD_PRIO                 2
 #endif
 
 /**
@@ -1368,7 +1368,7 @@
  * sys_thread_new() when the thread is created.
  */
 #ifndef DEFAULT_THREAD_PRIO
-#define DEFAULT_THREAD_PRIO             1
+#define DEFAULT_THREAD_PRIO             2
 #endif
 
 /**

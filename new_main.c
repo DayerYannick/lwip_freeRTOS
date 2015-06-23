@@ -10,6 +10,7 @@
 #include "freertos/FreeRTOS.h"
 
 void breath_task(void* param);
+void watcher_task(void* param);
 
 
 /*============================================================================*/
@@ -59,6 +60,14 @@ int main(int argc, char** argv) {
 				NULL,
 				2,
 				NULL );
+
+	xTaskCreate(watcher_task,
+				"event watcher task",
+				configMINIMAL_STACK_SIZE*4,
+				NULL,
+				uxTaskPriorityGet(NULL),
+				NULL);
+
 
 	vTaskStartScheduler();
 
@@ -288,3 +297,71 @@ void audio_task(void* param) {
 }	/* audio_task */
 
 #endif /* USE_AUDIO */
+
+void watcher_task(void* param) {
+	uint32_t bits[10] = {0};
+	uint32_t temp;
+	uint8_t socket;
+	uint32_t i;
+
+#if DISPLAY_MSG_ON_LCD
+	queueLCDMsg_t toSend;
+#endif
+
+	while(1) {
+		for(socket=0; socket<getSocketNbMax() && socket<10; ++socket) {	// process all the sockets
+			if(socketValid(socket) == 0) {
+				bits[socket] = 0;
+				continue;
+			}
+			if( (temp = socket_get_events(socket, EV_LWIP_SOCKET_RECV_TIMEOUT | EV_LWIP_SOCKET_SEND_TIMEOUT | EV_LWIP_SOCKET_ACCEPT_TIMEOUT)) > 0) {
+				if(temp != bits[socket]) {	// Changes detected
+
+					for(i=1; i<=(1<<6); i<<=1) {	// Process all bits
+						if(!(i&bits[socket]) && (i&temp)) {	// Event raised
+#if DISPLAY_MSG_ON_LCD
+							toSend.tick = xTaskGetTickCount();
+							toSend.type = 2;
+							toSend.ptr = pvPortMalloc(50);
+
+							switch(i&temp) {
+							case 1<<4:
+								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								break;
+							case 1<<5:
+								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+								break;
+							case 1<<6:
+								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+								break;
+							default:
+								;
+							}	// switch(i&temp)
+							xQueueSend(LCD_msgQueue, &toSend, portMAX_DELAY);
+#else
+							switch(i&temp) {
+							case 1<<4:
+								printf("socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								break;
+							case 1<<5:
+								printf("socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+								break;
+							case 1<<6:
+								printf("socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+								break;
+							default:
+								;
+							}	// switch(i&temp)
+#endif
+						}	// if(!(i&bits...
+					}	// for(i=1;...
+
+					bits[socket] = temp;
+
+				}	// if(temp != bits[...
+			}	// if( (temp =...
+		}	// for(socket=0...
+
+		vTaskDelay(5);
+	}
+}

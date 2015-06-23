@@ -10,6 +10,7 @@
 
 #if DEMO_SERVER
 
+#include <stdlib.h>
 
 #define MSG_LEN_MAX 2000
 
@@ -27,30 +28,30 @@ void server_thread(void* param);
 void main_task(void* param) {
 	int socket;
 	int i;
+	const int serverThreadStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+2) * configMINIMAL_STACK_SIZE;
 
 
 /*-------------------- INIT --------------------*/
 
-	#if MY_IP_BY_DHCP
+#if MY_IP_BY_DHCP
 
-		// Init the network interface and wait for a DHCP address
-		while(lwip_init_DHCP(0, MY_HOSTNAME) != 0);	// Repeat in case of error...
-		lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
-		#if !USE_DISPLAY
-			printf("My ip: %s\n", getMyIP());
-		#endif
+	// Init the network interface and wait for a DHCP address
+	while(lwip_init_DHCP(0, MY_HOSTNAME) != 0);	// Repeat in case of error...
+	lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
+	#if !USE_DISPLAY
+		printf("My ip: %s\n", getMyIP());
+	#endif
 
-	#else	/* MY_IP_BY_DHCP */
+#else	/* MY_IP_BY_DHCP */
 
-		// Init the network interface with a given IP address
-		lwip_init_static(MY_IP, MY_MASK, MY_GW, MY_HOSTNAME);
+	// Init the network interface with a given IP address
+	lwip_init_static(MY_IP, MY_MASK, MY_GW, MY_HOSTNAME);
 
-	#endif	/* MY_IP_BY_DHCP */
+#endif	/* MY_IP_BY_DHCP */
 
 
 /*---------------- START SERVER ----------------*/
 
-	const int serverThreadStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+2) * configMINIMAL_STACK_SIZE;
 	socket = simpleSocket();
 	if(socket == -1)
 		printf("ERROR while creating socket\n");
@@ -89,6 +90,8 @@ void main_task(void* param) {
 			else {
 				s[i] = tempS;
 				xTaskCreate(server_thread, "Client Handle", serverThreadStackSize, (void*)i, uxTaskPriorityGet(NULL), NULL);
+				// TODO remove
+				vTaskDelay(100000);
 			}
 		}
 	}
@@ -101,6 +104,8 @@ void main_task(void* param) {
 /*============================================================================*/
 /*------------------------------ SERVER THREAD -------------------------------*/
 /*============================================================================*/
+
+uint8_t detectEOF(const char* msg, int len);
 
 void server_thread(void* param) {
 	char msg[MSG_LEN_MAX];
@@ -235,6 +240,11 @@ void server_thread(void* param) {
 
 	vTaskDelete(NULL);
 }	/* server_thread */
+
+
+uint8_t detectEOF(const char* msg, int len) {
+	return msg[len-4] == '\r' && msg[len-3] == '\n' && msg[len-2] == '\r' && msg[len-1] == '\n';
+}
 
 #endif /* DEMO_SERVER */
 

@@ -125,7 +125,7 @@
  *
  * Only in use if USE_SEPARATE_USER_EVENT_BUFFER is set to 1.
  ******************************************************************************/
-#define USER_EVENT_BUFFER_SIZE 500
+#define USER_EVENT_BUFFER_SIZE 2048
 
 /*******************************************************************************
  * USER_EVENT_CHANNELS

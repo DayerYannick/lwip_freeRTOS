@@ -43,7 +43,7 @@
 #define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */
 
 
-#define USE_DISPLAY			0
+#define USE_DISPLAY			1
 #define USE_AUDIO			0
 
 
