@@ -47,15 +47,15 @@
 #define USE_SIMPLE_SOCKET 1
 #if USE_SIMPLE_SOCKET
 	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	5		/* Milliseconds */
-	#define SEND_TIMEOUT_VAL	5000		/* Milliseconds */
+	#define RECV_TIMEOUT_VAL	20		/* Milliseconds */
+	#define SEND_TIMEOUT_VAL	1000		/* Milliseconds */
 
 	#define KEEPALIVE_IDLE	5	/* Seconds */
 	#define KEEPALIVE_INTVL	1	/* Seconds */
 	#define KEEPALIVE_COUNT	10
 #endif
 
-
+#define LWIP_TRACE 1
 
 /*
  * Include user defined options first. Anything not defined in these files
@@ -157,7 +157,7 @@
  * a lot of data that needs to be copied, this should be set high.
  */
 #ifndef MEM_SIZE
-#define MEM_SIZE                        550/*8192*//*1600*/
+#define MEM_SIZE                        1600/*8192*//*1600*/
 #endif
 
 /**
@@ -1293,7 +1293,7 @@
  * sys_mbox_new() when tcpip_init is called.
  */
 #ifndef TCPIP_MBOX_SIZE
-#define TCPIP_MBOX_SIZE                 4
+#define TCPIP_MBOX_SIZE                 2	/* was 4 */
 #endif
 
 /**
@@ -1916,7 +1916,7 @@
  * debug messages of certain types.
  */
 #ifndef LWIP_DBG_TYPES_ON
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_OFF
+#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
 #endif
 
 /**
@@ -2042,7 +2042,7 @@
  * TCP_INPUT_DEBUG: Enable debugging in tcp_in.c for incoming debug.
  */
 #ifndef TCP_INPUT_DEBUG
-#define TCP_INPUT_DEBUG                 LWIP_DBG_ON
+#define TCP_INPUT_DEBUG                 LWIP_DBG_OFF
 #endif
 
 /**
@@ -2064,14 +2064,14 @@
  * TCP_CWND_DEBUG: Enable debugging for TCP congestion window.
  */
 #ifndef TCP_CWND_DEBUG
-#define TCP_CWND_DEBUG                  LWIP_DBG_ON
+#define TCP_CWND_DEBUG                  LWIP_DBG_OFF
 #endif
 
 /**
  * TCP_WND_DEBUG: Enable debugging in tcp_in.c for window updating.
  */
 #ifndef TCP_WND_DEBUG
-#define TCP_WND_DEBUG                   LWIP_DBG_ON
+#define TCP_WND_DEBUG                   LWIP_DBG_OFF
 #endif
 
 /**
@@ -2099,7 +2099,7 @@
  * UDP_DEBUG: Enable debugging in UDP.
  */
 #ifndef UDP_DEBUG
-#define UDP_DEBUG                       LWIP_DBG_OFF
+#define UDP_DEBUG                       LWIP_DBG_ON
 #endif
 
 /**

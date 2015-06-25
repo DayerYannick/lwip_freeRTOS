@@ -10,8 +10,8 @@
 
 #if DEMO_CLIENT
 
-void client_task(void* param);
-
+#define RECREATE_SOCKET 0	/* 0: create the socket once. 1: Recreate the socket for every message */
+#define SLOW_SEND 0	/* 0: full speed. 1: wait 1s between messages */
 
 
 /*============================================================================*/
@@ -20,7 +20,10 @@ void client_task(void* param);
 
 
 void main_task(void* param) {
-
+	int socket;
+	int count=0;
+	int ret;
+	char data[9];
 
 /*-------------------- INIT --------------------*/
 
@@ -42,32 +45,13 @@ void main_task(void* param) {
 
 
 /*---------------- START CLIENT ----------------*/
-	xTaskCreate(client_task,	// The code to execute
-				"Client task",	// A name for the trace functionnality
-				configMINIMAL_STACK_SIZE*8,	// A decent stack size
-				NULL,			// no parameters
-				uxTaskPriorityGet(NULL),	// The priority of the actual task
-				NULL );			// No handler
-
-	vTaskDelete(NULL);	// Delete the actual task
-}
-
-
-/*============================================================================*/
-/*------------------------------- CLIENT TASK --------------------------------*/
-/*============================================================================*/
-
-void client_task(void* param) {
-	int socket;
-	int count=0;
-	int ret;
-	char data[9];
-
-	vTaskDelay(1000);
 
 	while(1) {
 
 		printf("creating socket.\n");
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("Client"), "Creating socket");
+#endif
 		socket = simpleSocket();
 		if(socket < 0) {
 			printf("Error on socket creation.\n");
@@ -78,18 +62,30 @@ void client_task(void* param) {
 			if( (ret = simpleConnect(socket, PC_IP, TCP_PORT)) < 0) {
 				printf("Error on connect.\n");
 			}
-			else {
-				sprintf(data, "msg %3d\n", count);
-				printf("Client sending to IP: %s", data);
-				if( (ret = simpleSendStr(socket, data)) < 0) {
-					printf("Error on send.\n");
-				}
+			else {	// No error on connect
+				do {
+					sprintf(data, "msg %3d\n", count);
+
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("Client msg"), "%d", count);
+#endif
+					if(++count > 999)
+						count = 0;
+					//printf("Client sending to IP: %s", data);
+					if( (ret = simpleSendStr(socket, data)) < 0) {
+						printf("Error on send.\n");
+					}
+					if(SLOW_SEND) {
+						vTaskDelay(1*configTICK_RATE_HZ);
+					}
+				} while(!RECREATE_SOCKET && ret > 0);
 			}
 
 			simple_shutdown(socket, 2);
 
-			vTaskDelay(100);
-
+#if configUSE_TRACE_FACILITY
+			vTracePrintF(xTraceOpenLabel("Client"), "Closing socket");
+#endif
 			if( (ret=simpleClose(socket)) < 0)
 				printf("ERROR while closing socket: %d.\n", ret);
 
@@ -98,14 +94,11 @@ void client_task(void* param) {
 
 		}
 
-		if(++count > 999)
-			count = 0;
-		vTaskDelay(200);
-
 		printf("\n");
 
 	}	// While(1)
 }
+
 
 
 #endif /* DEMO_CLIENT */

@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 2048 /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 2200 /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************
@@ -95,7 +95,7 @@
  * this causes a declaration of a zero-sized array, for which the C compiler
  * behavior is not standardized and may cause misaligned data.
  ******************************************************************************/
-#define SYMBOL_TABLE_SIZE 1024
+#define SYMBOL_TABLE_SIZE 800
 
 #if (SYMBOL_TABLE_SIZE == 0)
 #error "SYMBOL_TABLE_SIZE may not be zero!"
@@ -125,7 +125,7 @@
  *
  * Only in use if USE_SEPARATE_USER_EVENT_BUFFER is set to 1.
  ******************************************************************************/
-#define USER_EVENT_BUFFER_SIZE 2048
+#define USER_EVENT_BUFFER_SIZE 900
 
 /*******************************************************************************
  * USER_EVENT_CHANNELS

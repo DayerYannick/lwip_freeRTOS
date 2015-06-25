@@ -119,9 +119,7 @@ void server_thread(void* param) {
 
 
 	//char* msgBack;
-#if DISPLAY_MSG_ON_LCD
 	queueLCDMsg_t toSendLCD;
-#endif
 
 
 #if USE_AUDIO
@@ -144,7 +142,7 @@ void server_thread(void* param) {
 
 		firstSegment = 1;
 #if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("Client"), "Wainting message");
+		vTracePrintF(xTraceOpenLabel("Client"), "Waiting message");
 #endif
 
 		do {
@@ -177,26 +175,25 @@ void server_thread(void* param) {
 #endif
 
 			if(firstSegment) {
-				int err;
+				//int err;
 				msgBack[0] = 'O';
 				msgBack[1] = 'K';
 				msgBack[2] = '!';
 				msgBack[3] = ' ';
 				memcpy(msgBack+4, msg, ret);
 				//printf("Sending %d char.\n", ret+4);
-				err = simpleSend(s[i], (unsigned char*)msgBack, ret+4);
+				/*err = */simpleSend(s[i], (unsigned char*)msgBack, ret+4);
 				//printf("returned %d.\n", err);
 			}
 			else {
-				int err;
+				//int err;
 				//printf("Sending %d char.\n", ret);
-				err = simpleSend(s[i], (unsigned char*)msg, ret);
+				/*err = */simpleSend(s[i], (unsigned char*)msg, ret);
 				//printf("returned %d.\n", err);
 			}
 
 			//printf("Free mem: %d\n", xPortGetFreeHeapSize());
 
-#if DISPLAY_MSG_ON_LCD
 				if(firstSegment) {
 					toSendLCD.type = 1;
 					toSendLCD.tick = xTaskGetTickCount();
@@ -208,7 +205,6 @@ void server_thread(void* param) {
 							vPortFree(toSendLCD.ptr);
 					}
 				}
-#endif
 
 #if USE_AUDIO
 				if(firstSegment)

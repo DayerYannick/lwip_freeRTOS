@@ -32,9 +32,9 @@
 /*============================================================================*/
 /*------------------------------ DEMO SELECTION ------------------------------*/
 /*============================================================================*/
-/* Set one of the macro to 1 to activate the demo */
-#define DEMO_CLIENT 		0	/* Connect to PC_IP and send messages */
-#define DEMO_SERVER 		1	/* Accept incoming connections */
+/* Set one of these macros to 1 to activate the demo */
+#define DEMO_CLIENT 		1	/* Connect to PC_IP and send messages */
+#define DEMO_SERVER 		0	/* Accept incoming connections */
 #define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */
 #define DEMO_HTTP_SERVER	0	/* A (very) simple HTTP server... */
 
@@ -43,8 +43,8 @@
 #define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */
 
 
-#define USE_DISPLAY			1
-#define USE_AUDIO			0
+#define USE_DISPLAY			0	/* 1 to display infos (console, messages, ...)*/
+#define USE_AUDIO			0	/* 1 to play sound on important events (expe.)*/
 
 
 

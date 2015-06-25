@@ -54,7 +54,7 @@ int main(int argc, char** argv) {
 				3,
 				NULL );
 
-	xTaskCreate(breath_task,
+/*	xTaskCreate(breath_task,
 				"Breath LED task",
 				configMINIMAL_STACK_SIZE,
 				NULL,
@@ -68,7 +68,7 @@ int main(int argc, char** argv) {
 				uxTaskPriorityGet(NULL),
 				NULL);
 
-
+*/
 	vTaskStartScheduler();
 
 	printf("ERROR: Task scheduler returned ??\n");
@@ -84,7 +84,7 @@ int main(int argc, char** argv) {
 /**
  * @brief Changes the luminosity of a LED periodically
  *
- * Changes the pwm of the LED 0 every 'ratems' ms, to inform the user that the
+ * Changes the pwm of the LED0 every 'ratems' ms, to inform the user that the
  * system is running.
  */
 void breath_task(void* param) {
@@ -119,15 +119,11 @@ void lcd_task(void* param) {
 	GWidgetInit wi;
 	GHandle ghStatus;
 	GHandle ghConsole;
-#if DISPLAY_MSG_ON_LCD
 	GHandle ghLastMessage;
 	GHandle ghLastMessageTime;
-#endif
 	uint32_t t;
 
-#if DISPLAY_MSG_ON_LCD
 	queueLCDMsg_t received;
-#endif
 
 	char msg[32];
 
@@ -177,7 +173,6 @@ void lcd_task(void* param) {
 
 		//-- Last message label --//
 
-#if DISPLAY_MSG_ON_LCD
 		wi.g.y = 30;
 		wi.g.x = 10;
 		wi.g.width = 300;
@@ -194,7 +189,6 @@ void lcd_task(void* param) {
 		wi.text = "No message received.";
 
 		ghLastMessage = gwinLabelCreate(NULL, &wi);
-#endif
 
 
 
@@ -240,14 +234,12 @@ void lcd_task(void* param) {
 
 		lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
 
-
 		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
 		sprintf(msg, "%d.%03d: IP assigned: %s.\n",  (int)(t/1000), (int)(t%1000), getMyIP());
 		gwinPutString(ghConsole, msg);
 
 
 	while(1) {
-#if DISPLAY_MSG_ON_LCD
 		xQueueReceive(LCD_msgQueue, &received, portMAX_DELAY);
 
 #if configUSE_TRACE_FACILITY
@@ -263,9 +255,6 @@ void lcd_task(void* param) {
 			gwinSetText(ghLastMessageTime, msg, 0);
 		}
 		vPortFree(received.ptr);
-#else
-		vTaskDelay(10*configTICK_RATE_HZ);
-#endif
 
 	}	// while(1)
 
@@ -303,8 +292,7 @@ void watcher_task(void* param) {
 	uint32_t temp;
 	uint8_t socket;
 	uint32_t i;
-
-#if DISPLAY_MSG_ON_LCD
+#if USE_DISPLAY
 	queueLCDMsg_t toSend;
 #endif
 
@@ -319,7 +307,9 @@ void watcher_task(void* param) {
 
 					for(i=1; i<=(1<<6); i<<=1) {	// Process all bits
 						if(!(i&bits[socket]) && (i&temp)) {	// Event raised
-#if DISPLAY_MSG_ON_LCD
+
+
+#if USE_DISPLAY
 							toSend.tick = xTaskGetTickCount();
 							toSend.type = 2;
 							toSend.ptr = pvPortMalloc(50);
@@ -337,7 +327,6 @@ void watcher_task(void* param) {
 							default:
 								;
 							}	// switch(i&temp)
-							xQueueSend(LCD_msgQueue, &toSend, portMAX_DELAY);
 #else
 							switch(i&temp) {
 							case 1<<4:
@@ -362,6 +351,6 @@ void watcher_task(void* param) {
 			}	// if( (temp =...
 		}	// for(socket=0...
 
-		vTaskDelay(5);
-	}
+		vTaskDelay(500);
+	}	// while(1) {
 }

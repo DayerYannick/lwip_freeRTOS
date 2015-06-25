@@ -651,21 +651,23 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 
 	do {
 #if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send start");
+		// XXX vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send start");
 #endif
 		ret = lwip_send(socket, data, length, 0);
 #if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("LwIP send ret"), "%d", ret);
+		// XXX vTracePrintF(xTraceOpenLabel("LwIP send ret"), "%d", ret);
+		//lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
+		// XXX vTracePrintF(xTraceOpenLabel("LwIP send ret"), "%d", error);
 #endif
 		if(ret < 0) {
 			lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
-			if(error != EWOULDBLOCK) { // error
+			if(error != EWOULDBLOCK) { // Error
 #if configUSE_TRACE_FACILITY
 				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send error");
 #endif
 				break;
 			}
-			else {
+			else {	// Timeout
 #if configUSE_TRACE_FACILITY
 				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send timeout");
 #endif
@@ -681,7 +683,7 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 	} while(count < length);
 
 #if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send end");
+	// XXX vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send end");
 #endif
 	return ret;
 }
