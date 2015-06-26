@@ -57,7 +57,7 @@
  * vTracePrintF may use multiple records depending on the number of data args.
  ******************************************************************************/
 
-#define EVENT_BUFFER_SIZE 2200 /* Adjust wrt. to available RAM */
+#define EVENT_BUFFER_SIZE 2100 /* Adjust wrt. to available RAM */
 
 
 /*******************************************************************************
@@ -125,7 +125,7 @@
  *
  * Only in use if USE_SEPARATE_USER_EVENT_BUFFER is set to 1.
  ******************************************************************************/
-#define USER_EVENT_BUFFER_SIZE 900
+#define USER_EVENT_BUFFER_SIZE 880
 
 /*******************************************************************************
  * USER_EVENT_CHANNELS

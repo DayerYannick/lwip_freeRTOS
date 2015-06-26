@@ -251,7 +251,7 @@
  * this should be set high.
  */
 #ifndef MEMP_NUM_PBUF
-#define MEMP_NUM_PBUF                   16
+#define MEMP_NUM_PBUF                   32	/* was 16. takes 16B */
 #endif
 
 /**
@@ -1293,7 +1293,7 @@
  * sys_mbox_new() when tcpip_init is called.
  */
 #ifndef TCPIP_MBOX_SIZE
-#define TCPIP_MBOX_SIZE                 2	/* was 4 */
+#define TCPIP_MBOX_SIZE                 1	/* was 4 */
 #endif
 
 /**
@@ -1377,7 +1377,7 @@
  * to sys_mbox_new() when the recvmbox is created.
  */
 #ifndef DEFAULT_RAW_RECVMBOX_SIZE
-#define DEFAULT_RAW_RECVMBOX_SIZE       0
+#define DEFAULT_RAW_RECVMBOX_SIZE       6
 #endif
 
 /**
@@ -1404,7 +1404,7 @@
  * sys_mbox_new() when the acceptmbox is created.
  */
 #ifndef DEFAULT_ACCEPTMBOX_SIZE
-#define DEFAULT_ACCEPTMBOX_SIZE         0
+#define DEFAULT_ACCEPTMBOX_SIZE         6
 #endif
 
 /*

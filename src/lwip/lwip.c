@@ -319,7 +319,8 @@ static int lwip_init_common(const int ip, const int mask, const int gateway, con
 #ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
 	memory_buffer_alloc_init(polarsslBuffer, sizeof(polarsslBuffer));
 #endif
-#endif
+#endif	/* USE_MBEDTLS */
+
 
 	return 0;
 }
@@ -421,6 +422,8 @@ int simpleSocket() {
 		return -1;
 	}
 
+	lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));
+
 	if(socket >= 0) {
 		Sock[socket].events = xEventGroupCreate();
 		xEventGroupClearBits(Sock[socket].events, 0xFFFFFF);
@@ -510,6 +513,8 @@ int simpleAccept(int socket) {
 
 	// Initialize the socket's parameters
 	if(ret != -1) {
+
+	lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));
 
 		if(ret >= MAX_SOCKET_NB) {
 			printf("ERROR: Too many simultaneous sockets!\n");
