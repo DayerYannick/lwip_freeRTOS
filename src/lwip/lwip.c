@@ -422,7 +422,7 @@ int simpleSocket() {
 		return -1;
 	}
 
-	lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));
+	lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (void*)1, sizeof(int));
 
 	if(socket >= 0) {
 		Sock[socket].events = xEventGroupCreate();
@@ -514,7 +514,7 @@ int simpleAccept(int socket) {
 	// Initialize the socket's parameters
 	if(ret != -1) {
 
-	lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));
+	//lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));
 
 		if(ret >= MAX_SOCKET_NB) {
 			printf("ERROR: Too many simultaneous sockets!\n");
@@ -981,8 +981,10 @@ int secureAccept(int socket) {	// FIXME
 int secureConnect(int socket, char* distantIP, int port) {
 	int ret;
 
-	if( (ret = simpleConnect(socket, distantIP, port)) != 0)
+	if( (ret = simpleConnect(socket, distantIP, port)) != 0) {
+		printf("Error in simplesocket\n");
 		return ret;
+	}
 
 	Sock[socket].ssl = pvPortMalloc(sizeof(ssl_context));
 	memset(Sock[socket].ssl, 0, sizeof(ssl_context));
@@ -999,13 +1001,22 @@ int secureConnect(int socket, char* distantIP, int port) {
 	ssl_set_authmode(Sock[socket].ssl, SSL_VERIFY_NONE);
 
 	//ssl_set_rng(Sock[socket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
-	ssl_set_rng(Sock[socket].ssl, randomHelper, 0);	// True RNG via hardware
+	// Function that give random numbers (True RNG via hardware)
+	ssl_set_rng(Sock[socket].ssl, randomHelper, 0);
+	// Debug handler to display messages
 	ssl_set_dbg(Sock[socket].ssl, sslDebugHelper, NULL);
-	ssl_set_bio(Sock[socket].ssl, recvHelper, (void*)socket, sendHelper, (void*)socket);
+	// Input/ouput functions (TCP)
+	ssl_set_bio(Sock[socket].ssl,	recvHelper, (void*)socket,
+									sendHelper, (void*)socket);
 
+	// Cipher suites to use (define SSL_CIPHERSUITES in mbedTLSConfig to change)
 	ssl_set_ciphersuites(Sock[socket].ssl, ssl_list_ciphersuites());
 
+	// Version minimum to use: SSL v3.1 (= TLS v1.0)
 	ssl_set_min_version(Sock[socket].ssl, 3, 1);
+
+	// ARC4 disabled (deprecated)
+    ssl_set_arc4_support(Sock[socket].ssl, SSL_ARC4_DISABLED);
 
 
 #if configUSE_TRACE_FACILITY
@@ -1037,7 +1048,7 @@ int secureConnectDNS(int socket, char* name, int port) {
 	if(ent != 0) {
 		sprintf(ip, "%d.%d.%d.%d", ent->h_addr_list[0][0]&0xFF, ent->h_addr_list[0][1]&0xFF, ent->h_addr_list[0][2]&0xFF, ent->h_addr_list[0][3]&0xFF);
 		ret = secureConnect(socket, ip, port);
-		printf("dns of %s => %s\n", name, ip);
+		//printf("dns of %s => %s\n", name, ip);
 	}
 	else {
 		printf("Error while resolving DNS name.\n");

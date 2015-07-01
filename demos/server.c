@@ -119,7 +119,9 @@ void server_thread(void* param) {
 
 
 	//char* msgBack;
+#if USE_DISPLAY
 	queueLCDMsg_t toSendLCD;
+#endif
 
 
 #if USE_AUDIO
@@ -195,6 +197,7 @@ void server_thread(void* param) {
 			//printf("Free mem: %d\n", xPortGetFreeHeapSize());
 
 				if(firstSegment) {
+#if USE_DISPLAY
 					toSendLCD.type = 1;
 					toSendLCD.tick = xTaskGetTickCount();
 					if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
@@ -204,6 +207,7 @@ void server_thread(void* param) {
 						if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
 							vPortFree(toSendLCD.ptr);
 					}
+#endif
 				}
 
 #if USE_AUDIO

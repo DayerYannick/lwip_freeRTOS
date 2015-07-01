@@ -21,29 +21,30 @@
 #define MY_GW "192.168.1.1"
 #define PC_IP "192.168.1.2"
 #else
-#define PC_IP "153.109.5.178"
+#define PC_IP "153.109.5.101"
 #endif
 
 #define MY_HOSTNAME "lwip_dayer"
 
-#define TCP_PORT 5001 /*4433*/
+#define TCP_PORT 443
 
 
 /*============================================================================*/
 /*------------------------------ DEMO SELECTION ------------------------------*/
 /*============================================================================*/
 /* Set one of these macros to 1 to activate the demo */
-#define DEMO_CLIENT 		1	/* Connect to PC_IP and send messages */
+#define DEMO_CLIENT 		0	/* Connect to PC_IP and send messages */
 #define DEMO_SERVER 		0	/* Accept incoming connections */
-#define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */
-#define DEMO_HTTP_SERVER	0	/* A (very) simple HTTP server... */
+#define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */	/* TODO Display picture */
+#define DEMO_HTTP_SERVER	0	/* A (very) simple HTTP server... */	/* TODO IMPLEMENT */
 
 #define DEMO_TLS_CLIENT		0	/* Connection to a secured server via TLS */
 #define DEMO_TLS_SERVER		0	/* Allows a client to connect via TLS */
-#define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */
+#define DEMO_HTTPS_CLIENT	1	/* Send a request to https://www.google.ch */
+#define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */	/* TODO implement... */
 
 
-#define USE_DISPLAY			0	/* 1 to display infos (console, messages, ...)*/
+#define USE_DISPLAY			1	/* 1 to display infos (console, messages, ...)*/
 #define USE_AUDIO			0	/* 1 to play sound on important events (expe.)*/
 
 
@@ -78,6 +79,10 @@ typedef struct {
 } queueAUDIOMsg_t;
 #endif	/* USE_AUDIO */
 
+typedef struct imgStruct {
+	size_t size;
+	char* img;
+} imgStruct_t;
 
 
 

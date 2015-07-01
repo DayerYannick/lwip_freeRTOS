@@ -1,14 +1,15 @@
 /*
- * ssl_client.c
+ * client_https.c
  *
- *  Created on: 22 juin 2015
+ *  Created on: 1 juil. 2015
  *      Author: yannick.dayer
  */
 
 
+
 #include "demos/demos.h"
 
-#if DEMO_TLS_CLIENT
+#if DEMO_HTTPS_CLIENT
 
 #define RECREATE_SOCKET 0	/* 0: create the socket once. 1: Recreate the socket for every message */
 #define SLOW_SEND 0	/* 0: full speed. 1: wait 1s between messages */
@@ -23,11 +24,10 @@ void main_task(void* param) {
 	int socket;
 	int count=0;
 	int ret;
-	char data[12];
 	char RData[200];
 
 #if USE_DISPLAY
-	queueLCDMsg_t toSendLCD;
+	//queueLCDMsg_t toSendLCD;
 #endif
 
 /*-------------------- INIT --------------------*/
@@ -65,58 +65,46 @@ void main_task(void* param) {
 		else {
 			printf("Trying connection to IP.\n");
 			// Connect the socket to the port TCP_PORT on PC_IP
-			if( (ret = secureConnect(socket, PC_IP, TCP_PORT)) < 0) {
-				printf("Error on connect.\n");
+			if( (ret = secureConnectDNS(socket, "www.google.ch", 443)) < 0) {
+				printf("Error on connect (www.google.ch : 443).\n");
 			}
 			else {	// Connect successful
 
 
 				do {	// Loop to send messages repeatedly
 
-					// Create the message
-					sprintf(data, "msg %6d\n", count);
-#if USE_DISPLAY
-					// Send a copy to the
-					toSendLCD.type = 0;
-					toSendLCD.tick = xTaskGetTickCount();
-					toSendLCD.ptr = pvPortMalloc(sizeof(data));
-					memcpy(toSendLCD.ptr, data, sizeof(data));
-					if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
-						vPortFree(toSendLCD.ptr);
-#endif	/* USE_DISPLAY */
-
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client msg"), "%d", count);
 #endif	/* configUSE_TRACE_FACILITY */
 
 					// Send the message to the host
-					if( (ret = secureSendStr(socket, data)) < 0) {
+					if( (ret = secureSendStr(socket, "GET /images/srpr/logo8w.png HTTP/1.1\r\n"
+						"Host: www.google.ch\r\n"
+						"Accept: */*\r\n"
+						"Content-Type: text/html\r\n"
+						"Content-Length: 0\r\n\r\n")) < 0) {
 						printf("Error on send.\n");
 					}
 					else {
-						ret = secureRecv(socket, (unsigned char*)RData, sizeof(RData));
-						if(ret < 0) {
-							switch(-ret) {
-							case 0x7880:
-								printf("Server notified that the connection is going to be closed.\n");
-								break;
-							default:
-								printf("Error on recv on socket %d: returned -%04X.\n", socket, -ret);
+						do {
+							ret = secureRecv(socket, (unsigned char*)RData, sizeof(RData));
+							if(ret < 0) {
+								printf("\nError on recv.\n");
 							}
-						}
-						else if(ret != 0) {
-							printf("received %d char on socket %d: %.*s\n", ret, socket, ret, RData);
-						}
-						else {
-							printf("Recv returned 0 char on socket %d.\n", socket);
-						}
+							else if(ret == 0) {
+								printf("\nEnd connection received.\n");
+							}
+							else {
+								printf("%.*s", ret, RData);
+							}
+						} while(ret > 0);
 					}
 #if SLOW_SEND
 						// Wait some time
 						vTaskDelay(1*configTICK_RATE_HZ);
 #if !USE_DISPLAY
 						// We can use printf with SLOW_SEND
-						printf("Sending message: %s\n"(const char*)data);
+						printf("Sending message: %s\n"(const char*)RData);
 #endif	/* !USE_DISPLAY */
 
 #endif	/* SLOW_SEND */
@@ -146,4 +134,4 @@ void main_task(void* param) {
 	}	// While(1)
 }
 
-#endif /* DEMO_SSL_CLIENT */
+#endif /* DEMO_HTTPS_CLIENT */

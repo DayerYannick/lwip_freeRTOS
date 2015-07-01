@@ -1010,7 +1010,7 @@
  * as much as (2 * TCP_SND_BUF/TCP_MSS) for things to work.
  */
 #ifndef TCP_SND_QUEUELEN
-#define TCP_SND_QUEUELEN                ((4 * (TCP_SND_BUF) + (TCP_MSS - 1))/(TCP_MSS))
+#define TCP_SND_QUEUELEN                16 /*was ((4 * (TCP_SND_BUF) + (TCP_MSS - 1))/(TCP_MSS))*/
 #endif
 
 /**
@@ -1293,7 +1293,7 @@
  * sys_mbox_new() when tcpip_init is called.
  */
 #ifndef TCPIP_MBOX_SIZE
-#define TCPIP_MBOX_SIZE                 1	/* was 4 */
+#define TCPIP_MBOX_SIZE                 4
 #endif
 
 /**
@@ -1435,7 +1435,7 @@
 #define LWIP_NETCONN                    1
 #endif
 
-/** LWIP_TCPIP_TIMEOUT==1: Enable tcpip_timeout/tcpip_untimeout tod create
+/** LWIP_TCPIP_TIMEOUT==1: Enable tcpip_timeout/tcpip_untimeout to create
  * timers running in tcpip_thread from another thread.
  */
 #ifndef LWIP_TCPIP_TIMEOUT

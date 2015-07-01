@@ -45,13 +45,13 @@
 
 
 #define CLIENT_TEST 0	/* Connect to PC_IP and send messages */
-#define SERVER_TEST 1	/* Accept incoming connections */
+#define SERVER_TEST 0	/* Accept incoming connections */
 #define HTTP_TEST 0		/* Send a request to http://www.hevs.ch */
 #define HTTP_SERVER_TEST 0	/* A (very) simple HTTP server... */
 
 #define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
 
-#define SECURE_CLIENT_TEST 0	/* Connection to a secured server via TLS */
+#define SECURE_CLIENT_TEST 1	/* Connection to a secured server via TLS */
 #define SECURE_SERVER_TEST 0	/* Allows a client to connect via TLS */
 #define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
 

@@ -23,18 +23,22 @@ void main_task(void* param) {
 	int socket;
 	int count=0;
 	int ret;
-	char data[9];
+	char data[12];
+
+#if USE_DISPLAY
+	queueLCDMsg_t toSendLCD;
+#endif
 
 /*-------------------- INIT --------------------*/
 
 #if MY_IP_BY_DHCP
-
 	// Init the network interface and wait for a DHCP address
 	while(lwip_init_DHCP(0, MY_HOSTNAME) != 0);	// Repeat in case of error...
 	lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
-	#if !USE_DISPLAY
-		printf("My ip: %s\n", getMyIP());
-	#endif
+#if !USE_DISPLAY
+	// Display our IP on the console if the LCD display is not used
+	printf("My ip: %s\n", getMyIP());
+#endif	/* !USE_DISPLAY */
 
 #else	/* MY_IP_BY_DHCP */
 
@@ -52,46 +56,70 @@ void main_task(void* param) {
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client"), "Creating socket");
 #endif
+		// Create a socket to handle the connection
 		socket = simpleSocket();
 		if(socket < 0) {
 			printf("Error on socket creation.\n");
 		}
 		else {
-
 			printf("Trying connection to IP.\n");
+			// Connect the socket to the port TCP_PORT on PC_IP
 			if( (ret = simpleConnect(socket, PC_IP, TCP_PORT)) < 0) {
 				printf("Error on connect.\n");
 			}
-			else {	// No error on connect
-				do {
-					sprintf(data, "msg %3d\n", count);
+			else {	// Connect successful
+
+
+				do {	// Loop to send messages repeatedly
+
+					// Create the message
+					sprintf(data, "msg %6d\n", count);
+#if USE_DISPLAY
+					// Send a copy to the
+					toSendLCD.type = 0;
+					toSendLCD.tick = xTaskGetTickCount();
+					toSendLCD.ptr = pvPortMalloc(sizeof(data));
+					memcpy(toSendLCD.ptr, data, sizeof(data));
+					if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
+						vPortFree(toSendLCD.ptr);
+#endif	/* USE_DISPLAY */
 
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client msg"), "%d", count);
-#endif
-					if(++count > 999)
-						count = 0;
-					//printf("Client sending to IP: %s", data);
+#endif	/* configUSE_TRACE_FACILITY */
+
+					// Send the message to the host
 					if( (ret = simpleSendStr(socket, data)) < 0) {
 						printf("Error on send.\n");
 					}
-					if(SLOW_SEND) {
+#if SLOW_SEND
+						// Wait some time
 						vTaskDelay(1*configTICK_RATE_HZ);
-					}
+#if !USE_DISPLAY
+						// We can use printf with SLOW_SEND
+						printf("Sending message: %s\n"(const char*)data);
+#endif	/* !USE_DISPLAY */
+
+#endif	/* SLOW_SEND */
+
+					// Change the content of the next message
+					if(++count > 999999)
+						count = 0;
+
 				} while(!RECREATE_SOCKET && ret > 0);
 			}
 
+			// Send the remaining packets
 			simple_shutdown(socket, 2);
 
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client"), "Closing socket");
 #endif
+			// Close the socket to free the memory
 			if( (ret=simpleClose(socket)) < 0)
 				printf("ERROR while closing socket: %d.\n", ret);
 
 			printf("Socket Closed.\n");
-			printf("(free mem = %d)\n", xPortGetFreeHeapSize());
-
 		}
 
 		printf("\n");

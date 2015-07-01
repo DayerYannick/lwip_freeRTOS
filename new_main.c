@@ -9,6 +9,12 @@
 
 #include "freertos/FreeRTOS.h"
 
+#if DEMO_TLS_CLIENT || DEMO_TLS_SERVER
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE*8
+#else
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE*8
+#endif
+
 void breath_task(void* param);
 void watcher_task(void* param);
 
@@ -49,7 +55,7 @@ int main(int argc, char** argv) {
 
 	xTaskCreate(main_task,
 				"Main task",
-				configMINIMAL_STACK_SIZE*8,
+				MAIN_TASK_STACK_SIZE,
 				NULL,
 				3,
 				NULL );
@@ -248,6 +254,9 @@ void lcd_task(void* param) {
 		switch(received.type) {
 		case 2:
 			gwinPutString(ghConsole, received.ptr);
+			break;
+		case 5:	// picture
+
 			break;
 		default:
 			gwinSetText(ghLastMessage, received.ptr, 0);
