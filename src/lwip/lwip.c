@@ -38,8 +38,8 @@
 #include "mbedtls/entropy.h"
 #include "mbedtls/platform.h"
 #include "mbedtls/debug.h"
-#include "mbedtls/certs.h"
 #include "mbedtls/ctr_drbg.h"
+#include "config/mbedTLSCerts.h"
 
 
 
@@ -106,19 +106,18 @@ const int EV_LWIP_SOCKET_CONNECTED_INTERN= 1<<10; // Internal event indicating t
 // sockets variables
 #define MAX_SOCKET_NB MEMP_NUM_TCP_PCB
 typedef struct {
-	EventGroupHandle_t events;
+	EventGroupHandle_t events;	// Socket events handle
 
-	uint8_t isSocket;
+	uint8_t isSocket;	// 'Socket initialized' flag
 
-	ssl_context* ssl;
-	x509_crt cacert;
-	pk_context pkey;
+	ssl_context* ssl;	// The ssl context for this socket
+
+	x509_crt* caChain;	// CA certificate chain (all the top level CA)
+	x509_crt* ownCert;	// Our certificate chain (the path to the top CA)
+	pk_context pkey;	// Our private key
 
 } socket_t;
 socket_t Sock[MAX_SOCKET_NB] = {{0}};
-
-//entropy_context entropy;
-//ctr_drbg_context ctr_drbg;
 
 
 #if USE_MBEDTLS
@@ -908,7 +907,7 @@ int secureListen(int socket) {
 	return ret;
 }
 
-int secureAccept(int socket) {	// FIXME
+int secureAccept(int socket) {
 	int ret, clientSocket;
 
 	clientSocket = simpleAccept(socket);
@@ -947,17 +946,26 @@ int secureAccept(int socket) {	// FIXME
 
 	pk_init(&(Sock[clientSocket].pkey));
 
-	if( (ret=pk_parse_key(&(Sock[clientSocket].pkey), (const unsigned char*)test_srv_key, sizeof(test_srv_key), NULL, 0) ) != 0)
+	if( (ret=pk_parse_key(&(Sock[clientSocket].pkey), (const unsigned char*)srv_key, sizeof(srv_key), NULL, 0) ) != 0)
 		printf("pk_parse_key returned %d\n", ret);
 
-	x509_crt_init(&(Sock[clientSocket].cacert));
+	Sock[clientSocket].caChain = polarssl_malloc( sizeof(x509_crt) );
+	Sock[clientSocket].ownCert = polarssl_malloc( sizeof(x509_crt) );
 
-	if( (ret=x509_crt_parse(&(Sock[clientSocket].cacert), (const unsigned char*) test_srv_crt_rsa, strlen(test_srv_crt_rsa)) ) != 0)
-		printf("x509_crt_parse returned %d\n", ret);
+	x509_crt_init(Sock[clientSocket].caChain);
+	x509_crt_init(Sock[clientSocket].ownCert);
 
+	if( (ret=x509_crt_parse(Sock[clientSocket].caChain, (const unsigned char*) ca_crt, strlen(ca_crt)) ) != 0)
+		printf("x509_crt_parse of the CA certificate returned %d\n", ret);
+	if( (ret=x509_crt_parse(Sock[clientSocket].ownCert, (const unsigned char*) srv_crt, strlen(srv_crt)) ) != 0)
+		printf("x509_crt_parse of our certificate returned %d\n", ret);
 
-	if( (ssl_set_own_cert(Sock[clientSocket].ssl, &(Sock[clientSocket].cacert), &(Sock[clientSocket].pkey)) ) != 0)
+	// TODO: Add support for Certificate Revocation List (CRL) and common name check
+	ssl_set_ca_chain(Sock[clientSocket].ssl, Sock[clientSocket].caChain, NULL, NULL);
+
+	if( (ssl_set_own_cert(Sock[clientSocket].ssl, Sock[clientSocket].ownCert, &(Sock[clientSocket].pkey)) ) != 0)
 		printf("ssl_set_own_cert returned %d\n", ret);
+
 
 
 #if configUSE_TRACE_FACILITY
@@ -982,7 +990,7 @@ int secureConnect(int socket, char* distantIP, int port) {
 	int ret;
 
 	if( (ret = simpleConnect(socket, distantIP, port)) != 0) {
-		printf("Error in simplesocket\n");
+		//printf("Error in simplesocket\n");
 		return ret;
 	}
 
@@ -998,7 +1006,7 @@ int secureConnect(int socket, char* distantIP, int port) {
 	}
 
 	ssl_set_endpoint(Sock[socket].ssl, SSL_IS_CLIENT);
-	ssl_set_authmode(Sock[socket].ssl, SSL_VERIFY_NONE);
+	ssl_set_authmode(Sock[socket].ssl, SSL_VERIFY_REQUIRED);
 
 	//ssl_set_rng(Sock[socket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
 	// Function that give random numbers (True RNG via hardware)
@@ -1017,6 +1025,36 @@ int secureConnect(int socket, char* distantIP, int port) {
 
 	// ARC4 disabled (deprecated)
     ssl_set_arc4_support(Sock[socket].ssl, SSL_ARC4_DISABLED);
+
+    // Certificates
+    pk_init(&(Sock[socket].pkey));
+
+	if( (ret=pk_parse_key(&(Sock[socket].pkey), (const unsigned char*)cli_key, sizeof(cli_key), NULL, 0) ) != 0)
+		printf("pk_parse_key returned %d\n", ret);
+
+
+	Sock[socket].caChain = polarssl_malloc( sizeof(x509_crt) );
+	Sock[socket].ownCert = polarssl_malloc( sizeof(x509_crt) );
+
+	x509_crt_init(Sock[socket].caChain);
+	x509_crt_init(Sock[socket].ownCert);
+
+
+	if( (ret=x509_crt_parse(Sock[socket].caChain, (const unsigned char*) ca_crt, strlen(ca_crt)) ) != 0)
+		printf("x509_crt_parse CA returned %d\n", ret);
+
+	debug_print_crt(Sock[socket].ssl, 1, "lwip.c", 1046, "parsed CA cert", Sock[socket].caChain);
+
+	if( (ret=x509_crt_parse(Sock[socket].ownCert, (const unsigned char*) cli_crt, strlen(cli_crt)) ) != 0)
+		printf("x509_crt_parse own certificate returned %d\n", ret);
+
+	debug_print_crt(Sock[socket].ssl, 1, "lwip.c", 1051, "parsed own cert", Sock[socket].ownCert);
+
+	// TODO: add support for CRL and expected commonName
+	ssl_set_ca_chain(Sock[socket].ssl, Sock[socket].caChain, NULL, NULL);
+
+	if( (ssl_set_own_cert(Sock[socket].ssl, Sock[socket].ownCert, &(Sock[socket].pkey)) ) != 0)
+		printf("ssl_set_own_cert returned %d\n", ret);
 
 
 #if configUSE_TRACE_FACILITY
@@ -1074,7 +1112,7 @@ int secureSendStr(int socket, const char* data) {
 	int length;
 
 	for(length = 0; data[length] != '\0'; ++length);
-	++length;
+		++length;
 
 	return secureSend(socket, (unsigned char*)data, length);
 }
@@ -1095,9 +1133,10 @@ int secureClose(int socket) {
 		if(Sock[socket].isSocket != 0) {
 			if(Sock[socket].ssl != NULL) {
 				pk_free(&Sock[socket].pkey);
-				x509_crt_free(&Sock[socket].cacert);
+				x509_crt_free(Sock[socket].caChain);
+				x509_crt_free(Sock[socket].ownCert);
 				ssl_free(Sock[socket].ssl);
-			//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO see if necessary
+			//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO clean memory?
 				vPortFree(Sock[socket].ssl);
 				Sock[socket].ssl = NULL;
 			}

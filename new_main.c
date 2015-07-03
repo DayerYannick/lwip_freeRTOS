@@ -9,6 +9,8 @@
 
 #include "freertos/FreeRTOS.h"
 
+#include <time.h>
+
 #if DEMO_TLS_CLIENT || DEMO_TLS_SERVER
 #define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE*8
 #else
@@ -26,6 +28,16 @@ void watcher_task(void* param);
 int main(int argc, char** argv) {
 	(void) argc;
 	(void) argv;
+	struct tm lt;
+	time_t tt;
+
+	printf("\n\n");
+
+
+	tt = time( NULL );
+	gmtime_r( &tt, &lt );
+	printf("Now: %d.%d.%d %d:%d:%d\n",
+			lt.tm_mday, lt.tm_mon + 1, lt.tm_year + 1900, lt.tm_hour, lt.tm_min, lt.tm_sec);
 
 	printf("\n\n");
 
@@ -60,7 +72,7 @@ int main(int argc, char** argv) {
 				3,
 				NULL );
 
-/*	xTaskCreate(breath_task,
+	xTaskCreate(breath_task,
 				"Breath LED task",
 				configMINIMAL_STACK_SIZE,
 				NULL,
@@ -74,7 +86,7 @@ int main(int argc, char** argv) {
 				uxTaskPriorityGet(NULL),
 				NULL);
 
-*/
+
 	vTaskStartScheduler();
 
 	printf("ERROR: Task scheduler returned ??\n");

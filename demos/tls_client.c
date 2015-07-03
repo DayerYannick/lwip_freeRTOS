@@ -23,7 +23,7 @@ void main_task(void* param) {
 	int socket;
 	int count=0;
 	int ret;
-	char data[12];
+	char data[13];
 	char RData[200];
 
 #if USE_DISPLAY
@@ -74,7 +74,7 @@ void main_task(void* param) {
 				do {	// Loop to send messages repeatedly
 
 					// Create the message
-					sprintf(data, "msg %6d\n", count);
+					sprintf(data, "-msg %6d\n", count);
 #if USE_DISPLAY
 					// Send a copy to the
 					toSendLCD.type = 0;
@@ -89,12 +89,15 @@ void main_task(void* param) {
 			vTracePrintF(xTraceOpenLabel("Client msg"), "%d", count);
 #endif	/* configUSE_TRACE_FACILITY */
 
+					//printf("sending %s\n", data);
 					// Send the message to the host
 					if( (ret = secureSendStr(socket, data)) < 0) {
 						printf("Error on send.\n");
 					}
 					else {
-						ret = secureRecv(socket, (unsigned char*)RData, sizeof(RData));
+						//printf("Sent msg %d\n", count);
+
+						/*ret = secureRecv(socket, (unsigned char*)RData, sizeof(RData));
 						if(ret < 0) {
 							switch(-ret) {
 							case 0x7880:
@@ -109,7 +112,8 @@ void main_task(void* param) {
 						}
 						else {
 							printf("Recv returned 0 char on socket %d.\n", socket);
-						}
+						}*/
+
 					}
 #if SLOW_SEND
 						// Wait some time

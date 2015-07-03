@@ -21,7 +21,7 @@
 #define MY_GW "192.168.1.1"
 #define PC_IP "192.168.1.2"
 #else
-#define PC_IP "153.109.5.101"
+#define PC_IP "153.109.5.97"
 #endif
 
 #define MY_HOSTNAME "lwip_dayer"
@@ -38,9 +38,9 @@
 #define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */	/* TODO Display picture */
 #define DEMO_HTTP_SERVER	0	/* A (very) simple HTTP server... */	/* TODO IMPLEMENT */
 
-#define DEMO_TLS_CLIENT		0	/* Connection to a secured server via TLS */
+#define DEMO_TLS_CLIENT		1	/* Connection to a secured server via TLS */
 #define DEMO_TLS_SERVER		0	/* Allows a client to connect via TLS */
-#define DEMO_HTTPS_CLIENT	1	/* Send a request to https://www.google.ch */
+#define DEMO_HTTPS_CLIENT	0	/* Send a request to https://www.google.ch */
 #define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */	/* TODO implement... */
 
 
