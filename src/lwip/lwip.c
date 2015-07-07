@@ -833,7 +833,7 @@ int recvHelper(void* fd, unsigned char* buf, size_t len) {
 	return ret;
 }
 
-int randomHelper(void* fd, unsigned char* buf, size_t len) {
+int random_Hardware(void* fd, unsigned char* buf, size_t len) {
 	const int timeout = 10;
 	int ret;
 	int i, j;
@@ -923,7 +923,7 @@ int secureAccept(int socket) {
 #if configUSE_TRACE_FACILITY
 	vTracePrintF(xTraceOpenLabel("mbedtls"), "ssl init");
 #endif
-	if( (ret = ssl_init(Sock[clientSocket].ssl)) != 0) {
+	if( (ret = ssl_init(Sock[clientSocket].ssl)) != 0) {	// TODO move in secureScoket()?
 		printf("Error in ssl_init.\n");
 		vPortFree(Sock[clientSocket].ssl);	// Cancel the malloc
 		Sock[clientSocket].ssl = NULL;
@@ -935,7 +935,7 @@ int secureAccept(int socket) {
 	ssl_set_authmode(Sock[clientSocket].ssl, SSL_VERIFY_NONE);
 
 	//ssl_set_rng(Sock[clientSocket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
-	ssl_set_rng(Sock[clientSocket].ssl, randomHelper, 0);				// Using only the hardware RNG
+	ssl_set_rng(Sock[clientSocket].ssl, random_Hardware, 0);				// Using only the hardware RNG
 	ssl_set_dbg(Sock[clientSocket].ssl, sslDebugHelper, NULL);
 	ssl_set_bio(Sock[clientSocket].ssl, recvHelper, (void*)clientSocket, sendHelper, (void*)clientSocket);
 
@@ -1010,7 +1010,7 @@ int secureConnect(int socket, char* distantIP, int port) {
 
 	//ssl_set_rng(Sock[socket].ssl, ctr_drbg_random, &ctr_drbg);	// default polarssl version of random
 	// Function that give random numbers (True RNG via hardware)
-	ssl_set_rng(Sock[socket].ssl, randomHelper, 0);
+	ssl_set_rng(Sock[socket].ssl, random_Hardware, 0);
 	// Debug handler to display messages
 	ssl_set_dbg(Sock[socket].ssl, sslDebugHelper, NULL);
 	// Input/ouput functions (TCP)

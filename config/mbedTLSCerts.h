@@ -52,7 +52,7 @@
 "-----END CERTIFICATE-----\r\n"
 const char ca_crt_rsa[] = CA_CRT_RSA;
 
-// The CA
+// The CA private key. (if we are the CA)
 const char ca_key_rsa[] =
 "-----BEGIN RSA PRIVATE KEY-----\r\n"
 "Proc-Type: 4,ENCRYPTED\r\n"
@@ -73,6 +73,7 @@ const char ca_key_rsa[] =
 "hESP91zu9wEtleymMCwLvsLEJMFSaKwWbeAn3MSSZcRXWiyJH2coZ53NIYafgcyu\r\n"
 "-----END RSA PRIVATE KEY-----\r\n";
 
+// The secret key of the encrypted ca_key
 const char ca_pwd_rsa[] = "TestKey";
 
 // The server certificate (sent to the client to identify us if required)
