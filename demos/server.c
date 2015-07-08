@@ -12,10 +12,10 @@
 
 #include <stdlib.h>
 
-#define MSG_LEN_MAX 2000
+#define MSG_LEN_MAX 2000	// The maximum length of a message when receiving
 
-#define ClNbMax 3
-volatile int s[ClNbMax];
+#define ClNbMax 6	// The maximum number of simultaneous connected clients
+volatile int s[ClNbMax]; // An array of socket listing all the connected clients
 
 void server_thread(void* param);
 
@@ -55,8 +55,6 @@ void main_task(void* param) {
 	socket = simpleSocket();
 	if(socket == -1)
 		printf("ERROR while creating socket\n");
-
-	//xTaskCreate(watcher_task, "event watcher task", configMINIMAL_STACK_SIZE*4, NULL, uxTaskPriorityGet(NULL), NULL);
 
 	if(simpleBind(socket, getMyIP(), TCP_PORT) == -1)
 		printf("ERROR in Bind\n");

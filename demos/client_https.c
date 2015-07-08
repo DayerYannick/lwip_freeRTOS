@@ -69,9 +69,9 @@ void main_task(void* param) {
 				printf("Error on connect (www.google.ch : 443).\n");
 			}
 			else {	// Connect successful
+				printf("Connected.\n");
 
-
-				do {	// Loop to send messages repeatedly
+				//do {	// Loop to send messages repeatedly
 
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client msg"), "%d", count);
@@ -79,13 +79,11 @@ void main_task(void* param) {
 
 					// Send the message to the host
 					if( (ret = secureSendStr(socket, "GET /images/srpr/logo8w.png HTTP/1.1\r\n"
-						"Host: www.google.ch\r\n"
-						"Accept: */*\r\n"
-						"Content-Type: text/html\r\n"
-						"Content-Length: 0\r\n\r\n")) < 0) {
+						"Host: www.google.ch\r\n")) < 0) {
 						printf("Error on send.\n");
 					}
 					else {
+						printf("Request sent.\n");
 						do {
 							ret = secureRecv(socket, (unsigned char*)RData, sizeof(RData));
 							if(ret < 0) {
@@ -113,7 +111,7 @@ void main_task(void* param) {
 					if(++count > 999999)
 						count = 0;
 
-				} while(!RECREATE_SOCKET && ret > 0);
+				//} while(!RECREATE_SOCKET && ret > 0);
 			}
 
 			// Send the remaining packets

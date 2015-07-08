@@ -35,17 +35,17 @@
 /* Set one of these macros to 1 to activate the demo */
 #define DEMO_CLIENT 		0	/* Connect to PC_IP and send messages */
 #define DEMO_SERVER 		0	/* Accept incoming connections */
-#define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */	/* TODO Display picture */
-#define DEMO_HTTP_SERVER	0	/* A (very) simple HTTP server... */	/* TODO IMPLEMENT */
+#define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */		/* TODO Display picture */
+#define DEMO_HTTP_SERVER	0	/* A simple HTTP server... */					/* NOT IMPLEMENTED */
 
-#define DEMO_TLS_CLIENT		1	/* Connection to a secured server via TLS */
+#define DEMO_TLS_CLIENT		0	/* Connection to a secured server via TLS */
 #define DEMO_TLS_SERVER		0	/* Allows a client to connect via TLS */
-#define DEMO_HTTPS_CLIENT	0	/* Send a request to https://www.google.ch */
-#define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */	/* TODO implement... */
+#define DEMO_HTTPS_CLIENT	1	/* Send a request to https://www.google.ch */
+#define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */	/* NOT IMPLEMENTED */
 
 
 #define USE_DISPLAY			1	/* 1 to display infos (console, messages, ...)*/
-#define USE_AUDIO			0	/* 1 to play sound on important events (expe.)*/
+#define USE_AUDIO			0	/* 1 to play sound on important events */
 
 
 

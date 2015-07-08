@@ -52,6 +52,7 @@ extern const int EV_LWIP_INITIALIZED;			/// Lwip is initialized
 extern const int EV_LWIP_ETH_UP;				/// Ethernet connection could be established
 extern const int EV_LWIP_ETH_DOWN;				/// Ethernet connection was lost (cable disconnected)
 extern const int EV_LWIP_IP_ASSIGNED;			/// The device has an IP address
+extern const int EV_LWIP_DHCP_STARTED;			/// The DHCP address assignment failed
 extern const int EV_LWIP_DHCP_FAILED;			/// The DHCP address assignment failed
 extern const int EV_LWIP_ERROR;					/// Something went wrong
 

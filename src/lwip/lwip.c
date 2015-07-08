@@ -88,7 +88,8 @@ const int EV_LWIP_INITIALIZED=			1<<0;	// Lwip is initialized
 const int EV_LWIP_ETH_UP=				1<<1;	// Ethernet connection could be established
 const int EV_LWIP_ETH_DOWN=				1<<2;	// Ethernet connection was lost (cable disconnected)
 const int EV_LWIP_IP_ASSIGNED=			1<<3;	// The interface has an IP
-const int EV_LWIP_DHCP_FAILED=			1<<4;	// The DHCP tries got higher than MAX_DHCP_TRIES
+const int EV_LWIP_DHCP_STARTED=			1<<4;	// The DHCP assignation protocol has started
+const int EV_LWIP_DHCP_FAILED=			1<<5;	// The DHCP tries got higher than MAX_DHCP_TRIES
 
 const int EV_LWIP_ERROR=				1<<23;	// There was an error with lwip
 
@@ -297,24 +298,8 @@ static int lwip_init_common(const int ip, const int mask, const int gateway, con
 #if USE_MBEDTLS
 	debug_set_threshold(0);	// 0: nothing, 4: everything	// XXX here...
 	threading_set_alt(polarssl_mutex_init_func, polarssl_mutex_free_func, polarssl_mutex_lock_func, polarssl_mutex_unlock_func);
-	//platform_set_malloc_free(pvPortMalloc, vPortFree);	// Uses the polarssl "pool" implementation with the extern memory instead
 	random_init();
-/*	entropy_init(&entropy);
-	ctr_drbg_init(&ctr_drbg, entropy_func, &entropy, (unsigned char*)"Random string", 13);
-	entropy_add_source(&entropy, randomHelper2, NULL, 0);
-	{
-#define lenTmp 50
-		unsigned char rand[lenTmp];
-		int i;
-		entropy_update_manual(&entropy, rand, lenTmp);
-		entropy_func(0, rand, lenTmp);
-		printf("rand: ");
-		for(i=0; i<lenTmp; ++i)
-			printf("%d, ", rand[i]);
 
-		printf("\n");
-	}
-*/
 #ifdef POLARSSL_MEMORY_BUFFER_ALLOC_C
 	memory_buffer_alloc_init(polarsslBuffer, sizeof(polarsslBuffer));
 #endif
@@ -336,6 +321,8 @@ static void dhcp_task(void* params) {
 		switch (dhcp_state) {
 		case DHCP_START:
 			dhcp_state = DHCP_WAIT_ADDRESS;
+
+			xEventGroupSetBits(evGrLwip, EV_LWIP_DHCP_STARTED);
 
 			dhcp_start(stmNetif);	// Start the DHCP procedure
 

@@ -172,10 +172,12 @@ void lcd_task(void* param) {
 		wi.text = "TCP/IP STACK: HTTP server test";
 #elif LED_COMMAND_TEST
 		wi.text = "TCP/IP STACK: LED command test";
-#elif DEMO_SSL_CLIENT
-		wi.text = "TCP/IP STACK: SSL client test";
-#elif DEMO_SSL_SERVER
-		wi.text = "TCP/IP STACK: SSL server test";
+#elif DEMO_TLS_CLIENT
+		wi.text = "TCP/IP STACK: TLS client test";
+#elif DEMO_TLS_SERVER
+		wi.text = "TCP/IP STACK: TLS server test";
+#elif DEMO_HTTPS_CLIENT
+		wi.text = "TCP/IP STACK: HTTPS client test";
 #elif DEMO_HTTPS_SERVER
 		wi.text = "TCP/IP STACK: HTTPS server test";
 #else
@@ -189,7 +191,7 @@ void lcd_task(void* param) {
 
 		gwinLabelCreate(NULL, &wi);
 
-		//-- Last message label --//
+		//-- Last message labels --//
 
 		wi.g.y = 30;
 		wi.g.x = 10;

@@ -57,6 +57,8 @@
 
 #define LWIP_TRACE 1
 
+#define LWIP_INTER_FIX 0
+
 /*
  * Include user defined options first. Anything not defined in these files
  * will be set to standard values. Override anything you dont like!
