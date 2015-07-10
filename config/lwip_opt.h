@@ -38,26 +38,38 @@
 #ifndef __LWIP_OPT_H__
 #define __LWIP_OPT_H__
 
-//#define LWIP_DEBUG
+#define LWIP_DEBUG 1
+
+
+/* Basic configuration */
 
 /*
- * Use simplified method for creating and using sockets.ti
+ * Use simplified method for creating and using sockets.
  * functions defined in lwip/lwip.h
  */
 #define USE_SIMPLE_SOCKET 1
-#if USE_SIMPLE_SOCKET
-	#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
-	#define RECV_TIMEOUT_VAL	20		/* Milliseconds */
-	#define SEND_TIMEOUT_VAL	1000		/* Milliseconds */
 
-	#define KEEPALIVE_IDLE	5	/* Seconds */
-	#define KEEPALIVE_INTVL	1	/* Seconds */
-	#define KEEPALIVE_COUNT	10
-#endif
 
-#define LWIP_TRACE 1
+/*
+ * Timing settings
+ */
+#define CONNECT_TIMEOUT_VAL	5000		/* Milliseconds */
+#define RECV_TIMEOUT_VAL	5000		/* Milliseconds */
+#define SEND_TIMEOUT_VAL	1000		/* Milliseconds */
+
+/*
+ * KeepAlive
+ */
+#define KEEPALIVE_IDLE	5	/* Seconds */
+#define KEEPALIVE_INTVL	1	/* Seconds */
+#define KEEPALIVE_COUNT	10
 
 #define LWIP_INTER_FIX 0
+
+
+
+
+/* Expert configuration */
 
 /*
  * Include user defined options first. Anything not defined in these files
@@ -1918,7 +1930,7 @@
  * debug messages of certain types.
  */
 #ifndef LWIP_DBG_TYPES_ON
-#define LWIP_DBG_TYPES_ON               LWIP_DBG_ON
+#define LWIP_DBG_TYPES_ON               LWIP_DBG_OFF
 #endif
 
 /**
@@ -2037,7 +2049,7 @@
  * TCP_DEBUG: Enable debugging for TCP.
  */
 #ifndef TCP_DEBUG
-#define TCP_DEBUG                       LWIP_DBG_ON
+#define TCP_DEBUG                       LWIP_DBG_OFF
 #endif
 
 /**

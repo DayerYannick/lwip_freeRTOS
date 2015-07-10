@@ -1,962 +1,153 @@
-/**
- * @file main.c
+/*
+ * new_main.c
  *
- * @brief test programs for lwip TCP stack
- * @author Dayer Yannick
+ *	Creates different tasks used by the examples
+ *
+ *  Created on: 22 juin 2015
+ *      Author: yannick.dayer
  */
 
-#include "heivs/config.h"
-
-#include <stdint.h>
-#include "heivs/bsp.h"
+#include "demos/demos.h"
 
 #include "freertos/FreeRTOS.h"
-#include "freertos/task.h"
-#include "freertos/event_groups.h"
 
+#include <time.h>
 
-#include "lwip/lwip.h"
-
-
-
-#include "mbedtls/md5.h"
-#include "mbedtls/sha1.h"
-#include "mbedtls/des.h"
-#include "mbedtls/aes.h"
-
-//-- Defines --//
-
-#define MY_IP_BY_DHCP 1	/* 0: use MY_IP / 1: use DHCP */
-
-
-#if !MY_IP_BY_DHCP
-#define MY_IP "192.168.1.5"
-#define MY_MASK "255.255.255.0"
-#define MY_GW "192.168.1.1"
-#define PC_IP "192.168.1.2"
+#if DEMO_TLS_CLIENT || DEMO_TLS_SERVER
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE*8
 #else
-#define PC_IP "153.109.5.178"
+#define MAIN_TASK_STACK_SIZE configMINIMAL_STACK_SIZE*8
 #endif
 
-#define MY_HOSTNAME "lwip_dayer"
-
-#define TCP_PORT 5001 /*4433*/
-
-
-
-#define CLIENT_TEST 0	/* Connect to PC_IP and send messages */
-#define SERVER_TEST 0	/* Accept incoming connections */
-#define HTTP_TEST 0		/* Send a request to http://www.hevs.ch */
-#define HTTP_SERVER_TEST 0	/* A (very) simple HTTP server... */
-
-#define LED_COMMAND_TEST 0	/* Remote control of the LEDs on the board */
-
-#define SECURE_CLIENT_TEST 1	/* Connection to a secured server via TLS */
-#define SECURE_SERVER_TEST 0	/* Allows a client to connect via TLS */
-#define HTTPS_TEST 0			/* Send a request to https://www.google.ch */
-
-
-
-#define USE_DISPLAY 1	/* Set to 1 to display info about the system on the LCD screen */
-#if USE_DISPLAY
-#include "ugfx/gfx.h"
-#endif
-
-#if (SERVER_TEST || SECURE_SERVER_TEST) && USE_DISPLAY
-#define DISPLAY_MSG_ON_LCD 1	/* 1: Displays the last received message on LCD screen */
-#endif
-
-#define USE_AUDIO 0	/* Set to 1 to be notified with a sound when an event occurs */
-#if USE_AUDIO
-#include "heivs/audio.h"
-#endif
-
-
-#define MSG_LEN_MAX 2000	/* The maximum length (in bytes) of a message received via TCP */
-
-
-void main_task(void* param);
-void led_task(void* param);
-#if USE_DISPLAY
-void lcd_task(void* param);
-#endif
-#if USE_AUDIO
-void audio_task(void* param);
-#endif
-
-#if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST || SECURE_SERVER_TEST
-void clientHandle_task(void* param);
-#endif
-
-#if CLIENT_TEST
-void clientToIP_task(void* param);
-#endif
-
-#if SECURE_CLIENT_TEST
-void clientToIPSecured_task(void* param);
-#endif
-
-
-#if HTTP_TEST
-void clientTohttp_task(void* param);
-#endif
-
-#if HTTPS_TEST
-void clientTohttps_task(void* param);
-#endif
-
+void breath_task(void* param);
 void watcher_task(void* param);
 
 
-#if SERVER_TEST || LED_COMMAND_TEST || HTTP_SERVER_TEST || SECURE_SERVER_TEST
-#define ClNbMax 3
-volatile int s[ClNbMax];
-#endif
-
-
-#if DISPLAY_MSG_ON_LCD
-QueueHandle_t LCD_msgQueue;
-typedef struct {
-	uint8_t type;
-	char* ptr;
-	unsigned int tick;
-} queueLCDMsg_t;
-#endif
-
-#if USE_AUDIO
-QueueHandle_t AUDIO_msgQueue;
-typedef struct {
-	unsigned int pitch;
-	unsigned int duration;
-} queueAUDIOMsg_t;
-#endif
+/*============================================================================*/
+/*----------------------------------- MAIN -----------------------------------*/
+/*============================================================================*/
 
 int main(int argc, char** argv) {
-	int i;
-	unsigned char digest[20];
-	char hello[] = "Hello, world!";
- 	printf("\n");
+	(void) argc;
+	(void) argv;
+	struct tm lt;
+	time_t tt;
+
+	printf("\n\n");
 
 /*
- * TEMPORARY TESTS
- * MD5, SHA1, DES, 3DES, AES
+ * Prints the actual GMT time. if the time is not right, problem could
+ *  occurs with certificates
  */
+	tt = time( NULL );
+	gmtime_r( &tt, &lt );
+	printf("GMT Now: %d.%d.%d %d:%d:%d\n",
+			lt.tm_mday, lt.tm_mon + 1, lt.tm_year + 1900,
+			lt.tm_hour, lt.tm_min, lt.tm_sec);
 
+	printf("\n\n");
 
-#if DISPLAY_MSG_ON_LCD
- 	LCD_msgQueue = xQueueCreateNamed(1, sizeof(queueLCDMsg_t), "LCD_msg queue");
-#endif
-
-#if USE_AUDIO
- 	AUDIO_msgQueue = xQueueCreateNamed(1, sizeof(queueAUDIOMsg_t), "AUDIO_msg queue");
-#endif
-
-
- 	printf("MD5('%s') = ", hello);
-
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("speed"), "MD5 start");
-#endif
- 	md5( (unsigned char*)hello, 13, digest);
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("speed"), "MD5 end");
-#endif
-
- 	for(i=0; i<16; ++i) {
- 		printf("%02X", digest[i]);
- 	}
-
- 	printf("\n");
-
- 	printf("SHA1('%s') = ", hello);
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("speed"), "SHA1 start");
-#endif
- 	sha1( (unsigned char*)hello, 13, digest);
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("speed"), "SHA1 end");
-#endif
-
- 	for(i=0; i<20; ++i) {
- 		printf("%02X", digest[i]);
- 	}
-
- 	printf("\n");
-
- 	{
- 		unsigned char output[8];
- 		unsigned char key[8] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x03, 0x02, 0x01};
- 		des_context ctx;
- 		des_init(&ctx);
-#if configUSE_TRACE_FACILITY
- 		vTracePrintF(xTraceOpenLabel("speed"), "des_ecb start");
-#endif
-		des_setkey_enc(&ctx, key);
-		des_crypt_ecb(&ctx, (unsigned char*)"datatocr", output);
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("speed"), "des_ecb end");
-#endif
-
-		printf("DES(\"datatocr\", \"0001020304030201\") = ");
-
-	 	for(i=0; i<8; ++i) {
-	 		printf("%02X", output[i]);
-	 	}
-
-	 	printf("\n");
- 	}
-
-
- 	{
- 		unsigned char output[8];
- 	 	unsigned char key[16] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01};
- 		des3_context ctx;
- 		des3_init(&ctx);
-#if configUSE_TRACE_FACILITY
- 		vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb start");
-#endif
-		des3_set3key_enc(&ctx, key);
-		des3_crypt_ecb(&ctx, (unsigned char*)"datatocr", output);
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("speed"), "3des_ecb end");
-#endif
-
-		printf("DES3(\"datatocr\", \"00010203040506070807060504030201\") = ");
-
-	 	for(i=0; i<8; ++i) {
-	 		printf("%02X", output[i]);
-	 	}
-
-	 	printf("\n");
- 	}
- 	{
- 		aes_context ctx;
- 	 	unsigned char output[16];
- 	 	unsigned char key[32] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x01,
- 	 							 0x09, 0x08, 0x07, 0x06, 0x05, 0x04, 0x03, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07, 0x08, 0x09, 0x0A};
-
- 	 	aes_init(&ctx);
-
-#if configUSE_TRACE_FACILITY
- 	 	vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb start");
-#endif
- 	 	aes_setkey_enc(&ctx, key, 256);
- 	 	aes_crypt_ecb(&ctx, AES_ENCRYPT, (unsigned char*)"datatocrypt12345", output);
-
-#if configUSE_TRACE_FACILITY
- 		vTracePrintF(xTraceOpenLabel("speed"), "aes_ecb end");
-#endif
- 		printf("AES(\"datatocrypt12345\", \"000102030405060708070605040302010908070605040302030405060708090A\") = ");
-
- 		for(i=0; i<16; ++i) {
- 			printf("%02X ", output[i]);
- 		}
-
- 		printf("\n");
- 	 }
-	 printf("\n");
-
-
-	 /* END OF TEMPORARY TESTS */
-
-
-
-	xTaskCreate(led_task, "Led Task", configMINIMAL_STACK_SIZE, NULL, 1, NULL);	// Indicates that the system is running
-	xTaskCreate(main_task, "Main Task", configMINIMAL_STACK_SIZE*6, NULL, 3, NULL);	// Runs the tests
 #if USE_DISPLAY
-	xTaskCreate(lcd_task, "LCD Task", configMINIMAL_STACK_SIZE, NULL, 3, NULL);	// Displays informations on the screen
+ 	LCD_msgQueue = xQueueCreateNamed(1,
+ 										sizeof(queueLCDMsg_t),
+ 										"LCD_msg queue" );
+	xTaskCreate(lcd_task,
+				"Display task",
+				configMINIMAL_STACK_SIZE*8,
+				NULL,
+				3,
+				NULL );
 #endif
+
 #if USE_AUDIO
-	xTaskCreate(audio_task, "Audio Task", configMINIMAL_STACK_SIZE, NULL, 2, NULL);	// Plays sounds when something happens
+ 	AUDIO_msgQueue = xQueueCreateNamed(1,
+ 										sizeof(queueAUDIOMsg_t),
+ 										"AUDIO_msg queue" );
+	xTaskCreate(audio_task,
+				"Audio task",
+				configMINIMAL_STACK_SIZE*8,
+				NULL,
+				3,
+				NULL );
 #endif
 
+	xTaskCreate(main_task,
+				"Main task",
+				MAIN_TASK_STACK_SIZE,
+				NULL,
+				3,
+				NULL );
 
-	vTaskStartScheduler();	// Start FreeRTOS scheduler
+	xTaskCreate(breath_task,
+				"Breath LED task",
+				configMINIMAL_STACK_SIZE,
+				NULL,
+				2,
+				NULL );
 
+	xTaskCreate(watcher_task,
+				"event watcher task",
+				configMINIMAL_STACK_SIZE*4,
+				NULL,
+				uxTaskPriorityGet(NULL),
+				NULL);
+
+
+	vTaskStartScheduler();
+
+	printf("ERROR: Task scheduler returned ??\n");
 	return 0;
-}	/* main */
-
-
-/*
- * Socket Task
- */
-void main_task(void* param) {
-
-	#if SERVER_TEST || LED_COMMAND_TEST || HTTP_SERVER_TEST || SECURE_SERVER_TEST
-	int socket;
-	int i;
-#endif
-
-	printf("Starting main task.\n");
-
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("main"), "Init start");
-#endif
-
-	//-- INIT --//
-#if MY_IP_BY_DHCP
-	while(lwip_init_DHCP(0, MY_HOSTNAME) != 0);
-	lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
-#if !USE_DISPLAY
-	printf("My ip: %s\n", getMyIP());
-#endif
-#else
-	lwip_init_static(MY_IP, MY_MASK, MY_GW, MY_HOSTNAME);
-#endif
-
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("main"), "Init end");
-#endif
-
-
-#if CLIENT_TEST
-	xTaskCreate(clientToIP_task, "client task", configMINIMAL_STACK_SIZE*16, NULL, uxTaskPriorityGet(NULL), NULL);
-#endif
-
-#if SECURE_CLIENT_TEST
-	xTaskCreate(clientToIPSecured_task, "SecuClient task", configMINIMAL_STACK_SIZE*6, NULL, uxTaskPriorityGet(NULL), NULL);
-	//xTaskCreate(clientToIPSecured_task, "SecuClient2 task", configMINIMAL_STACK_SIZE*6, NULL, uxTaskPriorityGet(NULL), NULL);
-#endif
-
-
-#if HTTP_TEST
-	xTaskCreate(clientTohttp_task, "http client task", configMINIMAL_STACK_SIZE * 8, NULL, uxTaskPriorityGet(NULL), NULL);
-#endif
-
-#if HTTPS_TEST
-	xTaskCreate(clientTohttps_task, "https client task", configMINIMAL_STACK_SIZE*8, NULL, uxTaskPriorityGet(NULL), NULL);
-#endif
-
-
-#if SERVER_TEST || LED_COMMAND_TEST  || HTTP_SERVER_TEST || SECURE_SERVER_TEST
-
-	const int clientHandleTaskStackSize = ((MSG_LEN_MAX/configMINIMAL_STACK_SIZE)+2) * configMINIMAL_STACK_SIZE;
-	socket = simpleSocket();
-	if(socket == -1)
-		printf("ERROR while creating socket\n");
-
-	xTaskCreate(watcher_task, "event watcher task", configMINIMAL_STACK_SIZE*4, NULL, uxTaskPriorityGet(NULL), NULL);
-
-	//printf("socket = %d.\n", socket);
-	if(simpleBind(socket, getMyIP(), TCP_PORT) == -1)
-		printf("ERROR in Bind\n");
-	if(simpleListen(socket) == -1)
-		printf("ERROR in Listen\n");
-
-	printf("accepting...\n");
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("main"), "Accepting");
-#endif
-
-	for(i=0;i<ClNbMax;++i) {
-		s[i] = -1;
-	}
-	while(1) {
-#if SECURE_SERVER_TEST
-		int tempS = secureAccept(socket);
-#else
-		int tempS = simpleAccept(socket);
-#endif
-
-		if(tempS < 0)
-			printf("ERROR in Accept.\n");
-		else {
-			for(i=0;i<ClNbMax;++i)
-				if(s[i] == -1)
-					break;
-
-			if(i==ClNbMax) {
-				printf("ERROR: Cannot create socket: too many clients.");
-#if SECURE_SERVER_TEST
-				secureClose(tempS);
-#else
-				simpleClose(tempS);
-#endif
-				printf("Client closed.\n");
-			}
-			else {
-				s[i] = tempS;
-				xTaskCreate(clientHandle_task, "Client Handle", clientHandleTaskStackSize, (void*)i, uxTaskPriorityGet(NULL), NULL);
-			}
-		}
-	}
-
-#endif
-
-
-	vTaskDelete(NULL);
-
-}	/* main_task */
-
-
-#if HTTP_SERVER_TEST || SERVER_TEST || LED_COMMAND_TEST
-#include <stdlib.h>
-
-uint8_t detectEOF(char* msg, int len) {
-	if(len < 4)
-		return 1;
-
-	return msg[len-4]=='\r' && msg[len-3]=='\n' && msg[len-2]=='\r' && msg[len-1]=='\n';
 }
 
-void clientHandle_task(void* param) {
-	char msg[MSG_LEN_MAX];
-	char msgBack[MSG_LEN_MAX+4];
-	int i = (int)param;
-	int ret;
-	//char traceMsg[5];
-	int traceNb;
-	uint8_t firstSegment=1;
-	uint8_t closeCon = 0;
 
 
-	//char* msgBack;
-#if DISPLAY_MSG_ON_LCD
-	queueLCDMsg_t toSendLCD;
-#endif
+/*============================================================================*/
+/*---------------------------------- Tasks -----------------------------------*/
+/*============================================================================*/
+
+/**
+ * @brief Changes the luminosity of a LED periodically
+ *
+ * Changes the pwm of the LED0 every 'ratems' ms, to inform the user that the
+ * system is running.
+ */
+void breath_task(void* param) {
+	int8_t pwm = 0;		// Actual luminosity. 0: LED off / 100: lum. max
+	uint8_t pwmInc = 1;	// 1: increase lum. / 0: decrease lum.
+	const uint8_t ratems = 100;	// Time in ms between two changes of lum.
 
-
-#if USE_AUDIO
-	queueAUDIOMsg_t toSendAudio;
-
-	toSendAudio.pitch = 2000;
-	toSendAudio.duration = 100;
-	xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
-#endif
-
-	printf("New client: %d\n", i);
-	printf("Free mem: %d\n", xPortGetFreeHeapSize());
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("Client"), "connect");
-#endif
-	msg[MSG_LEN_MAX-1] = '\0';
-
-	while(!closeCon) {
-		firstSegment = 1;
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("Client"), "Wainting message");
-#endif
-#if SERVER_TEST
-		do {
-#endif
-			ret = simpleRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX);
-
-			//printf("Received %d char.\n", ret);
-
-			if(ret == -1) {
-				printf("error with client %d\n", i);
-				closeCon = 1;
-				break;
-			}
-			else if(ret == 0) {
-				closeCon = 1;
-				break;
-			}
-			else {
-
-#if configUSE_TRACE_FACILITY
-			if(firstSegment) {				// 012345678
-				//memcpy(traceMsg, msg+4, 4);	// Msg nnnn.
-				//traceMsg[4] = '\0';			// nnnn0
-				traceNb = atoi(msg+4);
-				vTracePrintF(xTraceOpenLabel("Client msg"), "%d", traceNb);
-			}
-#endif
-
-
-#if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("Client"), "Sending message");
-#endif
-
-			if(firstSegment) {
-				int err;
-				msgBack[0] = 'O';
-				msgBack[1] = 'K';
-				msgBack[2] = '!';
-				msgBack[3] = ' ';
-				memcpy(msgBack+4, msg, ret);
-				//printf("Sending %d char.\n", ret+4);
-				err = simpleSend(s[i], (unsigned char*)msgBack, ret+4);
-				//printf("returned %d.\n", err);
-			}
-			else {
-				int err;
-				//printf("Sending %d char.\n", ret);
-				err = simpleSend(s[i], (unsigned char*)msg, ret);
-				//printf("returned %d.\n", err);
-			}
-
-			//printf("Free mem: %d\n", xPortGetFreeHeapSize());
-
-#if DISPLAY_MSG_ON_LCD
-				if(firstSegment) {
-					toSendLCD.type = 1;
-					toSendLCD.tick = xTaskGetTickCount();
-					if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
-						toSendLCD.ptr = pvPortMalloc(ret+1);
-						memcpy(toSendLCD.ptr, msg, ret);
-						toSendLCD.ptr[ret] = '\0';
-						if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
-							vPortFree(toSendLCD.ptr);
-					}
-				}
-#endif
-
-#if USE_AUDIO
-				if(firstSegment)
-					xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
-#endif
-
-			//vTracePrintF(xTraceOpenLabel("Client"), "msg rcv");
-#if HTTP_SERVER_TEST
-				simpleSendStr(s[i], "HTTP/1.1 200 OK \n\r"
-									"Date: Wen, 06 May 2015 10:40:00 GMT\n\r"
-									"Server: Apache/0.8.4\n\r"
-									"Content-Length: 140\n\r"
-									"Content-Type: text/html\n\r"
-									"\n\r"
-									"<html><head><title>ARMEBS 4</title></head><body><h1>This is a test</h1>This page was generated on the ARMEBS4 and sent via tcp</body></html>\n\r");
-#elif LED_COMMAND_TEST
-				if(msg[0] == '1')
-					bsp_led_toggle(1);
-				else if(msg[0] == '2')
-					bsp_led_toggle(2);
-				else if(msg[0] == '3')
-					bsp_led_toggle(3);
-				//else
-					//simpleSendStr(s[i], "not a LED.\n");
-#endif
-				//vPortFree(msg);
-				//vPortFree(msgBack);
-			}
-		firstSegment = 0;
-#if SERVER_TEST
-		} while(!detectEOF(msg,ret));
-#endif
-	}
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("Client"), "disconnect");
-#endif
-
-	simpleClose(s[i]);
-
-	printf("Connection %d closed.\n", i);
-	printf("Free mem: %d\n", xPortGetFreeHeapSize());
-
-#if USE_AUDIO
-	toSendAudio.pitch = 500;
-	toSendAudio.duration = 500;
-	xQueueSend(AUDIO_msgQueue, &toSendAudio, portMAX_DELAY);
-#endif
-	s[i] = -1;
-
-	vTaskDelete(NULL);
-} /* clientHandle_task */
-#endif
-
-#if CLIENT_TEST
-void clientToIP_task(void* param) {
-	int socket;
-	int count=0;
-	int ret;
-	char data[9];
-
-	vTaskDelay(1000);
-
-	while(1) {
-
-		printf("creating socket.\n");
-		socket = simpleSocket();
-		if(socket < 0)
-			printf("Error on socket creation.\n");
-		else {
-			printf("Trying connection to IP.\n");
-			ret = simpleConnect(socket, PC_IP, TCP_PORT);
-			if(ret < 0) {
-				printf("Error on connect.\n");
-			}
-			else {
-				sprintf(data, "msg %3d\n", count);
-				printf("Client sending to IP: %s\n", data);
-				ret = simpleSendStr(socket, data);
-				if(ret < 0) {
-					printf("Error on send.\n");
-				}
-			}
-
-			simpleClose(socket);
-		}
-
-		if(++count >= 1000)
-			count = 0;
-		vTaskDelay(200);
-	}	// While(1)
-}	/* clientToIP_task */
-
-#endif
-
-
-#if SECURE_CLIENT_TEST
-void clientToIPSecured_task(void* param) {
-	int socket;
-	int count=0;
-	int ret;
-	char data[30];
-	char RData[200];
-	int error = 0;
-
-	vTaskDelay(1000);
-
-	while(1) {
-		error = 0;
-
-		printf("creating socket.\n");
-
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("SecuClient"), "Create socket");
-#endif
-		socket = secureSocket();
-		if(socket < 0)
-			printf("Error on socket creation.\n");
-		else {
-			printf("Trying connection to IP with socket %d.\n", socket);
-
-#if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("SecuClient"), "Connect socket %d", socket);
-#endif
-			ret = secureConnect(socket, PC_IP, TCP_PORT);
-			if(ret < 0) {
-				printf("Error on connect.\n");
-			}
-			else {
-				while(error == 0) {
-					snprintf(data, 30, "GET localhost http/1.0 \r\n\r\n");
-					//snprintf(data, 27, "msg %3d from socket %1d \n\r\n\r", count, socket);
-					if(++count >= 1000)
-						count = 0;
-
-					printf("Client sending to IP: %s\n", data);
-
-	#if configUSE_TRACE_FACILITY
-					vTracePrintF(xTraceOpenLabel("SecuClient"), "send");
-	#endif
-					//ret = secureSendStr(socket, (unsigned char*)data);
-					ret = secureSend(socket, (unsigned char*)data, 27);
-
-					if(ret < 0) {
-						printf("Error on send on socket %d.\n", socket);
-						error = 1;
-					}
-					else {
-						//do {
-							ret = secureRecv(socket, (unsigned char*)RData, 200);
-							if(ret < 0) {
-								switch(-ret) {
-								case 0x7880:
-									printf("Server notified that the connection is going to be closed.\n");
-									break;
-								default:
-									printf("Error on recv on socket %d: returned -%04X.\n", socket, -ret);
-								}
-								error = 1;
-							}
-							else if(ret != 0) {
-								printf("received %d char on socket %d: %.*s\n", ret, socket, ret, RData);
-							}
-							else {
-								printf("Recv returned 0 char on socket %d.\n", socket);
-								error = 1;
-							}
-						//} while(ret>0);
-					}
-				}	// while(error == 0)
-			}
-
-#if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("SecuClient"), "Close socket");
-#endif
-			secureClose(socket);
-			printf("Socket closed.\n");
-		}
-
-		//breakpoint();
-
-
-	}	// While(1)
-}	/* clientToIPSecured_task */
-
-#endif
-
-
-#if SECURE_SERVER_TEST
-void clientHandle_task(void* param) {
-	char msg[MSG_LEN_MAX];
-	int i = (int)param;
-	int ret;
-
-
-	//char* msgBack;
-#if DISPLAY_MSG_ON_LCD
-	queueLCDMsg_t toSendLCD;
-#endif
-
-
-#if USE_AUDIO
-	queueAUDIOMsg_t toSendAudio;
-
-	toSendAudio.pitch = 2000;
-	toSendAudio.duration = 100;
-	xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
-#endif
-
-	printf("New client: %d\n", i);
-	printf("mem free: %d\n", xPortGetFreeHeapSize());
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("Client"), "connect");
-#endif
-	msg[MSG_LEN_MAX-1] = '\0';
-
-	while(1) {
-		ret = secureRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX-1);
-
-		if(ret < 0) {
-			switch(-ret) {
-			case 0x7880:
-				printf("Client %d notified us that the connection is going to be closed.\n", i);
-				break;
-			default:
-				printf("error with client %d: returned -0x%X\n", i, -ret);
-			}
-			break;
-		}
-		else if(ret == 0)
-			break;
-		else {
-#if DISPLAY_MSG_ON_LCD
-			toSendLCD.type = 1;
-			toSendLCD.tick = xTaskGetTickCount();
-			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
-				toSendLCD.ptr = pvPortMalloc(ret+1);
-				memcpy(toSendLCD.ptr, msg, ret);
-				toSendLCD.ptr[ret] = '\0';
-				if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
-					vPortFree(toSendLCD.ptr);
-			}
-#else
-			//printf("Message received on server: %.*s", ret, msg);
-#endif
-
-
-#if USE_AUDIO
-			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
-#endif
-
-			secureSend(s[i], (unsigned char*)"OK!\n", 4);
-
-		}
-	}
-
-#if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("Client"), "disconnect");
-#endif
-
-	printf("mem free: %d\n", xPortGetFreeHeapSize());
-	secureClose(s[i]);
-	printf("Connection with client %d closed.\n", i);
-	printf("mem free: %d\n", xPortGetFreeHeapSize());
-
-#if USE_AUDIO
-	toSendAudio.pitch = 500;
-	toSendAudio.duration = 500;
-	xQueueSend(AUDIO_msgQueue, &toSendAudio, portMAX_DELAY);
-#endif
-	s[i] = -1;
-
-	vTaskDelete(NULL);
-}	/* clientHandle_task */
-#endif
-
-#if HTTP_TEST
-void clientTohttp_task(void* param) {
-	int ret;
-	char data[MSG_LEN_MAX];
-	int socket;
-
-	while(1) {
-		printf("--Socket creation.\n");
-		socket = simpleSocket();
-
-		vTaskDelay(1000);
-
-		printf("--Connection.\n");
-		if(socket != -1) {
-			if(simpleConnectDNS(socket, "www.hevs.ch", 80) == 0) {
-				printf("--Connected.\n");
-
-				vTaskDelay(1000);
-
-				printf("--Send.\n");
-				if(simpleSendStr(socket, (unsigned char*)"POST /img/logo-hes-so-valais.png HTTP/1.1\r\n"
-						"Host: www.hevs.ch\r\n"
-						"Accept: */*\r\n"
-						"Content-Type: text/html\r\n"
-						"Content-Length: 0\r\n\r\n") != -1) {
-					printf("--Message sent.\n");
-
-					vTaskDelay(2000);
-
-					do {
-						ret = simpleRecv(socket, (unsigned char*)data, MSG_LEN_MAX);
-						if(ret != -1 && ret != 0)
-							printf("Received %d char: %.*s\n", ret, ret, data);
-						else if(ret == 0)
-							printf("--End of connection requested.\n");
-						else
-							printf("ERROR while receiving.\n");
-					} while(ret != 0 && ret != -1);
-
-				}
-				else
-					printf("ERROR while sending.\n");
-			}
-			else
-				printf("ERROR while connecting.\n");
-
-			printf("--Close.\n");
-			simpleClose(socket);
-
-			printf("\n\n");
-		}
-		else
-			printf("ERROR while creating socket: %s.\n", strerror(errno));
-
-		// Wait 2s and restart
-		vTaskDelay(2000);
-	}
-}	/* clientTohttp_task */
-#endif
-
-
-#if HTTPS_TEST
-void clientTohttps_task(void* param) {
-	int socket;
-	int ret;
-	char data[MSG_LEN_MAX];
-
-	vTaskDelay(1000);
-
-	while(1) {
-
-		printf("creating socket.\n");
-
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("SecuClient"), "Create socket");
-#endif
-		socket = secureSocket();
-		if(socket < 0)
-			printf("Error on socket creation.\n");
-		else {
-			printf("Trying connection to address with socket %d.\n", socket);
-
-#if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("SecuClient"), "Connect socket %d", socket);
-#endif
-			ret = secureConnectDNS(socket, "www.google.ch", 443);
-			if(ret < 0) {
-				printf("Error on connect.\n");
-			}
-			else {
-
-#if configUSE_TRACE_FACILITY
-				vTracePrintF(xTraceOpenLabel("SecuClient"), "send");
-#endif
-				ret = secureSendStr(socket, (unsigned char*)"POST /images/srpr/logo11w.png HTTP/1.1\r\n"
-						"Host: www.google.ch\r\n"
-						"Accept: */*\r\n"
-						"Content-Type: text/html\r\n"
-						"Content-Length: 0\r\n\r\n");
-				if(ret < 0) {
-					printf("Error on send.\n");
-				}
-				else {
-					do {
-						ret = secureRecv(socket, (unsigned char*)data, MSG_LEN_MAX);
-						if(ret < 0) {
-							printf("\nError on recv.\n");
-						}
-						else if(ret == 0) {
-							printf("\nEnd connection received.\n");
-						}
-						else {
-							printf("%.*s", ret, data);
-						}
-					} while(ret > 0);
-				}
-			}
-
-#if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("SecuClient"), "Close socket");
-#endif
-			secureClose(socket);
-			printf("Socket closed.\n");
-		}
-
-		breakpoint();
-
-		vTaskDelay(2000);
-
-	}	// While(1)
-}	/* clientTohttps_task */
-#endif
-
-void led_task(void* param) {
-	int8_t pwm = 0;
-	uint8_t pwmInc = 1;
-	const uint8_t ratems = 100;
 	while (1) {
+
 		bsp_led_set_pwm(0, pwm);
-		if(pwmInc != 0) {
+		if(pwmInc != 0) {	// pwmInc != 0: increase the pwm
 			if ((pwm+=ratems/10+1) >= 100) {
 				pwmInc = 0;
 				pwm = 100;
 			}
 		}
-		else {
+		else {	// pwmInc == 0: decrease the pwm
 			if((pwm-=ratems/10+1) <= 10) {
 				pwmInc = 1;
 				pwm = 10;
 			}
 		}
-		vTaskDelay((float)ratems/1000 * configTICK_RATE_HZ);
-	}
-}	/* led_task */
+		vTaskDelay((float)ratems/1000 * configTICK_RATE_HZ); // wait 'ratems' ms
+
+	}	// while(1)
+
+}	/* breath_task */
 
 #if USE_DISPLAY
 
 void lcd_task(void* param) {
-
 	GWidgetInit wi;
 	GHandle ghStatus;
 	GHandle ghConsole;
-#if DISPLAY_MSG_ON_LCD
 	GHandle ghLastMessage;
 	GHandle ghLastMessageTime;
-#endif
 	uint32_t t;
 
-#if DISPLAY_MSG_ON_LCD
 	queueLCDMsg_t received;
-#endif
 
 	char msg[32];
 
@@ -977,20 +168,24 @@ void lcd_task(void* param) {
 
 
 		//-- TITLE --//
-#if SERVER_TEST
+#if DEMO_SERVER
 		wi.text = "TCP/IP STACK: Server test";
-#elif CLIENT_TEST
+#elif DEMO_CLIENT
 		wi.text = "TCP/IP STACK: Client test";
-#elif HTTP_TEST
+#elif DEMO_HTTP_CLIENT
 		wi.text = "TCP/IP STACK: HTTP client test";
-#elif HTTP_SERVER_TEST
+#elif DEMO_HTTP_SERVER
 		wi.text = "TCP/IP STACK: HTTP server test";
 #elif LED_COMMAND_TEST
 		wi.text = "TCP/IP STACK: LED command test";
-#elif SECURE_CLIENT_TEST
-		wi.text = "TCP/IP STACK: SSL client test";
-#elif SECURE_SERVER_TEST
-		wi.text = "TCP/IP STACK: SSL server test";
+#elif DEMO_TLS_CLIENT
+		wi.text = "TCP/IP STACK: TLS client test";
+#elif DEMO_TLS_SERVER
+		wi.text = "TCP/IP STACK: TLS server test";
+#elif DEMO_HTTPS_CLIENT
+		wi.text = "TCP/IP STACK: HTTPS client test";
+#elif DEMO_HTTPS_SERVER
+		wi.text = "TCP/IP STACK: HTTPS server test";
 #else
 		wi.text = "-- no title --";
 #endif
@@ -1002,9 +197,8 @@ void lcd_task(void* param) {
 
 		gwinLabelCreate(NULL, &wi);
 
-		//-- Last message label --//
+		//-- Last message labels --//
 
-#if DISPLAY_MSG_ON_LCD
 		wi.g.y = 30;
 		wi.g.x = 10;
 		wi.g.width = 300;
@@ -1021,7 +215,6 @@ void lcd_task(void* param) {
 		wi.text = "No message received.";
 
 		ghLastMessage = gwinLabelCreate(NULL, &wi);
-#endif
 
 
 
@@ -1055,26 +248,27 @@ void lcd_task(void* param) {
 
 
 		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
-		sprintf(msg, "%d.%03d: gfx initialized.\n", (int)(t/1000), (int)(t%1000));
+		sprintf(msg, "%d.%03d: gfx initialized.\n", (int)(t/1000),
+													(int)(t%1000));
 		gwinPutString(ghConsole, msg);
 
 		lwip_wait_events(EV_LWIP_INITIALIZED, portMAX_DELAY);
 		gwinSetText(ghStatus, "lwip initialized.", 1);
 
 		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
-		sprintf(msg, "%d.%03d: lwip initialized.\n",  (int)(t/1000), (int)(t%1000));
+		sprintf(msg, "%d.%03d: lwip initialized.\n", (int)(t/1000),
+													 (int)(t%1000));
 		gwinPutString(ghConsole, msg);
 
 		lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
 
-
 		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
-		sprintf(msg, "%d.%03d: IP assigned: %s.\n",  (int)(t/1000), (int)(t%1000), getMyIP());
+		sprintf(msg, "%d.%03d: IP assigned: %s.\n",  (int)(t/1000),
+													 (int)(t%1000), getMyIP());
 		gwinPutString(ghConsole, msg);
 
 
 	while(1) {
-#if DISPLAY_MSG_ON_LCD
 		xQueueReceive(LCD_msgQueue, &received, portMAX_DELAY);
 
 #if configUSE_TRACE_FACILITY
@@ -1084,24 +278,26 @@ void lcd_task(void* param) {
 		case 2:
 			gwinPutString(ghConsole, received.ptr);
 			break;
+		case 5:	// picture
+
+			break;
 		default:
 			gwinSetText(ghLastMessage, received.ptr, 0);
-			sprintf(msg, "%d.%03d:",  (int)(received.tick/1000), (int)(received.tick%1000));
+			sprintf(msg, "%d.%03d:",  (int)(received.tick/1000),
+									  (int)(received.tick%1000));
 			gwinSetText(ghLastMessageTime, msg, 0);
 		}
 		vPortFree(received.ptr);
-#else
-		vTaskDelay(10*configTICK_RATE_HZ);
-#endif
 
-	}
+	}	// while(1)
 
 }	/* lcd_task */
 
-#endif
+#endif	/* USE_DISPLAY */
 
 
 #if USE_AUDIO
+
 void audio_task(void* param) {
 
 	queueAUDIOMsg_t audioMsg;
@@ -1118,62 +314,72 @@ void audio_task(void* param) {
 
 		Audio_PlaySin(audioMsg.pitch, audioMsg.duration);
 		//vTaskDelay(10*configTICK_RATE_HZ);
-	}
+	}	// while(1)
+
 }	/* audio_task */
-#endif
 
+#endif /* USE_AUDIO */
 
-
+/*
+ * This task
+ */
 void watcher_task(void* param) {
 	uint32_t bits[10] = {0};
 	uint32_t temp;
 	uint8_t socket;
 	uint32_t i;
-
-#if DISPLAY_MSG_ON_LCD
+#if USE_DISPLAY
 	queueLCDMsg_t toSend;
 #endif
 
 	while(1) {
-		for(socket=0; socket<getSocketNbMax() && socket<10; ++socket) {	// process all the sockets
+		for(socket=0; socket<getSocketNbMax() && socket<10; ++socket) {
 			if(socketValid(socket) == 0) {
 				bits[socket] = 0;
 				continue;
 			}
-			if( (temp = socket_get_events(socket, EV_LWIP_SOCKET_RECV_TIMEOUT | EV_LWIP_SOCKET_SEND_TIMEOUT | EV_LWIP_SOCKET_ACCEPT_TIMEOUT)) > 0) {
+			if( (temp = socket_get_events(socket, EV_LWIP_SOCKET_RECV_TIMEOUT |
+			EV_LWIP_SOCKET_SEND_TIMEOUT | EV_LWIP_SOCKET_ACCEPT_TIMEOUT)) > 0) {
 				if(temp != bits[socket]) {	// Changes detected
 
 					for(i=1; i<=(1<<6); i<<=1) {	// Process all bits
 						if(!(i&bits[socket]) && (i&temp)) {	// Event raised
-#if DISPLAY_MSG_ON_LCD
+
+
+#if USE_DISPLAY
 							toSend.tick = xTaskGetTickCount();
 							toSend.type = 2;
 							toSend.ptr = pvPortMalloc(50);
 
 							switch(i&temp) {
 							case 1<<4:
-								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								sprintf(toSend.ptr, "socket %d: "
+									"EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
 								break;
 							case 1<<5:
-								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+								sprintf(toSend.ptr,
+							"socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
 								break;
 							case 1<<6:
-								sprintf(toSend.ptr, "socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+								sprintf(toSend.ptr,
+						"socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
 								break;
 							default:
 								;
 							}	// switch(i&temp)
-							xQueueSend(LCD_msgQueue, &toSend, portMAX_DELAY);
 #else
 							switch(i&temp) {
 							case 1<<4:
-								printf("socket %d: EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+								printf("socket %d:"
+									"EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
 								break;
 							case 1<<5:
-								printf("socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+								printf("socket %d:"
+									"EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
 								break;
 							case 1<<6:
-								printf("socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+								printf("socket %d:"
+									"EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
 								break;
 							default:
 								;
@@ -1189,5 +395,5 @@ void watcher_task(void* param) {
 		}	// for(socket=0...
 
 		vTaskDelay(500);
-	}
+	}	// while(1) {
 }

@@ -68,20 +68,11 @@
 							</tool>
 						</toolChain>
 					</folderInfo>
-					<folderInfo id="cdt.managedbuild.config.gnu.cross.exe.release.549116244.1619227933" name="/" resourcePath="libheivs_stm32/src/jpeg">
-						<toolChain id="cdt.managedbuild.toolchain.gnu.cross.exe.release.1961618730" name="Cross GCC" superClass="cdt.managedbuild.toolchain.gnu.cross.exe.release" unusedChildren="">
-							<option id="cdt.managedbuild.option.gnu.cross.prefix.1119151507.1368787062" name="Prefix" superClass="cdt.managedbuild.option.gnu.cross.prefix.1119151507"/>
-							<option id="cdt.managedbuild.option.gnu.cross.path.331242991.420556464" name="Path" superClass="cdt.managedbuild.option.gnu.cross.path.331242991"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.739267003" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler.1457260315"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.compiler.750145491" name="Cross G++ Compiler" superClass="cdt.managedbuild.tool.gnu.cross.cpp.compiler.598207422"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.c.linker.1717655288" name="Cross GCC Linker" superClass="cdt.managedbuild.tool.gnu.cross.c.linker.2064611926"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.cpp.linker.718185064" name="Cross G++ Linker" superClass="cdt.managedbuild.tool.gnu.cross.cpp.linker.1303556676"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.archiver.1115850275" name="Cross GCC Archiver" superClass="cdt.managedbuild.tool.gnu.cross.archiver.221420409"/>
-							<tool id="cdt.managedbuild.tool.gnu.cross.assembler.150667505" name="Cross GCC Assembler" superClass="cdt.managedbuild.tool.gnu.cross.assembler.1554935649"/>
-						</toolChain>
-					</folderInfo>
+					<fileInfo id="cdt.managedbuild.config.gnu.cross.exe.release.549116244.276766902" name="main.c" rcbsApplicability="disable" resourcePath="main.c" toolsToInvoke="cdt.managedbuild.tool.gnu.cross.c.compiler.1457260315.1737748405">
+						<tool id="cdt.managedbuild.tool.gnu.cross.c.compiler.1457260315.1737748405" name="Cross GCC Compiler" superClass="cdt.managedbuild.tool.gnu.cross.c.compiler.1457260315"/>
+					</fileInfo>
 					<sourceEntries>
-						<entry excluding="libheivs_stm32/src/jpeg|demos|main.c|stm32lib/src/usb_bsp_template.c|libheivs_stm32/src/fatfs|libheivs_stm32/src/cmsis|libheivs_stm32/src/cyassl|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
+						<entry excluding="libheivs_stm32/src/jpeg|demos|stm32lib/src/usb_bsp_template.c|libheivs_stm32/src/fatfs|libheivs_stm32/src/cmsis|libheivs_stm32/src/cyassl|src" flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name=""/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="demos"/>
 						<entry flags="VALUE_WORKSPACE_PATH|RESOLVED" kind="sourcePath" name="src"/>
 					</sourceEntries>

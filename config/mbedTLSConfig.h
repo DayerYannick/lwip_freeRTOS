@@ -28,6 +28,15 @@
 #ifndef POLARSSL_CONFIG_H
 #define POLARSSL_CONFIG_H
 
+
+/* Basic configuration */
+#define CLIENT_MUST_VERIFY_CERT 1
+#define SERVER_MUST_VERIFY_CERT 0
+
+
+
+/* Expert configuration */
+
 #if defined(_MSC_VER) && !defined(_CRT_SECURE_NO_DEPRECATE)
 #define _CRT_SECURE_NO_DEPRECATE 1
 #endif

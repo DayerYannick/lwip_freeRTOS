@@ -1,6 +1,8 @@
 /*
  * ssl_client.c
  *
+ *	Tries to connect to the PC and checks the certificate validity
+ *
  *  Created on: 22 juin 2015
  *      Author: yannick.dayer
  */
@@ -12,6 +14,7 @@
 
 #define RECREATE_SOCKET 0	/* 0: create the socket once. 1: Recreate the socket for every message */
 #define SLOW_SEND 0	/* 0: full speed. 1: wait 1s between messages */
+#define OUTPUT_PRINTF 1	/* 0: only errors output to console, 1: print informations */
 
 
 /*============================================================================*/
@@ -24,7 +27,6 @@ void main_task(void* param) {
 	int count=0;
 	int ret;
 	char data[13];
-	char RData[200];
 
 #if USE_DISPLAY
 	queueLCDMsg_t toSendLCD;
@@ -53,17 +55,19 @@ void main_task(void* param) {
 
 	while(1) {
 
-		printf("creating socket.\n");
+		if(OUTPUT_PRINTF)
+			printf("creating socket.\n");
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client"), "Creating socket");
 #endif
 		// Create a socket to handle the connection
-		socket = secureSocket();
+		socket = secureSocket(TCP);
 		if(socket < 0) {
 			printf("Error on socket creation.\n");
 		}
 		else {
-			printf("Trying connection to IP.\n");
+			if(OUTPUT_PRINTF)
+				printf("Trying connection to IP.\n");
 			// Connect the socket to the port TCP_PORT on PC_IP
 			if( (ret = secureConnect(socket, PC_IP, TCP_PORT)) < 0) {
 				printf("Error on connect.\n");
@@ -74,7 +78,7 @@ void main_task(void* param) {
 				do {	// Loop to send messages repeatedly
 
 					// Create the message
-					sprintf(data, "-msg %6d\n", count);
+					sprintf(data, " msg %6d\n", count);
 #if USE_DISPLAY
 					// Send a copy to the
 					toSendLCD.type = 0;
@@ -89,41 +93,19 @@ void main_task(void* param) {
 			vTracePrintF(xTraceOpenLabel("Client msg"), "%d", count);
 #endif	/* configUSE_TRACE_FACILITY */
 
-					//printf("sending %s\n", data);
 					// Send the message to the host
 					if( (ret = secureSendStr(socket, data)) < 0) {
 						printf("Error on send.\n");
 					}
-					else {
-						//printf("Sent msg %d\n", count);
-
-						/*ret = secureRecv(socket, (unsigned char*)RData, sizeof(RData));
-						if(ret < 0) {
-							switch(-ret) {
-							case 0x7880:
-								printf("Server notified that the connection is going to be closed.\n");
-								break;
-							default:
-								printf("Error on recv on socket %d: returned -%04X.\n", socket, -ret);
-							}
-						}
-						else if(ret != 0) {
-							printf("received %d char on socket %d: %.*s\n", ret, socket, ret, RData);
-						}
-						else {
-							printf("Recv returned 0 char on socket %d.\n", socket);
-						}*/
-
-					}
 #if SLOW_SEND
 						// Wait some time
 						vTaskDelay(1*configTICK_RATE_HZ);
-#if !USE_DISPLAY
-						// We can use printf with SLOW_SEND
-						printf("Sending message: %s\n"(const char*)data);
-#endif	/* !USE_DISPLAY */
 
 #endif	/* SLOW_SEND */
+
+#if !USE_DISPLAY
+						printf("Sending message: %s\n", (char*)data);
+#endif	/* !USE_DISPLAY */
 
 					// Change the content of the next message
 					if(++count > 999999)
@@ -131,9 +113,6 @@ void main_task(void* param) {
 
 				} while(!RECREATE_SOCKET && ret > 0);
 			}
-
-			// Send the remaining packets
-			//simple_shutdown(socket, 2);
 
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client"), "Closing socket");

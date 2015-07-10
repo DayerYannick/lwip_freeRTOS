@@ -112,20 +112,17 @@ int aes_crypt_ecb( aes_context *ctx,
 /* DEBUG */
 	if(mode == AES_ENCRYPT) {
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("TLS AES"), "Encrypt ECB");
+	// vTracePrintF(xTraceOpenLabel("TLS AES"), "Encrypt ECB");
 #endif
 		//printf("AES ecb: encrypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
 	}
 	else {
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("TLS AES"), "Decrypt ECB");
+	// vTracePrintF(xTraceOpenLabel("TLS AES"), "Decrypt ECB");
 #endif
 		//printf("AES ecb: decrypt: %x %x %x...\n", ctx->key[0], ctx->key[1], ctx->key[2]);
 	}
 /* END DEBUG */
-
-	if(ctx->dir != mode)
-		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");	// TODO remove
 
 	if( CRYP_AES_ECB(mode, ctx->key, ctx->keySize, (uint8_t*)input, 16, (uint8_t*)output) == ERROR ) {
 		printf("ERROR in CRYP_AES_ECB.\n");
@@ -133,7 +130,7 @@ int aes_crypt_ecb( aes_context *ctx,
 	}
 
 #if configUSE_TRACE_FACILITY
-	vTracePrintF(xTraceOpenLabel("TLS AES"), "End encrypt/decrypt");
+	// vTracePrintF(xTraceOpenLabel("TLS AES"), "End encrypt/decrypt");
 #endif
 	//printf("AES ecb: crypt END.\n");
 
@@ -152,9 +149,6 @@ int aes_crypt_cbc( aes_context *ctx,
                     const unsigned char *input,
                     unsigned char *output )
 {
-	if(ctx->dir != mode)
-		printf("ERROR!! dir != mode. need 2 keys per aes_context\n");	// TODO remove
-
 	if(length%16)
 		return POLARSSL_ERR_AES_INVALID_INPUT_LENGTH;
 

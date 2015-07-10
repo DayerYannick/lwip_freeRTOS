@@ -1,6 +1,8 @@
 /*
  * ssl_server.c
  *
+ *	Accept secured connection with TLS
+ *
  *  Created on: 22 juin 2015
  *      Author: yannick.dayer
  */
@@ -88,8 +90,6 @@ void main_task(void* param) {
 			else {
 				s[i] = tempS;
 				xTaskCreate(server_thread, "Client Handle", serverThreadStackSize, (void*)i, uxTaskPriorityGet(NULL), NULL);
-				// TODO remove
-				vTaskDelay(100000);
 			}
 		}
 	}
@@ -110,9 +110,6 @@ void server_thread(void* param) {
 	char msgBack[MSG_LEN_MAX+4];
 	int i = (int)param;
 	int ret;
-	//char traceMsg[5];
-	int traceNb;
-	uint8_t firstSegment=1;
 	uint8_t closeCon = 0;
 
 
@@ -140,7 +137,6 @@ void server_thread(void* param) {
 
 	while(!closeCon) {
 
-		firstSegment = 1;
 #if configUSE_TRACE_FACILITY
 		vTracePrintF(xTraceOpenLabel("Client"), "Waiting message");
 #endif
@@ -148,8 +144,6 @@ void server_thread(void* param) {
 		do {
 
 			ret = secureRecv(s[i], (unsigned char*)msg, MSG_LEN_MAX);
-
-			//printf("Received %d char.\n", ret);
 
 			if(ret == -1) {
 				printf("error with client %d\n", i);
@@ -162,59 +156,32 @@ void server_thread(void* param) {
 			}
 			else {
 
-#if configUSE_TRACE_FACILITY
-			if(firstSegment) {
-				traceNb = atoi(msg+4);
-				vTracePrintF(xTraceOpenLabel("Client msg"), "%d", traceNb);
-			}
-#endif
-
 
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client"), "Sending message");
 #endif
 
-			if(firstSegment) {
-				//int err;
-				msgBack[0] = 'O';
-				msgBack[1] = 'K';
-				msgBack[2] = '!';
-				msgBack[3] = ' ';
-				memcpy(msgBack+4, msg, ret);
-				//printf("Sending %d char.\n", ret+4);
-				/*err = */secureSend(s[i], (unsigned char*)msgBack, ret+4);
-				//printf("returned %d.\n", err);
-			}
-			else {
-				//int err;
-				//printf("Sending %d char.\n", ret);
-				/*err = */secureSend(s[i], (unsigned char*)msg, ret);
-				//printf("returned %d.\n", err);
-			}
+			memcpy(msgBack, "OK! ", 4);
+			memcpy(msgBack+4, msg, ret);
+			secureSend(s[i], (unsigned char*)msgBack, ret+4);
 
-			//printf("Free mem: %d\n", xPortGetFreeHeapSize());
-
-				if(firstSegment) {
 #if USE_DISPLAY
-					toSendLCD.type = 1;
-					toSendLCD.tick = xTaskGetTickCount();
-					if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
-						toSendLCD.ptr = pvPortMalloc(ret+1);
-						memcpy(toSendLCD.ptr, msg, ret);
-						toSendLCD.ptr[ret] = '\0';
-						if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
-							vPortFree(toSendLCD.ptr);
-					}
+			toSendLCD.type = 1;
+			toSendLCD.tick = xTaskGetTickCount();
+			if(uxQueueSpacesAvailable(LCD_msgQueue) != 0) {
+				toSendLCD.ptr = pvPortMalloc(ret+1);
+				memcpy(toSendLCD.ptr, msg, ret);
+				toSendLCD.ptr[ret] = '\0';
+				if(xQueueSend(LCD_msgQueue, &toSendLCD, 0) != pdTRUE)
+					vPortFree(toSendLCD.ptr);
+			}
 #endif
-				}
 
 #if USE_AUDIO
-				if(firstSegment)
-					xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
+			xQueueSend(AUDIO_msgQueue, &toSendAudio, 0);
 #endif
 
 			}
-		firstSegment = 0;
 
 		} while(!detectEOF(msg,ret));
 

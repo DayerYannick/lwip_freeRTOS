@@ -50,7 +50,7 @@
 "ou4zZfoxLICmL4x2YTAQNLGzry8pupHgRUpZBYtq/ioehweT4LZywGYLGeQOtgl2\r\n" \
 "6PR2MkramyGv5IkwTd37UIm1\r\n" \
 "-----END CERTIFICATE-----\r\n" \
-"-----BEGIN CERTIFICATE-----\r\n" \
+"-----BEGIN CERTIFICATE-----\r\n" /* Google.com certificate issuer */  \
 "MIIDIDCCAomgAwIBAgIENd70zzANBgkqhkiG9w0BAQUFADBOMQswCQYDVQQGEwJV\r\n" \
 "UzEQMA4GA1UEChMHRXF1aWZheDEtMCsGA1UECxMkRXF1aWZheCBTZWN1cmUgQ2Vy\r\n" \
 "dGlmaWNhdGUgQXV0aG9yaXR5MB4XDTk4MDgyMjE2NDE1MVoXDTE4MDgyMjE2NDE1\r\n" \

@@ -11,8 +11,10 @@
 
 #if DEMO_HTTPS_CLIENT
 
-#define RECREATE_SOCKET 0	/* 0: create the socket once. 1: Recreate the socket for every message */
-#define SLOW_SEND 0	/* 0: full speed. 1: wait 1s between messages */
+#define RECREATE_SOCKET 0	/* 0: create the socket once.
+							   1: Recreate the socket for every message */
+#define SLOW_SEND 0	/* 0: full speed.
+					   1: wait 1s between messages */
 
 
 /*============================================================================*/
@@ -58,7 +60,7 @@ void main_task(void* param) {
 			vTracePrintF(xTraceOpenLabel("Client"), "Creating socket");
 #endif
 		// Create a socket to handle the connection
-		socket = secureSocket();
+		socket = secureSocket(TCP);
 		if(socket < 0) {
 			printf("Error on socket creation.\n");
 		}
@@ -78,8 +80,10 @@ void main_task(void* param) {
 #endif	/* configUSE_TRACE_FACILITY */
 
 					// Send the message to the host
-					if( (ret = secureSendStr(socket, "GET /images/srpr/logo8w.png HTTP/1.1\r\n"
-						"Host: www.google.ch\r\n")) < 0) {
+					if( (ret = secureSendStr(socket,
+									"GET /images/srpr/logo8w.png HTTP/1.1\r\n"
+									"Host: www.google.ch\r\n")) < 0) {
+
 						printf("Error on send.\n");
 					}
 					else {

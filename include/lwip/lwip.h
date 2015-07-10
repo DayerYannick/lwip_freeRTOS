@@ -1,6 +1,9 @@
 /*
  * lwip.h
  *
+ *	Offers simple methods to use TCP, UDP or TLS to connect to a server, or
+ *	to accept clients connections.
+ *
  *  Created on: 24 mars 2015
  *      Author: yannick.dayer
  */
@@ -13,8 +16,6 @@
 #if USE_LWIP
 
 // Load user configuration
-//#include "config/lwipConfig.h"
-// Initialize undefined options
 #include "config/lwip_opt.h"
 
 #if LWIP_DHCP
@@ -70,24 +71,38 @@ extern const int EV_LWIP_SOCKET_ACCEPT_TIMEOUT;	/// The socket did not accept an
  *	@param event: the event(s) to wait for
  *	@param timeout: the amount of ms to wait before the function returns anyway
  *
- *	@return the actual value of the EventGroup bits	// FIXME: return something more intuitive
+ *	@return the actual value of the EventGroup bits	// maybe: return something more intuitive
  */
 int lwip_wait_events(const int event, int timeout);
 
 #endif	/* USE_FREERTOS */
 
+/**
+ *	@brief Returns the board's current IP address
+ *
+ *	@return the IP address in "153.109.5.1" format
+ */
+char* getMyIP(void);
 
-#if USE_SIMPLE_SOCKET && USE_FREERTOS
+
+#if USE_SIMPLE_SOCKET
+
+#include "lwip/lwip/sockets.h"
+
+typedef enum {TCP = SOCK_STREAM, UDP = SOCK_DGRAM} protocole_t;
+
 
 /**
- *	@brief Creates a socket
+ *	@brief Creates a TCP or UDP socket
+ *
+ *	@param proto: the protocole to use, UDP or TCP
  *
  *	@return the socket identifier
  */
-	int simpleSocket();
+	int simpleSocket(protocole_t proto);
 
 /**
- *	@brief bind a port to the given socket
+ *	@brief Binds a port to the given socket
  *
  *	@param socket: the socket identifier
  *	@param localIP: the address to bind to
@@ -98,7 +113,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleBind(int socket, char* localIP, int port);
 
 /**
- *	@brief open the port binded to the socket
+ *	@brief Opens the port binded to the socket
  *
  *	@param socket: the socket identifier
  *
@@ -107,7 +122,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleListen(int socket);
 
 /**
- *	@brief wait for an external connection
+ *	@brief Waits for an external connection
  *
  *	@param socket: the socket identifier
  *
@@ -116,7 +131,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleAccept(int socket);
 
 /**
- *	@brief connect the socket to an IP
+ *	@brief Connects the socket to an IP
  *
  *	@param socket: the socket identifier
  *	@param distantIP: a string containing the IP in format "1.0.255.123"
@@ -127,7 +142,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleConnect(int socket, char* distantIP, int port);
 
 /**
- *	@brief retrieve the ip address via DNS and connect to it
+ *	@brief Retrieves the ip address via DNS and connect to it
  *
  *	@param socket: the socket identifier
  *	@param name: an URL
@@ -138,7 +153,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleConnectDNS(int socket, char* name, int port);
 
 /**
- *	@brief send length byte pointed by data
+ *	@brief Sends length byte pointed by data
  *
  *	@param socket: the socket identifier
  *	@param data: the values to send
@@ -149,7 +164,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleSend(int socket, const unsigned char* data, size_t length);
 
 /**
- *	@brief send a string of char
+ *	@brief Sends a string of char
  *
  *	@param socket: the socket identifier
  *	@param data: a null terminated string to send
@@ -159,7 +174,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleSendStr(int socket, const char* data);
 
 /**
- *	@brief returns when some data were received
+ *	@brief Returns when some data were received
  *
  *	@param socket: the socket identifier
  *	@param data: a pointer to store the data received
@@ -170,7 +185,7 @@ int lwip_wait_events(const int event, int timeout);
 	int simpleRecv(int socket, unsigned char* data, size_t maxLength);
 
 /**
- *	@brief end the connectoin and destroy the socket
+ *	@brief Ends the connection and destroy the socket
  *
  *	@param socket: the socket identifier
  *
@@ -178,12 +193,10 @@ int lwip_wait_events(const int event, int timeout);
  */
 	int simpleClose(int socket);
 
-	int simple_shutdown(int socket, int how);
 
-#endif	// USE_SIMPLE_SOCKET && USE_FREERTOS
 
 /**
- *	@brief return when the event given in parameter happen
+ *	@brief Returns when one of the events given in parameter happen
  *
  *	@param socket: the socket identifier
  *	@param events: the event(s) to wait for
@@ -193,39 +206,146 @@ int lwip_wait_events(const int event, int timeout);
  */
 	int socket_wait_events(int socket, const uint32_t events, int timeout);
 
+/**
+ *	@brief Returns the current events state
+ *
+ *	@param socket: the socket identifier
+ *	@param events: a mask for the wished events
+ *
+ *	@return the value of the event. -1 if error
+ */
 	int socket_get_events(int socket, uint32_t events);
 
+/**
+ *	@brief Returns the number of created sockets
+ *
+ *	@return the number of sockets
+ */
 	int getSocketNb(void);
+
+/**
+ *	@brief Returns the maximum number of simultaneously active socket
+ *
+ *	@return the maximum number of sockets
+ */
 	int getSocketNbMax(void);
+
+/**
+ *	@brief Returns the state of the socket
+ *
+ *	@param: socket: the socket identifier
+ *
+ *	@return 1 if the socket is valid (created), 0 if the socket is closed.
+ */
 	uint8_t socketValid(int socket);
 
-char* getMyIP(void);
+
+#endif	// USE_SIMPLE_SOCKET
 
 
+#if USE_MBEDTLS
 
-#if USE_MBEDTLS && USE_FREERTOS
 
+/**
+ *	@brief Creates a TLS socket
+ *
+ *	@return the new socket. -1 if error
+ */
 	int secureSocket();
 
+/**
+ *	@brief Binds a TCP port to a socket
+ *
+ *	@param socket: the socket identifier
+ *	@param localIP: the ip address to bind to
+ *	@param port: the TCP port to bind to
+ *
+ *	@return -1 if error
+ */
 	int secureBind(int socket, char* localIP, int port);
 
+/**
+ *	@brief Sets a TCP port to listen mode
+ *
+ *	@param socket: the socket identifier
+ *
+ *	@return -1 if error
+ */
 	int secureListen(int socket);
 
+/**
+ *	@brief Waits for a connection request and creates a new secureSocket
+ *
+ *	@param socket: the socket identifier
+ *
+ *	@return the newly created socket. -1 if error
+ */
 	int secureAccept(int socket);
 
+/**
+ *	@brief Connects to a TLS server. Verifies the certificate validity
+ *
+ *	@param socket: the socket identifier
+ *	@param distantIP: the ip of the server
+ *	@param port: the destination TCP port
+ *
+ *	@return -1 if error
+ */
 	int secureConnect(int socket, char* distantIP, int port);
 
+/**
+ *	@brief Connects to a TLS server by its dns address
+ *
+ *	@param socket: the socket identifier
+ *	@param name: the dns address
+ *	@param port: the TCP port to use
+ *
+ *	@return -1 if error
+ */
 	int secureConnectDNS(int socket, char* name, int port);
 
+/**
+ *	@brief Sends data over TLS to the host
+ *
+ *	@param socket: the socket identifier
+ *	@param data: length bytes of data
+ *	@param length: the size of the data
+ *
+ *	@return -1 if error
+ */
 	int secureSend(int socket, const unsigned char* data, size_t length);
 
+/**
+ *	@brief Sends a string of data over TLS to the host
+ *
+ *	@param socket: the socket identifier
+ *	@param data: a null-terminated string to send
+ *
+ *	@return -1 if error
+ */
 	int secureSendStr(int socket, const char* data);
 
+/**
+ *	@brief Waits some data to come from the host
+ *
+ *	@param socket: the socket identifier
+ *	@param data: memory place to store received data
+ *	@param maxLength: the size of the free space at data
+ *
+ *	@return the number of bytes received. -1 if error
+ */
 	int secureRecv(int socket, unsigned char* data, size_t maxLength);
 
+/**
+ *	@brief Ends the connection and destroys the socket
+ *
+ *	@param socket: the socket identifier
+ *
+ *	@return -1 if error
+ */
 	int secureClose(int socket);
 
-#endif	// USE_MBEDTLS && USE_FREERTOS
+#endif	// USE_MBEDTLS
 
 
 

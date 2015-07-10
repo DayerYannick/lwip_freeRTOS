@@ -1,6 +1,8 @@
 /*
  * client_http.c
  *
+ *	Connects to http://www.hevs.ch and download the HES-SO logo
+ *
  *  Created on: 22 juin 2015
  *      Author: yannick.dayer
  */
@@ -59,7 +61,7 @@ void main_task(void* param) {
 
 	while(1) {
 	printf("--Socket creation.\n");
-	socket = simpleSocket();
+	socket = simpleSocket(TCP);
 
 	vTaskDelay(1000);
 
@@ -83,8 +85,12 @@ void main_task(void* param) {
 				do {
 					// Wait for the answer
 					ret = simpleRecv(socket, (unsigned char*)data, sizeof(data));
+
+
 					if(ret != -1 && ret != 0) {	// Message partly received
 						printf("Received %d char: %.*s\n", ret, ret, data);
+
+				/* TODO Image parsing
 						if(imgPtr+ret > img+IMG_SIZE) {
 							printf("\n\nError, too much data\n\n");
 							break;
@@ -108,7 +114,7 @@ void main_task(void* param) {
 							else
 								i-=ret;
 						}
-
+				*/
 					}
 					else if(ret == 0)
 						printf("--End of connection requested from the host.\n");
@@ -118,12 +124,14 @@ void main_task(void* param) {
 
 				// Connection ended successfully
 
+/* TODO send image to screen app
 				picture.size = imgPtr-img;
 				toSendLCD.type = 5;
-				toSendLCD.ptr = picture;
+				toSendLCD.ptr = picture; // NOT finished
 				toSendLCD.tick = xTaskGetTickCount();
 
 				xQueueSend(LCD_msgQueue, &picture, portMAX_DELAY);
+*/
 
 			}	// if(simpleSendStr(...
 			else

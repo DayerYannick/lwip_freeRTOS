@@ -1,6 +1,9 @@
 /*
  * demos.h
  *
+ *	Sets different parameters for the demos
+ *
+ *
  *  Created on: 22 juin 2015
  *      Author: yannick.dayer
  */
@@ -12,6 +15,11 @@
 #include "freertos/FreeRTOS.h"
 
 
+
+/*============================================================================*/
+/*------------------------------ ADDRESS CONFIG ------------------------------*/
+/*============================================================================*/
+
 #define MY_IP_BY_DHCP 1	/* 0: use MY_IP / 1: use DHCP */
 
 
@@ -21,38 +29,46 @@
 #define MY_GW "192.168.1.1"
 #define PC_IP "192.168.1.2"
 #else
-#define PC_IP "153.109.5.97"
+#define PC_IP "153.109.5.95"
 #endif
 
 #define MY_HOSTNAME "lwip_dayer"
 
-#define TCP_PORT 443
+#define TCP_PORT 4433
+
 
 
 /*============================================================================*/
 /*------------------------------ DEMO SELECTION ------------------------------*/
 /*============================================================================*/
-/* Set one of these macros to 1 to activate the demo */
-#define DEMO_CLIENT 		0	/* Connect to PC_IP and send messages */
-#define DEMO_SERVER 		0	/* Accept incoming connections */
-#define DEMO_HTTP_CLIENT	0	/* Send a request to http://www.hevs.ch */		/* TODO Display picture */
-#define DEMO_HTTP_SERVER	0	/* A simple HTTP server... */					/* NOT IMPLEMENTED */
+/* Set ONE of these macros to 1 to activate the demo, the others to 0 */
+#define DEMO_CLIENT 		1	/* Connects to PC_IP and send messages */
+#define DEMO_SERVER 		0	/* Accepts incoming connections */
+#define DEMO_HTTP_CLIENT	0	/* Sends a request to http://www.hevs.ch */		/* TODO Display picture */
+
+#define DEMO_CLIENT_UDP		0	/* Sends messages really fast */
 
 #define DEMO_TLS_CLIENT		0	/* Connection to a secured server via TLS */
-#define DEMO_TLS_SERVER		0	/* Allows a client to connect via TLS */
-#define DEMO_HTTPS_CLIENT	1	/* Send a request to https://www.google.ch */
-#define DEMO_HTTPS_SERVER	0	/* Send a request to https://www.google.ch */	/* NOT IMPLEMENTED */
+#define DEMO_TLS_SERVER		0	/* Allows clients to connect via TLS */
+#define DEMO_HTTPS_CLIENT	0	/* Send a request to https://www.google.ch */	/* TODO  */
 
 
+
+/*============================================================================*/
+/*----------------------------- DISPLAY & AUDIO ------------------------------*/
+/*============================================================================*/
+/* Set the output options */
 #define USE_DISPLAY			1	/* 1 to display infos (console, messages, ...)*/
 #define USE_AUDIO			0	/* 1 to play sound on important events */
 
 
 
 
+
+
+// Declarations
+
 void main_task(void* param);
-
-
 
 
 #if USE_DISPLAY

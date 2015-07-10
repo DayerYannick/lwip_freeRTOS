@@ -51,11 +51,11 @@ int tcpip_init_once = 0;	// Flag indicating that lwip was already initialized
 #if USE_FREERTOS
 TaskHandle_t connectHandle;	// For deleting the connect task after a return or a timeout
 SemaphoreHandle_t createSema;	// Prevents errors while creating sockets ids
-//SemaphoreHandle_t connectSema;	// Ensures that the connect function is called once at a time
 int semaCreated = 0;	// Indicates that the semaphores were created.
 #endif
 
 char myIP[16];
+
 
 //-- Constants --//
 // DHCP states
@@ -68,6 +68,7 @@ char myIP[16];
 #define MAX_DHCP_TRIES 4	/* The max number of time the DHCP can fail */
 
 
+
 //-- Functions prototypes --//
 
 #if USE_FREERTOS
@@ -76,7 +77,8 @@ static void connectTask(void* param);	// A task allowing a timeout detection on 
 #endif
 
 static int lwip_init_common(const int ip, const int mask, const int gateway, const char* hostname);	// A private function that initializes lwip and the hardware
-void waitForLinkDown(void);
+
+
 
 //-- EVENTS --//
 #if USE_FREERTOS
@@ -279,8 +281,6 @@ static int lwip_init_common(const int ip, const int mask, const int gateway, con
 
 		//**** TO REMOVE: test for link down ****//
 		printf("Link up.\n");
-		//ETH_DMAITConfig(ETH_DMA_IT_FBE | ETH_DMA_IT_AIS, ENABLE);
-		//waitForLinkDown();
 
 	}
 	else {
@@ -377,16 +377,12 @@ static void dhcp_task(void* params) {
 
 
 
-void waitForLinkDown(void) {
-	while(bsp_eth_status() == (ETH_INIT_FLAG | ETH_LINK_FLAG));
-	printf("Link down!\n");
-}
 
 
-#if USE_SIMPLE_SOCKET && USE_FREERTOS
+#if USE_SIMPLE_SOCKET
 
 
-int simpleSocket() {
+int simpleSocket(protocole_t proto) {
 	int socket = 0;
 	//int i=0;
 
@@ -401,7 +397,7 @@ int simpleSocket() {
 #endif
 
 
-	socket = lwip_socket(AF_INET, SOCK_STREAM, 0);	// Create the socket
+	socket = lwip_socket(PF_INET, proto, 0);	// Create the socket
 
 	if(socket > MAX_SOCKET_NB) {
 		printf("Lwip: too many sockets!\n");
@@ -492,7 +488,6 @@ int simpleAccept(int socket) {
 			break;
 		}
 		else {	// Timeout! Set the event.
-			//printf("lwip_accept timed out\n");
 			xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_ACCEPT_TIMEOUT);
 		}
 	}
@@ -500,7 +495,7 @@ int simpleAccept(int socket) {
 	// Initialize the socket's parameters
 	if(ret != -1) {
 
-	//lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));
+	//lwip_setsockopt(socket, IPPROTO_TCP, TCP_NODELAY, (int)1, sizeof(int));	// Turns off Nagle algorithm
 
 		if(ret >= MAX_SOCKET_NB) {
 			printf("ERROR: Too many simultaneous sockets!\n");
@@ -588,17 +583,15 @@ int simpleConnect(int socket, char* distantIP, int port) {
 	params[3] = &ret;
 
 
-	//xSemaphoreTake(connectSema, portMAX_DELAY);
 	xTaskCreate(connectTask, "Connect Task", configMINIMAL_STACK_SIZE, (void*)params, uxTaskPriorityGet(NULL), &connectTaskHandle);
 
 	uxBits = xEventGroupWaitBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED_INTERN, pdTRUE, pdFALSE, CONNECT_TIMEOUT_VAL/portTICK_PERIOD_MS);
-	//xSemaphoreGive(connectSema);
+
 
 	if((uxBits & EV_LWIP_SOCKET_CONNECTED_INTERN) != EV_LWIP_SOCKET_CONNECTED_INTERN) {	// Timeout
 		xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECT_TIMEOUT | EV_LWIP_SOCKET_DISCONNECTED);
 		xEventGroupClearBits(Sock[socket].events, EV_LWIP_SOCKET_CONNECTED);
 		ret = -1;
-		//printf("Timeout of connect.\n");
 	}
 	else {
 		xEventGroupClearBits(Sock[socket].events, EV_LWIP_SOCKET_DISCONNECTED);
@@ -624,7 +617,7 @@ int simpleConnectDNS(int socket, char* name, int port) {
 		//printf("dns of %s => %s\n", name, ip);
 	}
 	else {
-		//printf("Error while resolving DNS name.\n");
+		printf("Error while resolving DNS name.\n");
 		return -1;
 	}
 
@@ -641,41 +634,21 @@ int simpleSend(int socket, const unsigned char* data, size_t length) {
 		return -1;
 
 	do {
-#if configUSE_TRACE_FACILITY
-		// XXX vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send start");
-#endif
 		ret = lwip_send(socket, data, length, 0);
-#if configUSE_TRACE_FACILITY
-		// XXX vTracePrintF(xTraceOpenLabel("LwIP send ret"), "%d", ret);
-		//lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
-		// XXX vTracePrintF(xTraceOpenLabel("LwIP send ret"), "%d", error);
-#endif
 		if(ret < 0) {
 			lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
 			if(error != EWOULDBLOCK) { // Error
-#if configUSE_TRACE_FACILITY
-				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send error");
-#endif
 				break;
 			}
 			else {	// Timeout
-#if configUSE_TRACE_FACILITY
-				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send timeout");
-#endif
 				xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_SEND_TIMEOUT);
-				//printf("lwip_send timed out.\n");
 			}
 		}	// if(ret < 0)
 		else {
 			count += ret;
-			if(count < length)
-				printf("message partially sent! %d / %d.\n", count, length);
 		}
 	} while(count < length);
 
-#if configUSE_TRACE_FACILITY
-	// XXX vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_send end");
-#endif
 	return ret;
 }
 
@@ -694,38 +667,20 @@ int simpleRecv(int socket, unsigned char* data, size_t maxLength) {
 	int error;
 	socklen_t optLen = sizeof(error);
 
-	//if( lwip_recv(socket, NULL, maxLength, MSG_PEEK) );
-
 
 	do {
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv start");
-#endif
 		ret = lwip_recv(socket, data, maxLength, 0);
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("LwIP recv ret"), "%d", ret);
-#endif
+
 		if(ret < 0) {
 			lwip_getsockopt(socket, SOL_SOCKET, SO_ERROR, &error, &optLen);
 			if(error!= EWOULDBLOCK) {	// error!
-#if configUSE_TRACE_FACILITY
-				vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv error");
-#endif
 				break;
 			}
 			else {	// Timeout.
-#if configUSE_TRACE_FACILITY
-			vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv timeout");
-#endif
 				xEventGroupSetBits(Sock[socket].events, EV_LWIP_SOCKET_RECV_TIMEOUT);
-				//printf("lwip_recv timed out\n");
 			}
 		}
 	} while(ret < 0);	// while((ret = lwip_recv...
-
-#if configUSE_TRACE_FACILITY
-		vTracePrintF(xTraceOpenLabel("LwIP"), "lwip_recv end");
-#endif
 
 	return ret;
 }
@@ -744,16 +699,9 @@ int simpleClose(int socket) {
 }
 
 
-int simple_shutdown(int socket, int how) {
-	return lwip_shutdown(socket, how);
-}
-
-
-#endif	/* USE_SIMPLESOCKET && USE_FREERTOS */
 
 
 int socket_wait_events(int socket, const uint32_t events, int timeout) {
-
 	if(Sock[socket].isSocket != 0)
 		return xEventGroupWaitBits(Sock[socket].events, events&(~EV_LWIP_SOCKET_CONNECTED_INTERN), pdFALSE, pdFALSE, timeout / portTICK_PERIOD_MS);
 	else
@@ -762,11 +710,8 @@ int socket_wait_events(int socket, const uint32_t events, int timeout) {
 
 
 int socket_get_events(int socket, uint32_t events) {
-	//uint32_t bits;
-	if(Sock[socket].isSocket != 0) {
-		//bits = xEventGroupGetBits(Sock[socket].events);
+	if(Sock[socket].isSocket != 0)
 		return (xEventGroupGetBits(Sock[socket].events) & events);
-	}
 	else
 		return -1;
 }
@@ -792,12 +737,14 @@ uint8_t socketValid(int socket) {
 	return Sock[socket].isSocket;
 }
 
+#endif	/* USE_SIMPLESOCKET */
+
+
 /*
  * MBED TLS
- *
  */
 
-#if USE_MBEDTLS && USE_FREERTOS
+#if USE_MBEDTLS
 
 int sendHelper(void* fd, const unsigned char* buf, size_t len) {
 	//printf("**ssl sending %d char: \"%s\" on socket %d.\n", len, buf, (int) fd);
@@ -868,7 +815,7 @@ void sslDebugHelper(void* fd, int level, const char* data) {
 int secureSocket() {
 	int socket;
 
-	socket = simpleSocket();
+	socket = simpleSocket(TCP);
 
 	if(socket < 0)
 		return socket;
@@ -1117,16 +1064,13 @@ int secureClose(int socket) {
 	int ret;
 
 	if(socket >= 0) {
-		if(Sock[socket].isSocket != 0) {
-			if(Sock[socket].ssl != NULL) {
-				pk_free(&Sock[socket].pkey);
-				x509_crt_free(Sock[socket].caChain);
-				x509_crt_free(Sock[socket].ownCert);
-				ssl_free(Sock[socket].ssl);
-			//	memset(Sock[socket].ssl, 0, sizeof(ssl_context));	// TODO clean memory?
-				vPortFree(Sock[socket].ssl);
-				Sock[socket].ssl = NULL;
-			}
+		if(Sock[socket].isSocket != 0 && Sock[socket].ssl != NULL) {
+			pk_free(&Sock[socket].pkey);
+			x509_crt_free(Sock[socket].caChain);
+			x509_crt_free(Sock[socket].ownCert);
+			ssl_free(Sock[socket].ssl);
+			vPortFree(Sock[socket].ssl);
+			Sock[socket].ssl = NULL;
 		}
 	}
 
@@ -1134,6 +1078,6 @@ int secureClose(int socket) {
 	return ret;
 }
 
-#endif	// USE_MBEDTLS && USE_FREERTOS
+#endif	/* USE_MBEDTLS */
 
 #endif	/* USE_LWIP */

@@ -1,7 +1,7 @@
 /*
  * client.c
  *
- *	Connects to the PC and sends messages
+ *	Sends data faster with UDP.
  *
  *  Created on: 22 juin 2015
  *      Author: yannick.dayer
@@ -10,11 +10,14 @@
 
 #include "demos/demos.h"
 
-#if DEMO_CLIENT
+#if DEMO_CLIENT_UDP
 
-#define RECREATE_SOCKET 0	/* 0: create the socket once. 1: Recreate the socket for every message */
-#define SLOW_SEND 0	/* 0: full speed. 1: wait 1s between messages */
-#define OUTPUT_PRINTF 0	/* 0: only errors output to console, 1: print informations */
+#define RECREATE_SOCKET 0	/* 0: create the socket once.
+							   1: Recreate the socket for every message */
+#define SLOW_SEND 0	/* 0: full speed.
+					   1: wait 1s between messages */
+#define OUTPUT_PRINTF 1	/* 0: only errors output to console,
+						   1: print informations */
 
 
 /*============================================================================*/
@@ -61,7 +64,7 @@ void main_task(void* param) {
 			vTracePrintF(xTraceOpenLabel("Client"), "Creating socket");
 #endif
 		// Create a socket to handle the connection
-		socket = simpleSocket(TCP);
+		socket = simpleSocket(UDP);
 		if(socket < 0) {
 			printf("Error on socket creation.\n");
 		}
@@ -101,12 +104,12 @@ void main_task(void* param) {
 #if SLOW_SEND
 						// Wait some time
 						vTaskDelay(1*configTICK_RATE_HZ);
+#if !USE_DISPLAY
+						// We can use printf with SLOW_SEND
+						printf("Sending message: %s\n"(const char*)data);
+#endif	/* !USE_DISPLAY */
 
 #endif	/* SLOW_SEND */
-
-#if !USE_DISPLAY
-						printf("Sending message: %s\n", (char*)data);
-#endif	/* !USE_DISPLAY */
 
 					// Change the content of the next message
 					if(++count > 999999)
@@ -114,6 +117,9 @@ void main_task(void* param) {
 
 				} while(!RECREATE_SOCKET && ret > 0);
 			}
+
+			// Send the remaining packets
+			simple_shutdown(socket, 2);
 
 #if configUSE_TRACE_FACILITY
 			vTracePrintF(xTraceOpenLabel("Client"), "Closing socket");
@@ -133,4 +139,4 @@ void main_task(void* param) {
 
 
 
-#endif /* DEMO_CLIENT */
+#endif /* DEMO_CLIENT_UDP */
