@@ -656,7 +656,8 @@ int simpleSendStr(int socket, const char* data) {
 	int length;
 
 	for(length = 0; data[length] != '\0'; ++length);
-		++length;
+
+	++length;
 
 	return simpleSend(socket, (unsigned char*)data, length);
 }

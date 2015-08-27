@@ -29,7 +29,7 @@
 #define MY_GW "192.168.1.1"
 #define PC_IP "192.168.1.2"
 #else
-#define PC_IP "153.109.5.95"
+#define PC_IP "192.168.1.114"
 #endif
 
 #define MY_HOSTNAME "lwip_dayer"
@@ -42,7 +42,7 @@
 /*------------------------------ DEMO SELECTION ------------------------------*/
 /*============================================================================*/
 /* Set ONE of these macros to 1 to activate the demo, the others to 0 */
-#define DEMO_CLIENT 		1	/* Connects to PC_IP and send messages */
+#define DEMO_CLIENT 		0	/* Connects to PC_IP and send messages */
 #define DEMO_SERVER 		0	/* Accepts incoming connections */
 #define DEMO_HTTP_CLIENT	0	/* Sends a request to http://www.hevs.ch */		/* TODO Display picture */
 
@@ -51,6 +51,8 @@
 #define DEMO_TLS_CLIENT		0	/* Connection to a secured server via TLS */
 #define DEMO_TLS_SERVER		0	/* Allows clients to connect via TLS */
 #define DEMO_HTTPS_CLIENT	0	/* Send a request to https://www.google.ch */	/* TODO  */
+
+#define DEMO_PRESENTATION	1
 
 
 

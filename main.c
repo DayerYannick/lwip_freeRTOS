@@ -41,7 +41,7 @@ int main(int argc, char** argv) {
  */
 	tt = time( NULL );
 	gmtime_r( &tt, &lt );
-	printf("GMT Now: %d.%d.%d %d:%d:%d\n",
+	printf("GMT Now: %02d.%02d.%02d %02d:%02d:%02d\n",
 			lt.tm_mday, lt.tm_mon + 1, lt.tm_year + 1900,
 			lt.tm_hour, lt.tm_min, lt.tm_sec);
 
@@ -53,7 +53,7 @@ int main(int argc, char** argv) {
  										"LCD_msg queue" );
 	xTaskCreate(lcd_task,
 				"Display task",
-				configMINIMAL_STACK_SIZE*8,
+				configMINIMAL_STACK_SIZE*16,
 				NULL,
 				3,
 				NULL );
@@ -139,17 +139,20 @@ void breath_task(void* param) {
 
 #if USE_DISPLAY
 
+void getTime(int* h, int* m, int* s);
+
 void lcd_task(void* param) {
 	GWidgetInit wi;
 	GHandle ghStatus;
 	GHandle ghConsole;
 	GHandle ghLastMessage;
 	GHandle ghLastMessageTime;
-	uint32_t t;
+	//uint32_t t;
 
 	queueLCDMsg_t received;
 
 	char msg[32];
+	int h, m, s;
 
 	gfxInit();
 	// Set the widget defaults
@@ -186,6 +189,8 @@ void lcd_task(void* param) {
 		wi.text = "TCP/IP STACK: HTTPS client test";
 #elif DEMO_HTTPS_SERVER
 		wi.text = "TCP/IP STACK: HTTPS server test";
+#elif DEMO_PRESENTATION
+		wi.text = "Application Demonstration";
 #else
 		wi.text = "-- no title --";
 #endif
@@ -247,26 +252,28 @@ void lcd_task(void* param) {
 
 
 
-		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
-		sprintf(msg, "%d.%03d: gfx initialized.\n", (int)(t/1000),
-													(int)(t%1000));
+		getTime(&h,&m,&s);
+		//t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
+		sprintf(msg, "%02d:%02d:%02d: gfx initialized.\n", h,m,s);//(int)(t/3600000), (int)(t/60000 %60), (int)(t/1000 %60), (int)(t%1000));
 		gwinPutString(ghConsole, msg);
 
 		lwip_wait_events(EV_LWIP_INITIALIZED, portMAX_DELAY);
 		gwinSetText(ghStatus, "lwip initialized.", 1);
 
-		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
-		sprintf(msg, "%d.%03d: lwip initialized.\n", (int)(t/1000),
-													 (int)(t%1000));
+		getTime(&h,&m,&s);
+		//t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
+		sprintf(msg, "%02d:%02d:%02d: lwip initialized.\n", h,m,s);
 		gwinPutString(ghConsole, msg);
 
 		lwip_wait_events(EV_LWIP_IP_ASSIGNED, portMAX_DELAY);
 
-		t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
-		sprintf(msg, "%d.%03d: IP assigned: %s.\n",  (int)(t/1000),
-													 (int)(t%1000), getMyIP());
+		getTime(&h,&m,&s);
+		//t = (uint32_t)xTaskGetTickCount()/portTICK_PERIOD_MS;
+		sprintf(msg, "%02d:%02d:%02d: IP assigned: %s.\n",  h,m,s, getMyIP());
 		gwinPutString(ghConsole, msg);
 
+
+	// MAIN LOOP
 
 	while(1) {
 		xQueueReceive(LCD_msgQueue, &received, portMAX_DELAY);
@@ -277,17 +284,35 @@ void lcd_task(void* param) {
 		switch(received.type) {
 		case 2:
 			gwinPutString(ghConsole, received.ptr);
+			vPortFree(received.ptr);
 			break;
 		case 5:	// picture
 
 			break;
+		case 10: // Server pres hello
+			gwinSetText(ghLastMessageTime, "hello!", 0);
+			break;
+		case 11: // Server pres chat
+			gwinSetText(ghLastMessage, received.ptr, 0);
+			vPortFree(received.ptr);
+			getTime(&h,&m,&s);
+			sprintf(msg, "%02d:%02d:%02d:", h,m,s);
+			gwinSetText(ghLastMessageTime, msg, 0);
+			break;
+		case 12: // Server pres log
+			getTime(&h,&m,&s);
+			sprintf(msg, "%02d:%02d:%02d: ", h,m,s);
+			gwinPutString(ghConsole, msg);
+			gwinPutString(ghConsole, received.ptr);
+			vPortFree(received.ptr);
+			break;
 		default:
 			gwinSetText(ghLastMessage, received.ptr, 0);
-			sprintf(msg, "%d.%03d:",  (int)(received.tick/1000),
-									  (int)(received.tick%1000));
+			getTime(&h,&m,&s);
+			sprintf(msg, "%02d:%02d:%02d:", h,m,s);
 			gwinSetText(ghLastMessageTime, msg, 0);
+			vPortFree(received.ptr);
 		}
-		vPortFree(received.ptr);
 
 	}	// while(1)
 
@@ -354,15 +379,15 @@ void watcher_task(void* param) {
 							switch(i&temp) {
 							case 1<<4:
 								sprintf(toSend.ptr, "socket %d: "
-									"EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
+										"EV_LWIP_SOCKET_RECV_TIMEOUT\n", socket);
 								break;
 							case 1<<5:
 								sprintf(toSend.ptr,
-							"socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
+										"socket %d: EV_LWIP_SOCKET_SEND_TIMEOUT\n", socket);
 								break;
 							case 1<<6:
 								sprintf(toSend.ptr,
-						"socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
+										"socket %d: EV_LWIP_SOCKET_ACCEPT_TIMEOUT\n", socket);
 								break;
 							default:
 								;
@@ -396,4 +421,17 @@ void watcher_task(void* param) {
 
 		vTaskDelay(500);
 	}	// while(1) {
+}
+
+
+void getTime(int* h, int* m, int* s) {
+	struct tm lt;
+	time_t tt;
+
+	tt = time( NULL );
+	gmtime_r( &tt, &lt );
+
+	*h = lt.tm_hour;
+	*m = lt.tm_min;
+	*s = lt.tm_sec;
 }
