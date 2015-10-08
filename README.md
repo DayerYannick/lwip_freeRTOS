@@ -11,9 +11,3 @@ The project run on FreeRTOS: www.freertos.org.
 ## Informations
 This project only works with the heivs libraries and on the ARMEBS4 board.
 (http://wiki.hevs.ch/uit/index.php5/Hardware/ARMEBS/4)
-
-## TODO
-
-- Move src/lwip and src/mbedtls to libheivs_stm32/src
-- Move include/lwip and include/mbedtls to libheivs_stm32/include
-- Move the project to the demo branch of the svn
