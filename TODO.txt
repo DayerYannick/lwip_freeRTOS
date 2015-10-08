@@ -1,0 +1,23 @@
+
+- Move src/lwip and src/mbedtls to libheivs_stm32/src
+
+- Move include/lwip and include/mbedtls to libheivs_stm32/include
+
+- Add this to libheivs_stm32/include/heivs/config.h :
+/*
+ * \def USE_MBEDTLS (new name of polarSSL)
+ * \brief Use mbedTLS SSL/TLS encryption set.
+ *
+ * Possible values:
+ * - 0 : Don't use mbedTLS
+ * - 1 : Use mbedTLS
+ *
+ * TODO : examples
+ * \see mbedTLS site: https://tls.mbed.org/
+ */
+#if !defined(USE_MBEDTLS)
+	#define USE_MBEDTLS 0
+#endif
+#if USE_MBEDTLS != 0 && USE_MBEDTLS != 1
+	#error USE_MBEDTLS valid values are 0 or 1, please check your config/config.h, there is a model in "heivs/samples/config.h.txt"
+#endif
