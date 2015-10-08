@@ -3,6 +3,8 @@
 
 - Move include/lwip and include/mbedtls to libheivs_stm32/include
 
+- Move the project to the demo branch of the svn
+
 - Add this to libheivs_stm32/include/heivs/config.h :
 /*
  * \def USE_MBEDTLS (new name of polarSSL)
